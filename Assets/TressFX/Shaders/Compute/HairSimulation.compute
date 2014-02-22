@@ -1,19 +1,61 @@
-﻿#pragma kernel FillWithRed
+﻿#pragma kernel WindSimluation
+#pragma kernel ShapeConstraints
+
+struct StrandIndex
+{
+	int vertexId;
+	int hairId;
+	int vertexCountInStrand;
+};
 
 // Configuration
-float3 windForce;
+float4 windForce;
 float damping;
  
 RWStructuredBuffer<float3> b_InitialVertexPosition;
 RWStructuredBuffer<float3> b_LastVertexPosition;
 RWStructuredBuffer<float3> b_CurrentVertexPosition;
 
-RWStructuredBuffer<int> b_StrandIndices;
+RWStructuredBuffer<struct StrandIndex> b_StrandIndices;
+
 
 float timeT;
  
+// /----------------------------------------------------------------------------------------
+// | WindSimulation Shader kernel
+// | =========================================
+// | This kernel will move the hairs by the passed windForce value.
+// \----------------------------------------------------------------------------------------
 [numthreads(1,1,1)]
-void FillWithRed(uint3 dtid : SV_DispatchThreadID)
+void WindSimluation(uint3 dtid : SV_DispatchThreadID)
 {
-    b_CurrentVertexPosition[dtid.x] = b_InitialVertexPosition[dtid.x] + (float3(1,1,1) * sin(timeT) * (b_StrandIndices[dtid.x] / 10));
-} 
+	// Get Strand index
+	struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
+	
+	// Save last position
+	b_LastVertexPosition[dtid.x] = b_CurrentVertexPosition[dtid.x];
+	
+	// Generate new position
+    b_CurrentVertexPosition[dtid.x] = b_CurrentVertexPosition[dtid.x]  + (float3(1,0,0) * sin(timeT) * ((float)strandIndex.vertexId / (float)strandIndex.vertexCountInStrand));
+    // + ( (windForce.xyz) * sin(timeT) * (strandIndex.vertexId / strandIndex.vertexCountInStrand) );
+}
+
+// /----------------------------------------------------------------------------------------
+// | ShapeConstraints Shader kernel
+// | =========================================
+// | This kernel will move the hairs back to its initial position to make sure for example
+// | the first hair in strand (which would be physically bound to the the head) will not move away from it's position
+// \----------------------------------------------------------------------------------------
+[numthreads(1,1,1)]
+void ShapeConstraints (uint3 dtid : SV_DispatchThreadID)
+{
+	// Get Strand index
+	/*struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
+	
+	float3 positionOffset = b_LastVertexPosition[dtid.x] - b_CurrentVertexPosition[dtid.x];
+	
+	// b_CurrentVertexPosition[dtid.x] = b_InitialVertexPosition[dtid.x];
+	
+	// Do shape constraint
+	b_CurrentVertexPosition[dtid.x] = lerp(b_InitialVertexPosition[dtid.x], positionOffset, 0.01);*/
+}

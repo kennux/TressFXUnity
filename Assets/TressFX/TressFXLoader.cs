@@ -2,49 +2,34 @@
 using System.Collections.Generic;
 using System;
 
+/// <summary>
+/// This class is able to load tressfx mesh files.
+/// Currently only text based amd tressfx mesh files are supported.
+/// Binary format is planned!
+/// </summary>
+[RequireComponent(typeof(TressFX))]
 public class TressFXLoader : MonoBehaviour
 {
+	/// <summary>
+	/// The hair meshes.
+	/// </summary>
 	public TextAsset[] hairs;
 
-	// Use this for initialization
+	/// <summary>
+	/// This function will generate the vertice and strand index buffers used for initializing TressFX.
+	/// </summary>
 	public void Start ()
 	{
+		// Declare lists for vertices and strand indices which will get passed to TressFX
 		List<Vector3> vertices = new List<Vector3>();
-		List<int> strandIndices = new List<int>();
+		List<StrandIndex> strandIndices = new List<StrandIndex>();
 
+		// Load all hair files
 		for (int i = 0; i < this.hairs.Length; i++)
 		{
 			Debug.Log ("Loading hair " + i);
-			this.LoadHair(this.hairs[i].text, vertices, strandIndices);
+			this.LoadHairTFX(this.hairs[i].text, vertices, strandIndices, i);
 		}
-		
-		/*for (i = 0; i < meshCount; i++)
-		{
-			Mesh hairMesh = new Mesh();
-			hairMesh.vertices = meshVertices;
-			hairMesh.subMeshCount = 1;
-			
-			// Inidices
-			int[] indices = new int[meshVertices.Length];
-			Color32[] colors = new Color32[meshVertices.Length];
-			
-			for (int j = 0; j < meshVertices.Length; ++j)
-			{
-				allVertices.Add (meshVertices[j]);
-				indices[j] = j;
-			}
-			
-			hairMesh.SetIndices (indices, MeshTopology.LineStrip, 0);
-			hairMesh.normals = meshNormals;
-			hairMesh.colors32 = colors;
-			
-			// Generate mesh gameobject
-			GameObject hairObject = new GameObject();
-			hairObject.AddComponent<MeshFilter>().mesh = hairMesh;
-			hairObject.AddComponent<MeshRenderer>().material = this.renderer.sharedMaterial;
-			hairObject.transform.parent = this.transform;
-			hairObject.transform.name = "Hair Mesh";
-		}*/
 
 		// Tress fx loaded!
 		TressFX tressFx = this.GetComponent<TressFX>();
@@ -55,7 +40,15 @@ public class TressFXLoader : MonoBehaviour
 
 	}
 
-	private void LoadHair(string hairData, List<Vector3> verticeList, List<int> strandIndices) //, List<Vector3> normalList)
+	/// <summary>
+	/// Loads the hair tfx (text) file.
+	/// This will generate the hair vertices and strandindices and store them in the passed lists.
+	/// </summary>
+	/// <param name="hairData">Hair mesh data (text from tfx file)</param>
+	/// <param name="verticeList">The list where the vertices should go.</param>
+	/// <param name="strandIndices">The list where the StrandIndices should go.</param>
+	/// <param name="hairId">The HairID (starts at 0)</param>
+	private void LoadHairTFX(string hairData, List<Vector3> verticeList, List<StrandIndex> strandIndices, int hairId) //, List<Vector3> normalList)
 	{
 		// Start parsing hair file
 		string[] hairLines = hairData.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
@@ -64,26 +57,33 @@ public class TressFXLoader : MonoBehaviour
 		int numStrands = 0; 
 		int numVertices = 0;
 
+		// Read every line of the data
 		int i = 0;
 		while (i < hairLines.Length)
 		{
 			string[] stringTokens = hairLines[i].Split(' ');
-			
+
+			// Hair definition
 			if (stringTokens[0] == "numStrands")
 			{
 				// Strands definition
 				numStrands = int.Parse(stringTokens[1]);
 			}
+			// Strand definition
 			else if (stringTokens[0] == "strand")
 			{
+				// Parse informations about the strand
 				int strandNum = int.Parse(stringTokens[1]);
 				int numStrandVertices = int.Parse(stringTokens[3]);
 
+				// Used for corruption check
+				// If a strand or just one vertex of it is corrupted it will get ignored
 				bool corrupted = false;
 
 				// Read all vertices
 				for (int j = 0; j < numStrandVertices; j++)
 				{
+					// String tokens
 					string[] vertexData = hairLines[i+1].Split (' ');
 					
 					// Strand corrupted?
@@ -100,7 +100,14 @@ public class TressFXLoader : MonoBehaviour
 					
 					// Add to vertice list
 					verticeList.Add (vertexPosition);
-					strandIndices.Add (j);
+
+					// Build strand index for the current strand vertice
+					StrandIndex index = new StrandIndex();
+					index.hairId = hairId;
+					index.vertexId = j;
+					index.vertexCountInStrand = numStrandVertices;
+
+					strandIndices.Add (index);
 
 					i++;
 				}
@@ -115,11 +122,5 @@ public class TressFXLoader : MonoBehaviour
 			
 			i++;
 		}
-	}
-
-	private Color32 VertIndexToColor(int vertexIndex)
-	{
-		byte[] indexBytes = BitConverter.GetBytes(vertexIndex);
-		return new Color32(indexBytes[0], indexBytes[1], indexBytes[3], indexBytes[4]);
 	}
 }

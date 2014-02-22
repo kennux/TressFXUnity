@@ -12,10 +12,17 @@
 			#pragma geometry geom
  
             #include "UnityCG.cginc"
+
+			struct StrandIndex
+			{
+				int vertexId;
+				int hairId;
+				int vertexCountInStrand;
+			};
  
             //The buffer containing the points we want to draw.
             StructuredBuffer<float3> _VertexPositionBuffer;
-            StructuredBuffer<int> _StrandIndicesBuffer;
+            StructuredBuffer<StrandIndex> _StrandIndicesBuffer;
             uniform float4 _HairColor;
  
             //A simple input struct for our pixel shader step containing a position.
@@ -42,7 +49,7 @@
 			void geom (line ps_input input[2], inout LineStream<ps_input> outStream)
 			{
 				outStream.Append(input[0]);
-				if (_StrandIndicesBuffer[input[0].vertexIndex+1] == 0)
+				if (_StrandIndicesBuffer[input[0].vertexIndex+1].vertexId == 0)
 				{
 					outStream.RestartStrip();
 				}
@@ -52,6 +59,10 @@
             //Pixel function returns a solid color for each point.
             float4 frag (ps_input i) : COLOR
             {
+				/*if (_StrandIndicesBuffer[i.vertexIndex+1].vertexCountInStrand == 14)
+				{
+					return float4(1,0,0,1);
+				}*/
                 return _HairColor;
             }
  
