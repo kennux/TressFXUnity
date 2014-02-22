@@ -1,0 +1,19 @@
+﻿#pragma kernel FillWithRed
+
+// Configuration
+float3 windForce;
+float damping;
+ 
+RWStructuredBuffer<float3> b_InitialVertexPosition;
+RWStructuredBuffer<float3> b_LastVertexPosition;
+RWStructuredBuffer<float3> b_CurrentVertexPosition;
+
+RWStructuredBuffer<int> b_StrandIndices;
+
+float timeT;
+ 
+[numthreads(1,1,1)]
+void FillWithRed(uint3 dtid : SV_DispatchThreadID)
+{
+    b_CurrentVertexPosition[dtid.x] = b_InitialVertexPosition[dtid.x] + (float3(1,1,1) * sin(timeT) * (b_StrandIndices[dtid.x] / 10));
+} 
