@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 /// <summary>
 /// This class handles the rendering of the hairs.
@@ -22,6 +23,12 @@ public class TressFXRender : MonoBehaviour
 	/// This holds the hair color (_HairColor in shader) which will get passed to the rendering shader
 	/// </summary>
 	public Color HairColor;
+	
+	/// <summary>
+	/// Holds the time the renderer needed to render in milliseconds.
+	/// </summary>
+	[HideInInspector]
+	public float renderTime;
 
 	/// <summary>
 	/// Initializes the renderer.
@@ -44,7 +51,7 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void OnDestroy()
 	{
-		Object.DestroyImmediate(this.hairMaterial);
+		UnityEngine.Object.DestroyImmediate(this.hairMaterial);
 	}
 
 	/// <summary>
@@ -53,15 +60,19 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void OnRenderObject()
 	{
+		long ticks = DateTime.Now.Ticks;
+
 		// Hair material initialized?
 		if (this.hairMaterial != null)
 		{
 			this.hairMaterial.SetPass(0);
 			this.hairMaterial.SetColor ("_HairColor", this.HairColor);
 			this.hairMaterial.SetBuffer ("_VertexPositionBuffer", this.master.VertexPositionBuffer);
-			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.strandIndicesBuffer);
+			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.StrandIndicesBuffer);
 
 			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);
 		}
+
+		this.renderTime = ((float) (ticks - DateTime.Now.Ticks) / 10.0f) / 1000.0f;
 	}
 }

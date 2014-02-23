@@ -34,14 +34,15 @@ public class TressFX : MonoBehaviour
 	// They will index every vertex in the hair strands, so the first vertex will have the index 0, the last for ex. 11
 	// This way weighted animation / simulation can be done.
 	[HideInInspector]
-	public ComputeBuffer strandIndicesBuffer;
-	public ComputeBuffer strandIndicesIntBuffer;
+	public ComputeBuffer StrandIndicesBuffer;
 
 	/// <summary>
 	/// Holds the vertex count.
 	/// </summary>
 	[HideInInspector]
 	public int vertexCount;
+
+	public CapsuleCollider headCollider;
 	
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
@@ -55,20 +56,29 @@ public class TressFX : MonoBehaviour
 		this.InitialVertexPositionBuffer = new ComputeBuffer(vertices.Length, 12);
 		this.LastVertexPositionBuffer = new ComputeBuffer(vertices.Length, 12);
 		this.VertexPositionBuffer = new ComputeBuffer(vertices.Length, 12);
-		this.strandIndicesBuffer = new ComputeBuffer(strandIndices.Length, 12);
+		this.StrandIndicesBuffer = new ComputeBuffer(strandIndices.Length, 12);
 
 		this.InitialVertexPositionBuffer.SetData(vertices);
 		this.LastVertexPositionBuffer.SetData (vertices);
 		this.VertexPositionBuffer.SetData (vertices);
-		this.strandIndicesBuffer.SetData(strandIndices);
+		this.StrandIndicesBuffer.SetData(strandIndices);
 
 		this.vertexCount = vertices.Length;
+
+		// Generate headcollider
+		TressFXCapsuleCollider headCollider = new TressFXCapsuleCollider();
+
+		/*Vector3 topSphereCenter = this.headCollider.transform.localPosition + new Vector3(0, this.headCollider.radius / 2,0);
+		Vector3 bottomSphereCenter = this.headCollider.transform.localPosition - new Vector3(0, this.headCollider.radius / 2,0);*/
 		
+		headCollider.point1 = new Vector4(-0.095f, 92.000f, -9.899f, 26.5f); // new Vector4(topSphereCenter.x, topSphereCenter.y, topSphereCenter.z, this.headCollider.radius);
+		headCollider.point2 = new Vector4(-0.405f, 93.707f, 5.111f, 24.113f); // new Vector4(bottomSphereCenter.x, bottomSphereCenter.y, bottomSphereCenter.z, this.headCollider.radius*this.headCollider.radius);
+
 		TressFXSimulation simulation = this.gameObject.GetComponent<TressFXSimulation>();
 		if (simulation != null)
 		{
 			// Initialize Simulation
-			simulation.Initialize();
+			simulation.Initialize(headCollider);
 		}
 		
 		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();

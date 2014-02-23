@@ -4,6 +4,8 @@
     {
         Pass
         {
+        	Blend SrcAlpha OneMinusSrcAlpha // turn on alpha blending
+        
             CGPROGRAM
             #pragma target 5.0
  
@@ -15,7 +17,7 @@
 
 			struct StrandIndex
 			{
-				int vertexId;
+				int vertexInStrandId;
 				int hairId;
 				int vertexCountInStrand;
 			};
@@ -37,6 +39,8 @@
             ps_input vert (uint id : SV_VertexID)
             {
                 ps_input o;
+                
+                // Position transformation
                 float3 worldPos = _VertexPositionBuffer[id];
                 o.pos = mul (UNITY_MATRIX_VP, float4(worldPos,1.0f));
                 
@@ -49,7 +53,7 @@
 			void geom (line ps_input input[2], inout LineStream<ps_input> outStream)
 			{
 				outStream.Append(input[0]);
-				if (_StrandIndicesBuffer[input[0].vertexIndex+1].vertexId == 0)
+				if (_StrandIndicesBuffer[input[0].vertexIndex+1].vertexInStrandId == 0)
 				{
 					outStream.RestartStrip();
 				}
@@ -59,10 +63,6 @@
             //Pixel function returns a solid color for each point.
             float4 frag (ps_input i) : COLOR
             {
-				/*if (_StrandIndicesBuffer[i.vertexIndex+1].vertexCountInStrand == 14)
-				{
-					return float4(1,0,0,1);
-				}*/
                 return _HairColor;
             }
  

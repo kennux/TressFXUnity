@@ -6,7 +6,13 @@ using System.Collections;
 /// </summary>
 public struct StrandIndex
 {
-	public int vertexId;
+	public int vertexInStrandId;
 	public int hairId;
 	public int vertexCountInStrand;
+}
+
+public struct TressFXCapsuleCollider
+{
+	public Vector4 point1; // xyz = top sphere center, w = radius
+	public Vector4 point2; // xyz = bottom sphere center, w = radius * radius
 }

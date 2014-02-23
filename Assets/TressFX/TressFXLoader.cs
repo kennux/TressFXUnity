@@ -104,7 +104,7 @@ public class TressFXLoader : MonoBehaviour
 					// Build strand index for the current strand vertice
 					StrandIndex index = new StrandIndex();
 					index.hairId = hairId;
-					index.vertexId = j;
+					index.vertexInStrandId = j;
 					index.vertexCountInStrand = numStrandVertices;
 
 					strandIndices.Add (index);

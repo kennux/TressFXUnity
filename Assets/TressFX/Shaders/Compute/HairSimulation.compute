@@ -1,16 +1,28 @@
-﻿#pragma kernel WindSimluation
-#pragma kernel ShapeConstraints
+﻿#pragma kernel IntegrationAndGlobalShapeConstraints
+#pragma kernel LocalShapeConstraints
+#pragma kernel CollisionCheck
+
+#define THREAD_GROUP_SIZE 64
 
 struct StrandIndex
 {
-	int vertexId;
+	int vertexInStrandId;
 	int hairId;
 	int vertexCountInStrand;
+};
+
+
+struct TressFXCapsuleCollider
+{
+	float4 p1; // xyz = top sphere center, w = radius
+	float4 p2; // xyz = bottom sphere center, w = radius * radius
 };
 
 // Configuration
 float4 windForce;
 float damping;
+float globalShapeMatchingEffectiveRange;
+float stiffnessForGlobalShapeMatching;
  
 RWStructuredBuffer<float3> b_InitialVertexPosition;
 RWStructuredBuffer<float3> b_LastVertexPosition;
@@ -18,44 +30,214 @@ RWStructuredBuffer<float3> b_CurrentVertexPosition;
 
 RWStructuredBuffer<struct StrandIndex> b_StrandIndices;
 
+RWStructuredBuffer<struct TressFXCapsuleCollider> b_Colliders;
+
+RWStructuredBuffer<float2x3> debug;
 
 float timeT;
- 
+float timeStep;
+float4x4 HeadModelMatrix;
+float4x4 InverseHeadModelMatrix;
+float4x4 LastInverseHeadModelMatrix;
+
+// <-----------------------------------------> Helper functions for physics simulation <----------------------------------------->
+
 // /----------------------------------------------------------------------------------------
-// | WindSimulation Shader kernel
-// | =========================================
-// | This kernel will move the hairs by the passed windForce value.
+// | Uses Verlet integration to calculate the new position for the current time step
 // \----------------------------------------------------------------------------------------
-[numthreads(1,1,1)]
-void WindSimluation(uint3 dtid : SV_DispatchThreadID)
+float3 Integrate(float3 curPosition, float3 oldPosition, float3 initialPos, float3 force, float dampingCoeff = 1.0f)
+{  
+    float3 outputPos = curPosition;
+
+    // force.xyz += 9.81 * float3(0, -1.0f, 0);
+    outputPos.xyz = curPosition.xyz + (1.0 - dampingCoeff)*(curPosition.xyz - oldPosition.xyz) + force.xyz*timeStep*timeStep; 
+    
+    return outputPos;  
+}
+
+bool IsMovable(int vertexId)
 {
-	// Get Strand index
-	struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
-	
-	// Save last position
-	b_LastVertexPosition[dtid.x] = b_CurrentVertexPosition[dtid.x];
-	
-	// Generate new position
-    b_CurrentVertexPosition[dtid.x] = b_CurrentVertexPosition[dtid.x]  + (float3(1,0,0) * sin(timeT) * ((float)strandIndex.vertexId / (float)strandIndex.vertexCountInStrand));
-    // + ( (windForce.xyz) * sin(timeT) * (strandIndex.vertexId / strandIndex.vertexCountInStrand) );
+    if ( vertexId == 0 )
+        return false;
+    return true;      
+}
+
+
+
+//--------------------------------------------------------------------------------------
+// 
+//	CapsuleCollision
+//
+//  Moves the position based on collision with capsule
+//
+//--------------------------------------------------------------------------------------
+float3 CapsuleCollision(float4 curPosition, float4 oldPosition, TressFXCapsuleCollider cc, float friction = 0.4f)
+{
+	float3 newPos = curPosition.xyz;
+	const float radius = cc.p1.w;
+	const float radius2 = cc.p2.w;
+			
+	float3 segment = cc.p2.xyz - cc.p1.xyz;
+	float3 delta1 = curPosition.xyz - cc.p1.xyz;
+	float3 delta2 = cc.p2.xyz - curPosition.xyz;
+		
+	float dist1 = dot(delta1, segment);
+	float dist2 = dot(delta2, segment);
+		
+	// colliding with sphere 1
+	if ( dist1 < 0.f )
+	{
+		if ( dot(delta1, delta1) < radius2 )
+		{
+			float3 n = normalize(delta1);
+			newPos = radius * n + cc.p1.xyz;
+		}
+		return newPos;
+	}
+		
+	// colliding with sphere 2
+	if ( dist2 < 0.f )
+	{
+		if ( dot(delta2, delta2) < radius2 )
+		{
+			float3 n = normalize(-delta2);
+			newPos = radius * n + cc.p2.xyz;
+		}
+		return newPos;
+	}
+		
+	// colliding with middle cylinder
+	float3 x = (dist1 * cc.p2.xyz + dist2 * cc.p1.xyz) / (dist1 + dist2);
+	float3 delta = curPosition.xyz - x;
+		
+	if ( dot(delta, delta) < radius2 )
+	{
+		float3 n = normalize(delta);
+		float3 vec = curPosition.xyz - oldPosition.xyz;
+		float3 segN = normalize(segment);
+		float3 vecTangent = dot(vec, segN) * segN;
+		float3 vecNormal = vec - vecTangent;
+		newPos.xyz = oldPosition.xyz + friction * vecTangent + (vecNormal + radius * n - delta);
+	}
+	return newPos;
 }
 
 // /----------------------------------------------------------------------------------------
-// | ShapeConstraints Shader kernel
+// | Will multiply the given worldPosition with the InverseHeadModelMatrix.
+// \----------------------------------------------------------------------------------------
+float3 GetLocalPosition(float3 worldPosition)
+{
+	return mul(float4(worldPosition, 1.0f), InverseHeadModelMatrix).xyz;
+}
+
+// /----------------------------------------------------------------------------------------
+// | Will multiply the given worldPosition with the LastInverseHeadModelMatrix.
+// | When using this function keep in mind that the LastInverseHeadModelMatrix is the identity matrix in the first frame
+// \----------------------------------------------------------------------------------------
+float3 GetLocalPositionLast(float3 worldPosition)
+{
+	return mul(float4(worldPosition, 1.0f), LastInverseHeadModelMatrix).xyz;
+}
+
+// /----------------------------------------------------------------------------------------
+// | Will multiply the given localPosition with the HeadModelMatrix.
+// \----------------------------------------------------------------------------------------
+float3 GetWorldPosition(float3 localPosition)
+{
+	return mul(float4(localPosition, 1.0f), HeadModelMatrix).xyz;
+}
+
+void UpdateFinalVertexPositions(int vertexId, float3 oldPosition, float3 newPosition)
+{
+	b_LastVertexPosition[vertexId] = oldPosition;        
+	b_CurrentVertexPosition[vertexId] = newPosition;
+}
+
+// <-----------------------------------------> Kernel functions <----------------------------------------->
+ // /----------------------------------------------------------------------------------------
+// | PhysicsSimulation Shader kernel
 // | =========================================
-// | This kernel will move the hairs back to its initial position to make sure for example
-// | the first hair in strand (which would be physically bound to the the head) will not move away from it's position
+// | This kernel will move the hairs by the passed windForce value.
+// | It will also take care of the global shape constraints.
 // \----------------------------------------------------------------------------------------
 [numthreads(1,1,1)]
-void ShapeConstraints (uint3 dtid : SV_DispatchThreadID)
+void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex, uint3 dtid : SV_DispatchThreadID)
 {
 	// Get Strand index
-	/*struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
+	struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
+
+	// Skip simulation:
 	
-	float3 positionOffset = b_LastVertexPosition[dtid.x] - b_CurrentVertexPosition[dtid.x];
+    float3 oldPos = b_LastVertexPosition[dtid.x];
+    oldPos = GetWorldPosition(GetLocalPositionLast(oldPos));
+    float3 currentPos = b_CurrentVertexPosition[dtid.x];
+    float3 initialPos = GetWorldPosition(b_InitialVertexPosition[dtid.x]);
+    
+    float3 newPosition = currentPos;
+    
+	// Check if vertex is movable
+	if (IsMovable(strandIndex.vertexInStrandId))
+	{
+		// Generate new position
+	}
 	
-	// b_CurrentVertexPosition[dtid.x] = b_InitialVertexPosition[dtid.x];
+	// Global shape constraint
+    if ( stiffnessForGlobalShapeMatching > 0 && IsMovable(strandIndex.vertexInStrandId) &&
+    (float)strandIndex.vertexInStrandId > 1.0f - (globalShapeMatchingEffectiveRange * (float)strandIndex.vertexCountInStrand) )
+    {
+		float factor = stiffnessForGlobalShapeMatching;
+		float3 del = factor * (initialPos - newPosition).xyz;
+		newPosition.xyz += del;
+	}
+	else
+	{
+		newPosition = initialPos;
+	}
 	
-	// Do shape constraint
-	b_CurrentVertexPosition[dtid.x] = lerp(b_InitialVertexPosition[dtid.x], positionOffset, 0.01);*/
+	// Set final vertex positions
+	UpdateFinalVertexPositions(dtid.x, oldPos, newPosition);
+}
+
+// /----------------------------------------------------------------------------------------
+// | LocalShapeConstraints Shader kernel
+// | =========================================
+// | Currently not implemented!
+// \----------------------------------------------------------------------------------------
+[numthreads(1,1,1)]
+void LocalShapeConstraints (uint3 dtid : SV_DispatchThreadID)
+{
+
+}
+
+
+// /----------------------------------------------------------------------------------------
+// | CollisionCheck Shader kernel
+// | =========================================
+// | This kernel will check all vertices for collision with the headcollider.
+// | If the vertice collides with the collider it will jump to the next point on the collider's face.
+// \----------------------------------------------------------------------------------------
+[numthreads(1,1,1)]
+void CollisionCheck (uint3 dtid : SV_DispatchThreadID)
+{
+	if ( !IsMovable(dtid.x) )
+		return;
+	
+    float3 oldPos = GetLocalPositionLast(b_LastVertexPosition[dtid.x]);
+    float3 currentPos = GetLocalPosition(b_CurrentVertexPosition[dtid.x]);
+    
+    TressFXCapsuleCollider collider = b_Colliders[dtid.z];
+   	
+   	float3 lastPos = currentPos;
+   	
+    currentPos = GetWorldPosition(CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),collider, 0.4f));
+    
+    if (currentPos.x != lastPos.x || currentPos.y != lastPos.y || currentPos.z != lastPos.z)
+    {
+    	debug[0] = float2x3(currentPos.x, currentPos.y, currentPos.z,
+    						lastPos.x, lastPos.y, lastPos.z);
+    }
+    
+    // debug[dtid.x+1] = currentPos;
+    
+    UpdateFinalVertexPositions(dtid.x, oldPos, currentPos);
 }
