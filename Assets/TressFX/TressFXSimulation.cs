@@ -30,7 +30,6 @@ public class TressFXSimulation : MonoBehaviour
 
 	// Buffers
 	private ComputeBuffer colliderBuffer;
-	private ComputeBuffer debugBuffer;
 
 	/// <summary>
 	/// This loads the kernel ids from the compute buffer and also sets it's TressFX master.
@@ -51,8 +50,6 @@ public class TressFXSimulation : MonoBehaviour
 		// Initialize collision buffer
 		this.colliderBuffer = new ComputeBuffer(1, 32);
 		this.colliderBuffer.SetData(new TressFXCapsuleCollider[] { headCollider });
-
-		this.debugBuffer = new ComputeBuffer(this.master.vertexCount, 12 * 2);
 	}
 
 	/// <summary>
@@ -90,25 +87,11 @@ public class TressFXSimulation : MonoBehaviour
 		this.HairSimulationShader.SetBuffer(this.CollisionCheckKernelId, "b_Colliders", this.colliderBuffer);
 
 		this.SetStrandInfoBuffers(this.CollisionCheckKernelId);
-		this.HairSimulationShader.SetBuffer(this.CollisionCheckKernelId, "debug", this.debugBuffer);
-
-		TressFXCapsuleCollider[] c = new TressFXCapsuleCollider[1];
-		this.colliderBuffer.GetData(c);
 
 		// Dispatch collision check shader
 		this.HairSimulationShader.Dispatch(this.CollisionCheckKernelId, this.master.vertexCount, 1, 1);
-		
-		Vector3[] debug = new Vector3[this.master.vertexCount];
-		Vector3[] debug2 = new Vector3[this.master.vertexCount];
-		this.debugBuffer.GetData (debug);
-		this.master.VertexPositionBuffer.GetData(debug2);
 
-		if (debug2[0].x != 0)
-		{
-			int i = 0;
-		}
-
-		this.computationTime = ((float) (ticks - DateTime.Now.Ticks) / 10.0f) / 1000.0f;
+		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}
 
 	/// <summary>

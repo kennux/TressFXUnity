@@ -1,4 +1,4 @@
-﻿#pragma kernel IntegrationAndGlobalShapeConstraints
+#pragma kernel IntegrationAndGlobalShapeConstraints
 #pragma kernel LocalShapeConstraints
 #pragma kernel CollisionCheck
 
@@ -16,6 +16,13 @@ struct TressFXCapsuleCollider
 {
 	float4 p1; // xyz = top sphere center, w = radius
 	float4 p2; // xyz = bottom sphere center, w = radius * radius
+};
+
+
+struct TressFXSphereCollider
+{
+	float3 centerPos;
+	float radius;
 };
 
 // Configuration
@@ -222,22 +229,48 @@ void CollisionCheck (uint3 dtid : SV_DispatchThreadID)
 	if ( !IsMovable(dtid.x) )
 		return;
 	
-    float3 oldPos = GetLocalPositionLast(b_LastVertexPosition[dtid.x]);
-    float3 currentPos = GetLocalPosition(b_CurrentVertexPosition[dtid.x]);
+    float3 oldPos = b_LastVertexPosition[dtid.x];
+    float3 currentPos = b_CurrentVertexPosition[dtid.x];
     
     TressFXCapsuleCollider collider = b_Colliders[dtid.z];
-   	
-   	float3 lastPos = currentPos;
-   	
-    currentPos = GetWorldPosition(CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),collider, 0.4f));
     
-    if (currentPos.x != lastPos.x || currentPos.y != lastPos.y || currentPos.z != lastPos.z)
-    {
-    	debug[0] = float2x3(currentPos.x, currentPos.y, currentPos.z,
-    						lastPos.x, lastPos.y, lastPos.z);
-    }
+    // Collision 1
+    float3 centerSphere = collider.p1.xyz;
+    centerSphere = GetWorldPosition(centerSphere);
+    float radius = collider.p1.w;
+
+	TressFXCapsuleCollider cc;
+	cc.p1.xyz = centerSphere;
+	cc.p1.w = radius;
+	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+	cc.p2.w = radius*radius;
+   	
+    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
+	
+	// Collision 2
+    centerSphere = collider.p2.xyz;
+    centerSphere = GetWorldPosition(centerSphere);
+    radius = collider.p2.w;
     
-    // debug[dtid.x+1] = currentPos;
+	cc.p1.xyz = centerSphere;
+	cc.p1.w = radius;
+	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+	cc.p2.w = radius*radius;
+   	
+    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
+    
+    // Collision 3
+    centerSphere = float3(-0.072f, 68.548f, 10.561f);
+    centerSphere = GetWorldPosition(centerSphere);
+    radius = 25.500f;
+    
+	cc.p1.xyz = centerSphere;
+	cc.p1.w = radius;
+	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+	cc.p2.w = radius*radius;
+   	
+    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
+    oldPos = currentPos;
     
     UpdateFinalVertexPositions(dtid.x, oldPos, currentPos);
 }

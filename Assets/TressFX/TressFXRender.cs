@@ -73,6 +73,6 @@ public class TressFXRender : MonoBehaviour
 			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);
 		}
 
-		this.renderTime = ((float) (ticks - DateTime.Now.Ticks) / 10.0f) / 1000.0f;
+		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}
 }

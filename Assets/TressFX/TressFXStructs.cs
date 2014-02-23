@@ -11,8 +11,15 @@ public struct StrandIndex
 	public int vertexCountInStrand;
 }
 
+
 public struct TressFXCapsuleCollider
 {
-	public Vector4 point1; // xyz = top sphere center, w = radius
-	public Vector4 point2; // xyz = bottom sphere center, w = radius * radius
+	public Vector4 point1;
+	public Vector4 point2;
+}
+
+public struct TressFXSphereCollider
+{
+	public Vector3 centerPos;
+	public float radius;
 }
