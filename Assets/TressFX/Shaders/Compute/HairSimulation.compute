@@ -1,75 +1,158 @@
+#pragma kernel SkipSimulateHair
 #pragma kernel IntegrationAndGlobalShapeConstraints
 #pragma kernel LocalShapeConstraints
-#pragma kernel CollisionCheck
+#pragma kernel LengthConstraintsAndWind
+#pragma kernel CollisionAndTangents
+
+RWStructuredBuffer<float4> g_HairVertexPositions; 
+RWStructuredBuffer<float4> g_HairVertexPositionsPrev; 
+RWStructuredBuffer<float4> g_HairVertexTangents; 
+RWStructuredBuffer<float4> g_InitialHairPositions;
+RWStructuredBuffer<float4> g_GlobalRotations; 
+RWStructuredBuffer<float4> g_LocalRotations; 
+
+RWStructuredBuffer<int>		g_HairVerticesOffsetsSRV; 
+RWStructuredBuffer<float>	g_HairRestLengthSRV;
+RWStructuredBuffer<int>		g_HairStrandType; 
+RWStructuredBuffer<float3>	g_HairRefVecsInLocalFrame; 
+
+RWStructuredBuffer<uint3> debug;
+
+float4x4 g_ModelTransformForHead;
+float4x4 g_ModelPrevInvTransformForHead;
+float4 g_ModelRotateForHead; // quaternion
+
+float g_TimeStep;
+int numStrands;
 
 #define THREAD_GROUP_SIZE 64
 
-struct StrandIndex
-{
-	int vertexInStrandId;
-	int hairId;
-	int vertexCountInStrand;
-};
+groupshared float4 sharedPos[THREAD_GROUP_SIZE];
+groupshared float  sharedLength[THREAD_GROUP_SIZE];
 
+// -------------------------> FUNCTIONS <---------------------------
 
-struct TressFXCapsuleCollider
-{
-	float4 p1; // xyz = top sphere center, w = radius
-	float4 p2; // xyz = bottom sphere center, w = radius * radius
-};
+void UpdateFinalVertexPositions(float4 oldPosition, float4 newPosition, int globalVertexIndex, int localVertexIndex, int numVerticesInTheStrand)
+{ 
+	if ( localVertexIndex < numVerticesInTheStrand )
+	{
+		g_HairVertexPositionsPrev[globalVertexIndex] = oldPosition;        
+		g_HairVertexPositions[globalVertexIndex] = newPosition;
+	}
+}
 
-
-struct TressFXSphereCollider
-{
-	float3 centerPos;
-	float radius;
-};
-
-// Configuration
-float4 windForce;
-float damping;
-float globalShapeMatchingEffectiveRange;
-float stiffnessForGlobalShapeMatching;
- 
-RWStructuredBuffer<float3> b_InitialVertexPosition;
-RWStructuredBuffer<float3> b_LastVertexPosition;
-RWStructuredBuffer<float3> b_CurrentVertexPosition;
-
-RWStructuredBuffer<struct StrandIndex> b_StrandIndices;
-
-RWStructuredBuffer<struct TressFXCapsuleCollider> b_Colliders;
-
-RWStructuredBuffer<float2x3> debug;
-
-float timeT;
-float timeStep;
-float4x4 HeadModelMatrix;
-float4x4 InverseHeadModelMatrix;
-float4x4 LastInverseHeadModelMatrix;
-
-// <-----------------------------------------> Helper functions for physics simulation <----------------------------------------->
-
-// /----------------------------------------------------------------------------------------
-// | Uses Verlet integration to calculate the new position for the current time step
-// \----------------------------------------------------------------------------------------
-float3 Integrate(float3 curPosition, float3 oldPosition, float3 initialPos, float3 force, float dampingCoeff = 1.0f)
+//--------------------------------------------------------------------------------------
+// 
+//	Integrate
+//
+//  Uses Verlet integration to calculate the new position for the current time step
+//
+//--------------------------------------------------------------------------------------
+float4 Integrate(float4 curPosition, float4 oldPosition, float4 initialPos, float4 force, int globalVertexIndex, int localVertexIndex, int numVerticesInTheStrand, float dampingCoeff = 1.0f)
 {  
-    float3 outputPos = curPosition;
+    float4 outputPos = curPosition;
 
-    // force.xyz += 9.81 * float3(0, -1.0f, 0);
-    outputPos.xyz = curPosition.xyz + (1.0 - dampingCoeff)*(curPosition.xyz - oldPosition.xyz) + force.xyz*timeStep*timeStep; 
+    force.xyz += 9.82f * float3(0, -1.0f, 0);
+    outputPos.xyz = curPosition.xyz + (1.0 - dampingCoeff)*(curPosition.xyz - oldPosition.xyz) + force.xyz*g_TimeStep*g_TimeStep; 
     
     return outputPos;  
 }
 
-bool IsMovable(int vertexId)
+bool IsMovable(float4 particle)
 {
-    if ( vertexId == 0 )
-        return false;
-    return true;      
+    if ( particle.w > 0 )
+        return true;
+    return false;      
+}
+
+float2 ConstraintMultiplier(float4 particle0, float4 particle1)
+{
+    if (IsMovable(particle0)) 
+    {
+        if (IsMovable(particle1))
+            return float2(0.5, 0.5);
+        else
+            return float2(1, 0);
+    }
+    else 
+    {
+        if (IsMovable(particle1))
+            return float2(0, 1);
+        else
+            return float2(0, 0);
+    }    
+}
+
+float4 MakeQuaternion(float angle_radian, float3 axis)
+{
+    // create quaternion using angle and rotation axis
+    float4 quaternion;
+    float halfAngle = 0.5f * angle_radian;
+    float sinHalf = sin(halfAngle);
+
+    quaternion.w = cos(halfAngle);
+    quaternion.xyz = sinHalf * axis.xyz;
+
+    return quaternion;
+}
+
+float4 InverseQuaternion(float4 q)
+{
+    float lengthSqr = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
+
+    if ( lengthSqr < 0.001 )
+        return float4(0, 0, 0, 1.0f);
+
+    q.x = -q.x / lengthSqr;
+    q.y = -q.y / lengthSqr;
+    q.z = -q.z / lengthSqr;
+    q.w = q.w / lengthSqr;
+
+    return q;
+}
+
+float3 MultQuaternionAndVector(float4 q, float3 v)
+{
+    float3 uv, uuv;
+    float3 qvec = float3(q.x, q.y, q.z);
+    uv = cross(qvec, v);
+    uuv = cross(qvec, uv);
+    uv *= (2.0f * q.w);
+    uuv *= 2.0f;
+
+    return v + uv + uuv;
+}
+
+float4 MultQuaternionAndQuaternion(float4 qA, float4 qB)
+{
+    float4 q;
+
+    q.w = qA.w * qB.w - qA.x * qB.x - qA.y * qB.y - qA.z * qB.z;
+    q.x = qA.w * qB.x + qA.x * qB.w + qA.y * qB.z - qA.z * qB.y;
+    q.y = qA.w * qB.y + qA.y * qB.w + qA.z * qB.x - qA.x * qB.z;
+    q.z = qA.w * qB.z + qA.z * qB.w + qA.x * qB.y - qA.y * qB.x;
+    
+    return q;
+}
+
+void ApplyDistanceConstraint(inout float4 pos0, inout float4 pos1, float targetDistance, float stiffness = 1.0)
+{
+    float3 delta = pos1.xyz - pos0.xyz;
+    float distance = max(length(delta), 1e-7);
+    float stretching = 1 - targetDistance / distance;
+    delta = stretching * delta;
+    float2 multiplier = ConstraintMultiplier(pos0, pos1);
+    
+    pos0.xyz += multiplier[0] * delta * stiffness;
+    pos1.xyz -= multiplier[1] * delta * stiffness;
 }
 
 
+struct CollisionCapsule
+{
+	float4 p1; // xyz = position 1 of capsule, w = radius
+	float4 p2; // xyz = position 2 of capsule, w = radius * radius
+};
 
 //--------------------------------------------------------------------------------------
 // 
@@ -78,11 +161,14 @@ bool IsMovable(int vertexId)
 //  Moves the position based on collision with capsule
 //
 //--------------------------------------------------------------------------------------
-float3 CapsuleCollision(float4 curPosition, float4 oldPosition, TressFXCapsuleCollider cc, float friction = 0.4f)
+float3 CapsuleCollision(float4 curPosition, float4 oldPosition, CollisionCapsule cc, float friction = 0.4f)
 {
 	float3 newPos = curPosition.xyz;
 	const float radius = cc.p1.w;
 	const float radius2 = cc.p2.w;
+		
+	if ( !IsMovable(curPosition) )
+		return newPos;
 			
 	float3 segment = cc.p2.xyz - cc.p1.xyz;
 	float3 delta1 = curPosition.xyz - cc.p1.xyz;
@@ -129,148 +215,464 @@ float3 CapsuleCollision(float4 curPosition, float4 oldPosition, TressFXCapsuleCo
 	return newPos;
 }
 
-// /----------------------------------------------------------------------------------------
-// | Will multiply the given worldPosition with the InverseHeadModelMatrix.
-// \----------------------------------------------------------------------------------------
-float3 GetLocalPosition(float3 worldPosition)
-{
-	return mul(float4(worldPosition, 1.0f), InverseHeadModelMatrix).xyz;
-}
 
-// /----------------------------------------------------------------------------------------
-// | Will multiply the given worldPosition with the LastInverseHeadModelMatrix.
-// | When using this function keep in mind that the LastInverseHeadModelMatrix is the identity matrix in the first frame
-// \----------------------------------------------------------------------------------------
-float3 GetLocalPositionLast(float3 worldPosition)
-{
-	return mul(float4(worldPosition, 1.0f), LastInverseHeadModelMatrix).xyz;
-}
-
-// /----------------------------------------------------------------------------------------
-// | Will multiply the given localPosition with the HeadModelMatrix.
-// \----------------------------------------------------------------------------------------
-float3 GetWorldPosition(float3 localPosition)
-{
-	return mul(float4(localPosition, 1.0f), HeadModelMatrix).xyz;
-}
-
-void UpdateFinalVertexPositions(int vertexId, float3 oldPosition, float3 newPosition)
-{
-	b_LastVertexPosition[vertexId] = oldPosition;        
-	b_CurrentVertexPosition[vertexId] = newPosition;
-}
-
-// <-----------------------------------------> Kernel functions <----------------------------------------->
- // /----------------------------------------------------------------------------------------
-// | PhysicsSimulation Shader kernel
-// | =========================================
-// | This kernel will move the hairs by the passed windForce value.
-// | It will also take care of the global shape constraints.
-// \----------------------------------------------------------------------------------------
+// -----------------------------> KERNELS <-------------------------
+// Skip hair simulation kernel
 [numthreads(1,1,1)]
-void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex, uint3 dtid : SV_DispatchThreadID)
+void SkipSimulateHair (uint3 dtid : SV_DispatchThreadID)
 {
-	// Get Strand index
-	struct StrandIndex strandIndex = b_StrandIndices[dtid.x];
+	float4 oldPosition = g_HairVertexPositionsPrev[dtid.x];
+	float4 newPosition = g_HairVertexPositions[dtid.x];
+	
+	oldPosition.xyz = mul(float4( oldPosition.xyz, 1), g_ModelPrevInvTransformForHead).xyz;
+	oldPosition.xyz = mul(float4( oldPosition.xyz, 1), g_ModelTransformForHead).xyz;
+	
+	newPosition.xyz = mul(float4( newPosition.xyz, 1), g_ModelPrevInvTransformForHead).xyz;
+	newPosition.xyz = mul(float4( newPosition.xyz, 1), g_ModelTransformForHead).xyz;
+	
+	UpdateFinalVertexPositions(oldPosition, newPosition, dtid.x, 0, 2);
+}
 
-	// Skip simulation:
-	
-    float3 oldPos = b_LastVertexPosition[dtid.x];
-    oldPos = GetWorldPosition(GetLocalPositionLast(oldPos));
-    float3 currentPos = b_CurrentVertexPosition[dtid.x];
-    float3 initialPos = GetWorldPosition(b_InitialVertexPosition[dtid.x]);
-    
-    float3 newPosition = currentPos;
-    
-	// Check if vertex is movable
-	if (IsMovable(strandIndex.vertexInStrandId))
+//--------------------------------------------------------------------------------------
+// 
+//	IntegrationAndGlobalShapeConstraints
+//
+//  Compute shader to simulate the gravitational force with integration and to maintain the
+//  global shape constraints.
+//
+// One thread computes one vertex.
+//
+//--------------------------------------------------------------------------------------
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
+void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
+                  uint3 GId : SV_GroupID,
+                  uint3 DTid : SV_DispatchThreadID)
+{
+    int offset = 0;
+    int strandType = 0;
+
+	uint globalStrandIndex = 0;
+	uint localVertexIndex = 0; 
+	uint indexForSharedMem = GIndex;
+	uint numOfStrandsPerThreadGroup = 2;
+	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
+
+	if ( GIndex < maxPossibleVertsInStrand )
 	{
-		// Generate new position
-	}
-	
-	// Global shape constraint
-    if ( stiffnessForGlobalShapeMatching > 0 && IsMovable(strandIndex.vertexInStrandId) &&
-    (float)strandIndex.vertexInStrandId > 1.0f - (globalShapeMatchingEffectiveRange * (float)strandIndex.vertexCountInStrand) )
-    {
-		float factor = stiffnessForGlobalShapeMatching;
-		float3 del = factor * (initialPos - newPosition).xyz;
-		newPosition.xyz += del;
+		globalStrandIndex = 2 * GId.x;
+		localVertexIndex = GIndex;
 	}
 	else
 	{
-		newPosition = initialPos;
+		globalStrandIndex = 2 * GId.x + 1;
+		localVertexIndex = GIndex - maxPossibleVertsInStrand;
 	}
 	
-	// Set final vertex positions
-	UpdateFinalVertexPositions(dtid.x, oldPos, newPosition);
+    if( globalStrandIndex > 0 ) 
+    {
+        offset =  g_HairVerticesOffsetsSRV[globalStrandIndex - 1];
+    }
+
+	uint globalVertexIndex = offset + localVertexIndex;
+    uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV[globalStrandIndex] - offset;
+
+	if ( numVerticesInTheStrand > maxPossibleVertsInStrand )
+		numVerticesInTheStrand = maxPossibleVertsInStrand;
+
+    float4 currentPos = float4(0, 0, 0, 0); // position when this step starts. In other words, a position from the last step. 
+    float4 initialPos = float4(0, 0, 0, 0); // rest position
+
+    //------------------------------
+    // Copy data into shared memory 
+    //------------------------------
+    if (localVertexIndex < numVerticesInTheStrand )
+    {
+        currentPos = sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
+        initialPos = g_InitialHairPositions[globalVertexIndex];
+        initialPos.xyz = mul(float4( initialPos.xyz, 1), g_ModelTransformForHead).xyz;
+    }
+        
+    GroupMemoryBarrierWithGroupSync();
+
+    //-----------
+    // Integrate
+    //-----------
+    if ( localVertexIndex < numVerticesInTheStrand ) 
+    {  
+        float dampingCoeff = 0.5f;
+
+        float4 oldPos = g_HairVertexPositionsPrev[globalVertexIndex];
+        float4 force = float4(0, 0, 0, 0);
+
+        if ( IsMovable(currentPos) )  
+            sharedPos[indexForSharedMem] = Integrate(currentPos, oldPos, initialPos, force, globalVertexIndex, localVertexIndex, numVerticesInTheStrand, dampingCoeff); 
+        else
+            sharedPos[indexForSharedMem] = initialPos;
+    }    
+
+    //--------------------------------------------
+    // Global shaping matching style enforcement
+    //--------------------------------------------
+    float stiffnessForGlobalShapeMatching = 0.5f;
+    float globalShapeMatchingEffectiveRange = 0.6f;
+    
+    if ( stiffnessForGlobalShapeMatching > 0 && globalShapeMatchingEffectiveRange )
+    {
+        if ( IsMovable(sharedPos[indexForSharedMem]) )  
+        {
+            if ( (float)localVertexIndex < globalShapeMatchingEffectiveRange * (float)numVerticesInTheStrand )
+            {
+                float factor = stiffnessForGlobalShapeMatching;
+                float3 del = factor * (initialPos - sharedPos[indexForSharedMem]).xyz;
+                sharedPos[indexForSharedMem].xyz += del;
+            }
+        }
+    }
+
+	//---------------------------------------
+    // update global position buffers
+    //---------------------------------------
+    UpdateFinalVertexPositions(currentPos, sharedPos[indexForSharedMem], globalVertexIndex, localVertexIndex, numVerticesInTheStrand);
 }
 
-// /----------------------------------------------------------------------------------------
-// | LocalShapeConstraints Shader kernel
-// | =========================================
-// | Currently not implemented!
-// \----------------------------------------------------------------------------------------
-[numthreads(1,1,1)]
-void LocalShapeConstraints (uint3 dtid : SV_DispatchThreadID)
+//--------------------------------------------------------------------------------------
+// 
+//	LocalShapeConstraints
+//
+//  Compute shader to maintain the local shape constraints.
+//
+// One thread computes one strand.
+//
+//--------------------------------------------------------------------------------------
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
+void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
+                  uint3 GId : SV_GroupID,
+                  uint3 DTid : SV_DispatchThreadID)
 {
-
-}
-
-
-// /----------------------------------------------------------------------------------------
-// | CollisionCheck Shader kernel
-// | =========================================
-// | This kernel will check all vertices for collision with the headcollider.
-// | If the vertice collides with the collider it will jump to the next point on the collider's face.
-// \----------------------------------------------------------------------------------------
-[numthreads(1,1,1)]
-void CollisionCheck (uint3 dtid : SV_DispatchThreadID)
-{
-	if ( !IsMovable(dtid.x) )
+    uint globalStrandIndex = THREAD_GROUP_SIZE*GId.x;
+	globalStrandIndex += GIndex;
+	
+	if (globalStrandIndex > numStrands -1)
 		return;
-	
-    float3 oldPos = b_LastVertexPosition[dtid.x];
-    float3 currentPos = b_CurrentVertexPosition[dtid.x];
-    
-    TressFXCapsuleCollider collider = b_Colliders[dtid.z];
-    
-    // Collision 1
-    float3 centerSphere = collider.p1.xyz;
-    centerSphere = GetWorldPosition(centerSphere);
-    float radius = collider.p1.w;
 
-	TressFXCapsuleCollider cc;
-	cc.p1.xyz = centerSphere;
-	cc.p1.w = radius;
-	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-	cc.p2.w = radius*radius;
-   	
-    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
+	int offset = 0;
+    int strandType = 0;
+
+	if ( globalStrandIndex > 0 )
+    {
+        offset =  g_HairVerticesOffsetsSRV.Load(globalStrandIndex - 1);
+        strandType = g_HairStrandType.Load(globalStrandIndex);
+    }
+
+    uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV.Load(globalStrandIndex) - offset;
 	
-	// Collision 2
-    centerSphere = collider.p2.xyz;
-    centerSphere = GetWorldPosition(centerSphere);
-    radius = collider.p2.w;
+	/*if (numVerticesInTheStrand < 1)
+		return;*/
+
+	// stiffness for local shape constraints
+	float stiffnessForLocalShapeMatching = 0.7f;
+
+	// 1.0 for stiffness makes things unstable sometimes.
+	if ( stiffnessForLocalShapeMatching >= 0.95f )
+		stiffnessForLocalShapeMatching = 0.95f;
+
+	//--------------------------------------------
+	// Local shape constraint for bending/twisting 
+	//--------------------------------------------    
+	{
+		float4 pos_minus_one = g_HairVertexPositions[offset];
+		float4 pos = g_HairVertexPositions[offset+1];
+		float4 pos_plus_one;
+		uint globalVertexIndex = 0;
+		float4 rotGlobal = g_GlobalRotations[offset];
+	
+		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
+		{
+			globalVertexIndex = offset + localVertexIndex;
+			pos_plus_one = g_HairVertexPositions[globalVertexIndex+1];
+
+			//--------------------------------
+			// Update position i and i_plus_1
+			//--------------------------------
+			float4 rotGlobalWorld = MultQuaternionAndQuaternion(g_ModelRotateForHead, rotGlobal); 
+
+			float3 orgPos_i_plus_1_InLocalFrame_i = g_HairRefVecsInLocalFrame[globalVertexIndex+1];	
+			float3 orgPos_i_plus_1_InGlobalFrame = MultQuaternionAndVector(rotGlobalWorld, orgPos_i_plus_1_InLocalFrame_i) + pos.xyz;
+
+			float3 del = stiffnessForLocalShapeMatching * 0.5f * (orgPos_i_plus_1_InGlobalFrame - pos_plus_one.xyz).xyz;
+
+			if ( IsMovable(pos) )
+				pos.xyz -= del.xyz;
+
+			if ( IsMovable(pos_plus_one) ) 
+				pos_plus_one.xyz += del.xyz;
+	
+			//---------------------------
+			// Update local/global frames
+			//---------------------------
+			float4 invRotGlobalWorld = InverseQuaternion(rotGlobalWorld);	
+			float3 vec = normalize(pos_plus_one.xyz - pos.xyz);		
     
-	cc.p1.xyz = centerSphere;
-	cc.p1.w = radius;
-	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-	cc.p2.w = radius*radius;
-   	
-    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
+			float3 x_i_plus_1_frame_i = normalize(MultQuaternionAndVector(invRotGlobalWorld, vec));
+			float3 e = float3(1.0f, 0, 0);
+			float3 rotAxis = cross(e, x_i_plus_1_frame_i);
     
-    // Collision 3
-    centerSphere = float3(-0.072f, 68.548f, 10.561f);
-    centerSphere = GetWorldPosition(centerSphere);
-    radius = 25.500f;
+			if ( length(rotAxis) > 0.001 )
+			{
+				float angle_radian = acos(dot(e, x_i_plus_1_frame_i));
+				rotAxis = normalize(rotAxis);
+
+				float4 localRot = MakeQuaternion(angle_radian, rotAxis);
+				rotGlobal = MultQuaternionAndQuaternion(rotGlobal, localRot);
+			}	
+
+			g_HairVertexPositions[globalVertexIndex].xyz = pos.xyz;			
+			g_HairVertexPositions[globalVertexIndex+1].xyz = pos_plus_one.xyz;
+
+			pos_minus_one = pos;
+			pos = pos_plus_one;
+		}	  
+	}
+
+	return;
+}
+
+//--------------------------------------------------------------------------------------
+// 
+//	LengthConstriantsAndWind
+//
+//  Compute shader to move the vertex position based on wind and maintains the lenght constraints.
+//
+// One thread computes one vertex.
+//
+//--------------------------------------------------------------------------------------
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
+void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
+                  uint3 GId : SV_GroupID,
+                  uint3 DTid : SV_DispatchThreadID)
+{
+	int offset = 0;
+
+	uint globalStrandIndex = 0;
+	uint localVertexIndex = 0; 
+	uint indexForSharedMem = GIndex;
+	uint numOfStrandsPerThreadGroup = 2;
+	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
+	uint offsetForLocalVertexIndex = 0;
+
+	// With offsetForLocalVertexIndex, we can convert localVertexIndex into indexForSharedMem by doing below.
+	// indexForSharedMem = localVertexIndex + offsetForLocalVertexIndex
+
+	if ( GIndex < maxPossibleVertsInStrand )
+	{
+		globalStrandIndex = 2 * GId.x;
+		localVertexIndex = GIndex;
+		offsetForLocalVertexIndex = 0;
+	}
+	else
+	{
+		globalStrandIndex = 2 * GId.x + 1;
+		localVertexIndex = GIndex - maxPossibleVertsInStrand;
+		offsetForLocalVertexIndex = maxPossibleVertsInStrand;
+	}
+	
+    if( globalStrandIndex > 0 ) 
+    {
+        offset =  g_HairVerticesOffsetsSRV.Load(globalStrandIndex - 1);
+    }
+
+	uint globalVertexIndex = offset + localVertexIndex;
+    uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV.Load(globalStrandIndex) - offset;
+
+	if ( numVerticesInTheStrand > maxPossibleVertsInStrand )
+		numVerticesInTheStrand = maxPossibleVertsInStrand;
+				
+    //------------------------------
+    // Copy data into shared memory
+    //------------------------------
+    if (localVertexIndex < numVerticesInTheStrand )
+    {
+        sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
+        sharedLength[indexForSharedMem] = g_HairRestLengthSRV[globalVertexIndex]; 
+    }
+        
+    GroupMemoryBarrierWithGroupSync();
     
-	cc.p1.xyz = centerSphere;
-	cc.p1.w = radius;
-	cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-	cc.p2.w = radius*radius;
-   	
-    currentPos =  CapsuleCollision(float4(currentPos, 1),float4(oldPos, 1),cc);
-    oldPos = currentPos;
+	//------------
+	// Wind
+	//------------
+	// if ( g_Wind.x != 0 || g_Wind.y != 0 || g_Wind.z != 0 )
+	{  
+		float4 force = float4(0, 0, 0, 0);
+
+		float frame = 0.5f;
+
+		if ( localVertexIndex >= 2 && localVertexIndex < numVerticesInTheStrand-1 )
+		{
+			// combining four winds.
+			float a = ((float)(globalStrandIndex % 20))/20.0f;
+			float3	w = a*float4(1,1,0,0).xyz + (1.0f-a)*float4(1,1,0,0).xyz + a*float4(1,1,0,0).xyz + (1.0f-a)*float4(1,1,0,0).xyz;
+
+			float3 v = sharedPos[indexForSharedMem].xyz - sharedPos[indexForSharedMem+1].xyz;
+			float3 force = -cross(cross(v, w), v);
+			sharedPos[indexForSharedMem].xyz += force*g_TimeStep*g_TimeStep; 				
+		}
+	}
+
+	GroupMemoryBarrierWithGroupSync();
+
+	// We do the length constraints in LocalShapeConstraints. 
+	// Below code is vertex level parallel process and uses shared memory. So it is better than doing it in LocalShapeConstraints.
+	// But we need one directional position update to prevent exessive stretchy problem under fast head movement. 
+	//----------------------------
+	// Enforce length constraints
+	//----------------------------
+	uint a = floor(numVerticesInTheStrand/2.0f);
+	uint b = floor((numVerticesInTheStrand-1)/2.0f); 
+	
+	for ( int iterationE=0; iterationE < 2; iterationE++ )
+	{
+		uint sharedIndex = localVertexIndex*2 + offsetForLocalVertexIndex;
+
+		if( localVertexIndex < a )
+			ApplyDistanceConstraint(sharedPos[sharedIndex], sharedPos[sharedIndex+1], sharedLength[sharedIndex].x);
+
+		GroupMemoryBarrierWithGroupSync(); 
+
+		if( localVertexIndex < b )
+			ApplyDistanceConstraint(sharedPos[sharedIndex+1], sharedPos[sharedIndex+2], sharedLength[sharedIndex+1].x);
+
+		GroupMemoryBarrierWithGroupSync();
+	}
+
+	//---------------------------------------
+    // update global position buffers
+    //---------------------------------------
+	if ( localVertexIndex < numVerticesInTheStrand )
+	    g_HairVertexPositions[globalVertexIndex] = sharedPos[indexForSharedMem];
+	
+	return;
+}
+
+
+
+//--------------------------------------------------------------------------------------
+// 
+//	CollisionAndTangents
+//
+//  Compute shader to simulate collisions and calculate the new tangent after the vertex has moved.
+//
+// One thread computes one vertex.
+//
+//--------------------------------------------------------------------------------------
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
+void CollisionAndTangents(uint GIndex : SV_GroupIndex,
+                  uint3 GId : SV_GroupID,
+                  uint3 DTid : SV_DispatchThreadID)
+{
+	int offset = 0;
+
+	uint globalStrandIndex = 0;
+	uint localVertexIndex = 0; 
+	uint indexForSharedMem = GIndex;
+	uint numOfStrandsPerThreadGroup = 2;
+	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
+	
+	if ( GIndex < maxPossibleVertsInStrand )
+	{
+		globalStrandIndex = 2 * GId.x;
+		localVertexIndex = GIndex;
+	}
+	else
+	{
+		globalStrandIndex = 2 * GId.x + 1;
+		localVertexIndex = GIndex - maxPossibleVertsInStrand;
+	}
+	
+    if( globalStrandIndex > 0 ) 
+    {
+        offset =  g_HairVerticesOffsetsSRV.Load(globalStrandIndex - 1);
+    }
+
+	uint globalVertexIndex = offset + localVertexIndex;
+    uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV.Load(globalStrandIndex) - offset;
+
+	if ( numVerticesInTheStrand > maxPossibleVertsInStrand )
+		numVerticesInTheStrand = maxPossibleVertsInStrand;
+		
+    //------------------------------
+    // Copy data into shared memory
+    //------------------------------
+    if (localVertexIndex < numVerticesInTheStrand )
+    {
+        sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
+    }
+
+	float4 oldPos = g_HairVertexPositionsPrev[globalVertexIndex];
+        
+    GroupMemoryBarrierWithGroupSync();
+	
+    //-------------------------------------------------
+    // Collision handling hard-code collision shapes
+    //-------------------------------------------------
+    if ( true )
+    {
+        {
+            float3 centerSphere = float3(-0.095f, 92.000f, -9.899f);
+            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
+            float radius = 26.5f;
+
+			CollisionCapsule cc;
+			cc.p1.xyz = centerSphere;
+			cc.p1.w = radius;
+			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+			cc.p2.w = radius*radius;
+			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
+        }
+
+        {
+            float3 centerSphere = float3(-0.405f, 93.707f, 5.111f);
+            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
+            float radius = 24.113f;
+
+			CollisionCapsule cc;
+			cc.p1.xyz = centerSphere;
+			cc.p1.w = radius;
+			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+			cc.p2.w = radius*radius;
+			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
+        }
+
+        {
+            float3 centerSphere = float3(-0.072f, 68.548f, 10.561f);
+            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
+            float radius = 25.500f;
+
+			CollisionCapsule cc;
+			cc.p1.xyz = centerSphere;
+			cc.p1.w = radius;
+			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+			cc.p2.w =  radius*radius;
+			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync();
     
-    UpdateFinalVertexPositions(dtid.x, oldPos, currentPos);
+    //-------------------
+    // Compute tangent
+    //-------------------
+    /*if ( localVertexIndex < numVerticesInTheStrand-1  ) 
+    {
+        float3 tangent = sharedPos[indexForSharedMem+1].xyz - sharedPos[indexForSharedMem].xyz;
+        g_HairVertexTangents[globalVertexIndex].xyz = normalize(tangent);
+    }*/
+	
+    //---------------------------------------
+    // update global position buffers
+    //---------------------------------------
+	if ( localVertexIndex < numVerticesInTheStrand )
+	    g_HairVertexPositions[globalVertexIndex] = sharedPos[indexForSharedMem];
+	    
+	return;
 }

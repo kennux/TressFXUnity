@@ -46,11 +46,13 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\TressFX\Matrix3x3.cs" />
      <Compile Include="Assets\TressFX\TressFX.cs" />
      <Compile Include="Assets\TressFX\TressFXGui.cs" />
      <Compile Include="Assets\TressFX\TressFXLoader.cs" />
      <Compile Include="Assets\TressFX\TressFXRender.cs" />
      <Compile Include="Assets\TressFX\TressFXSimulation.cs" />
+     <Compile Include="Assets\TressFX\TressFXStrand.cs" />
      <Compile Include="Assets\TressFX\TressFXStructs.cs" />
      <Compile Include="Assets\Util\Parallel.cs" />
      <None Include="Assets\TressFX\Shaders\TEst.shader" />

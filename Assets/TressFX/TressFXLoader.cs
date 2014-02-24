@@ -21,21 +21,22 @@ public class TressFXLoader : MonoBehaviour
 	public void Start ()
 	{
 		// Declare lists for vertices and strand indices which will get passed to TressFX
-		List<Vector3> vertices = new List<Vector3>();
-		List<StrandIndex> strandIndices = new List<StrandIndex>();
+		List<TressFXStrand> strands = new List<TressFXStrand>();
+
+		int vertexCount = 0;
 
 		// Load all hair files
 		for (int i = 0; i < this.hairs.Length; i++)
 		{
 			Debug.Log ("Loading hair " + i);
-			this.LoadHairTFX(this.hairs[i].text, vertices, strandIndices, i);
+			vertexCount += this.LoadHairTFX(this.hairs[i].text, strands, i);
 		}
 
 		// Tress fx loaded!
 		TressFX tressFx = this.GetComponent<TressFX>();
 		if (tressFx != null)
 		{
-			tressFx.Initialize(vertices.ToArray(), strandIndices.ToArray());
+			tressFx.Initialize(strands.ToArray(), vertexCount);
 		}
 
 	}
@@ -48,8 +49,10 @@ public class TressFXLoader : MonoBehaviour
 	/// <param name="verticeList">The list where the vertices should go.</param>
 	/// <param name="strandIndices">The list where the StrandIndices should go.</param>
 	/// <param name="hairId">The HairID (starts at 0)</param>
-	private void LoadHairTFX(string hairData, List<Vector3> verticeList, List<StrandIndex> strandIndices, int hairId) //, List<Vector3> normalList)
+	private int LoadHairTFX(string hairData, List<TressFXStrand> strandsList, int hairId)// string hairData, List<Vector4> verticeList, List<StrandIndex> strandIndices, List<int> verticesOffsets, int hairId) //, List<Vector3> normalList)
 	{
+		int vertexCount = 0;
+
 		// Start parsing hair file
 		string[] hairLines = hairData.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
 		
@@ -76,12 +79,16 @@ public class TressFXLoader : MonoBehaviour
 				int strandNum = int.Parse(stringTokens[1]);
 				int numStrandVertices = int.Parse(stringTokens[3]);
 
+				TressFXStrand strand = new TressFXStrand(numStrandVertices);
+
 				// Used for corruption check
 				// If a strand or just one vertex of it is corrupted it will get ignored
 				bool corrupted = false;
 
+				int j;
+
 				// Read all vertices
-				for (int j = 0; j < numStrandVertices; j++)
+				for (j = 0; j < numStrandVertices; j++)
 				{
 					// String tokens
 					string[] vertexData = hairLines[i+1].Split (' ');
@@ -92,22 +99,21 @@ public class TressFXLoader : MonoBehaviour
 						corrupted = true;
 						break;
 					}
-					
-					// Cast/Parse vertex position from string to float
-					Vector3 vertexPosition = new Vector3(float.Parse(vertexData[0]),		// X
+
+					float invMass = 1.0f;
+
+					if (j == 0)
+					{
+						invMass = 0.0f;
+					}
+
+					// Set TressFX Strand data
+					strand.vertices[j] = new TressFXVertex();
+					strand.vertices[j].pos = new Vector3(float.Parse(vertexData[0]),		// X
 					                                     float.Parse(vertexData[1]),		// Y
 					                                     float.Parse(vertexData[2]));		// Z
-					
-					// Add to vertice list
-					verticeList.Add (vertexPosition);
-
-					// Build strand index for the current strand vertice
-					StrandIndex index = new StrandIndex();
-					index.hairId = hairId;
-					index.vertexInStrandId = j;
-					index.vertexCountInStrand = numStrandVertices;
-
-					strandIndices.Add (index);
+					strand.vertices[j].invMass = invMass;
+					strand.hairId = hairId;
 
 					i++;
 				}
@@ -118,9 +124,16 @@ public class TressFXLoader : MonoBehaviour
 					// Delete this strand
 					numStrands--;
 				}
+				else
+				{
+					vertexCount += j;
+					strandsList.Add (strand);
+				}
 			}
 			
 			i++;
 		}
+
+		return vertexCount;
 	}
 }

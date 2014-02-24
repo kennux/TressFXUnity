@@ -24,7 +24,7 @@
  
             //The buffer containing the points we want to draw.
             StructuredBuffer<float3> _VertexPositionBuffer;
-            StructuredBuffer<StrandIndex> _StrandIndicesBuffer;
+            StructuredBuffer<int> _StrandIndicesBuffer;
             uniform float4 _HairColor;
  
             //A simple input struct for our pixel shader step containing a position.
@@ -53,7 +53,7 @@
 			void geom (line ps_input input[2], inout LineStream<ps_input> outStream)
 			{
 				outStream.Append(input[0]);
-				if (_StrandIndicesBuffer[input[0].vertexIndex+1].vertexInStrandId == 0)
+				if (_StrandIndicesBuffer[input[0].vertexIndex+1] == 0)
 				{
 					outStream.RestartStrip();
 				}
