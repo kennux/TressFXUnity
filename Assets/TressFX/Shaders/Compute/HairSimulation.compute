@@ -4,6 +4,19 @@
 #pragma kernel LengthConstraintsAndWind
 #pragma kernel CollisionAndTangents
 
+// --------> Configuration values <--------
+
+float g_TimeStep;
+float GravityMagnitude;
+int NumStrands;
+int NumLengthConstraintIterations;
+float4 g_Wind;
+float4 g_Wind1;
+float4 g_Wind2;
+float4 g_Wind3;
+
+// --------> Configuration end <--------
+
 
 struct TressFXHairConfig
 {
@@ -26,15 +39,9 @@ RWStructuredBuffer<int>		g_HairStrandType;
 RWStructuredBuffer<float3>	g_HairRefVecsInLocalFrame; 
 RWStructuredBuffer<struct TressFXHairConfig> g_Config;
 
-
-RWStructuredBuffer<uint3> debug;
-
 float4x4 g_ModelTransformForHead;
 float4x4 g_ModelPrevInvTransformForHead;
 float4 g_ModelRotateForHead; // quaternion
-
-float g_TimeStep;
-int numStrands;
 
 #define THREAD_GROUP_SIZE 64
 
@@ -63,7 +70,7 @@ float4 Integrate(float4 curPosition, float4 oldPosition, float4 initialPos, floa
 {  
     float4 outputPos = curPosition;
 
-    force.xyz += 9.82f * float3(0, -1.0f, 0);
+    force.xyz += GravityMagnitude * float3(0, -1.0f, 0);
     outputPos.xyz = curPosition.xyz + (1.0 - dampingCoeff)*(curPosition.xyz - oldPosition.xyz) + force.xyz*g_TimeStep*g_TimeStep; 
     
     return outputPos;  
@@ -366,7 +373,7 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 	
     int strandType = 0;
 	
-	if (globalStrandIndex > numStrands - 1)
+	if (globalStrandIndex > NumStrands - 1)
 		return;
 
 	int offset = 0;
@@ -511,17 +518,17 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 	//------------
 	// Wind
 	//------------
-	// if ( g_Wind.x != 0 || g_Wind.y != 0 || g_Wind.z != 0 )
+	if ( g_Wind.x != 0 || g_Wind.y != 0 || g_Wind.z != 0 )
 	{  
 		float4 force = float4(0, 0, 0, 0);
 
-		float frame = 0.5f;
+		float frame = g_Wind.w;
 
 		if ( localVertexIndex >= 2 && localVertexIndex < numVerticesInTheStrand-1 )
 		{
 			// combining four winds.
 			float a = ((float)(globalStrandIndex % 20))/20.0f;
-			float3	w = a*float4(0,0,0,0).xyz + (1.0f-a)*float4(0,0,0,0).xyz + a*float4(0,0,0,0).xyz + (1.0f-a)*float4(0,0,0,0).xyz;
+			float3	w = a*g_Wind.xyz + (1.0f-a)*g_Wind1.xyz + a*g_Wind2.xyz + (1.0f-a)*g_Wind3.xyz;
 
 			float3 v = sharedPos[indexForSharedMem].xyz - sharedPos[indexForSharedMem+1].xyz;
 			float3 force = -cross(cross(v, w), v);
@@ -540,7 +547,7 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 	uint a = floor(numVerticesInTheStrand/2.0f);
 	uint b = floor((numVerticesInTheStrand-1)/2.0f); 
 	
-	for ( int iterationE=0; iterationE < 6; iterationE++ )
+	for ( int iterationE=0; iterationE < 2; iterationE++ )
 	{
 		uint sharedIndex = localVertexIndex*2 + offsetForLocalVertexIndex;
 

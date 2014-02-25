@@ -100,6 +100,7 @@ public class TressFXLoader : MonoBehaviour
 						break;
 					}
 
+					// invMass = 1 means strand movable, 0 means not movable
 					float invMass = 1.0f;
 
 					if (j == 0)
@@ -112,6 +113,8 @@ public class TressFXLoader : MonoBehaviour
 					strand.vertices[j].pos = new Vector3(float.Parse(vertexData[0]),		// X
 					                                     float.Parse(vertexData[1]),		// Y
 					                                     float.Parse(vertexData[2]));		// Z
+
+
 					strand.vertices[j].invMass = invMass;
 					strand.hairId = hairId;
 

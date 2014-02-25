@@ -8,6 +8,7 @@
         
             CGPROGRAM
             #pragma target 5.0
+            #pragma multi_compile_fwdbase
  
             #pragma vertex vert
             #pragma fragment frag
@@ -43,8 +44,10 @@
                 // Position transformation
                 float3 worldPos = _VertexPositionBuffer[id];
                 o.pos = mul (UNITY_MATRIX_VP, float4(worldPos,1.0f));
-                
                 o.vertexIndex = id;
+                
+                TRANSFER_VERTEX_TO_FRAGMENT(o);
+                
                 
                 return o;
             }

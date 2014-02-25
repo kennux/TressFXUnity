@@ -11,12 +11,6 @@ public struct StrandIndex
 	public int vertexCountInStrand;
 }
 
-public struct TressFXCapsuleCollider
-{
-	public Vector4 point1;
-	public Vector4 point2;
-}
-
 public struct TressFXHairConfig
 {
 	public float globalStiffness;

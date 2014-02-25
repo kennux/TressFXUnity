@@ -36,7 +36,7 @@ public class TressFX : MonoBehaviour
 	[HideInInspector]
 	public ComputeBuffer StrandIndicesBuffer;
 
-	// Strand indices buffer.
+	// Hair indices buffer.
 	// They will index every hair strand with it's hair id.
 	[HideInInspector]
 	public ComputeBuffer HairIndicesBuffer;
@@ -46,10 +46,12 @@ public class TressFX : MonoBehaviour
 	/// </summary>
 	[HideInInspector]
 	public int vertexCount;
+
+	/// <summary>
+	/// The hair strand count.
+	/// </summary>
 	[HideInInspector]
 	public int strandCount;
-
-	public CapsuleCollider headCollider;
 	
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
@@ -60,11 +62,12 @@ public class TressFX : MonoBehaviour
 	public void Initialize (TressFXStrand[] strands, int numVertices)
 	{
 		this.strandCount = strandCount;
-		
+
+		// Buffer resources
 		Vector4[] positionVectors = new Vector4[numVertices];
 		Vector3[] referenceVectors = new Vector3[numVertices];
 		float[] hairRestLengths = new float[numVertices];
-		int[] strandIndices = new int[numVertices];
+		int[] strandIndices = new int[numVertices]; 
 		int[] offsets = new int[strands.Length];
 		int[] hairIndices = new int[strands.Length];
 
@@ -76,6 +79,7 @@ public class TressFX : MonoBehaviour
 		TressFXTransform[] localTransforms = new TressFXTransform[numVertices];
 		TressFXTransform[] globalTransforms = new TressFXTransform[numVertices];
 
+		// Fill transforms and already some buffers
 		int index = 0;
 		for (int i = 0; i < strands.Length; i++)
 		{
@@ -83,7 +87,10 @@ public class TressFX : MonoBehaviour
 
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
+				// Load position of the strand
 				positionVectors[index] = strands[i].GetTressFXVector(j);
+
+				// Get rest length
 				if (j < strands[i].vertices.Length - 1)
 				{
 					hairRestLengths[index] = (strands[i].vertices[j].pos - strands[i].vertices[j+1].pos).magnitude;
@@ -99,10 +106,12 @@ public class TressFX : MonoBehaviour
 				strands[i].localTransforms[j] = localTransforms[index];
 				strands[i].globalTransforms[j] = globalTransforms[index];
 
+				// Set strand indices currently used for cutting linestrips by a geometry shader
 				strandIndices[index] = j;
 				index++;
 			}
 
+			// Set strand offsets
 			offsets[i] = index;
 		}
 
@@ -162,7 +171,7 @@ public class TressFX : MonoBehaviour
 				else
 				{
 					rotAxis.Normalize();
-					Quaternion rot = TressFXUtil.QuaternionFromAngleAxis(angle, rotAxis); // new Quaternion(rotAxis.x, rotAxis.y, rotAxis.z, angle);
+					Quaternion rot = TressFXUtil.QuaternionFromAngleAxis(angle, rotAxis);
 					localRotations[i] = rot;
 				}
 
@@ -187,33 +196,34 @@ public class TressFX : MonoBehaviour
 		this.HairIndicesBuffer = new ComputeBuffer(strands.Length, 4);
 
 		this.InitialVertexPositionBuffer.SetData(positionVectors);
-		this.LastVertexPositionBuffer.SetData (positionVectors);
-		this.VertexPositionBuffer.SetData (positionVectors);
 		this.StrandIndicesBuffer.SetData(strandIndices);
 		this.HairIndicesBuffer.SetData(hairIndices);
 
 		this.vertexCount = numVertices;
 		this.strandCount = strands.Length;
 
-		// Generate headcollider
-		TressFXCapsuleCollider headCollider = new TressFXCapsuleCollider();
-		
-		headCollider.point1 = new Vector4(-0.095f, 92.000f, -9.899f, 26.5f);
-		headCollider.point2 = new Vector4(-0.405f, 93.707f, 5.111f, 24.113f);
-
+		// Initialize simulation if existing
 		TressFXSimulation simulation = this.gameObject.GetComponent<TressFXSimulation>();
 		if (simulation != null)
 		{
-			// Initialize Simulation
-			simulation.Initialize(headCollider, hairRestLengths, referenceVectors, offsets, localRotations, globalRotations);
+			simulation.Initialize(hairRestLengths, referenceVectors, offsets, localRotations, globalRotations);
 		}
 		
+		// Initialize Rendering if existing
 		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
 		if (render != null)
 		{
-			// Initialize Rendering
 			render.Initialize();
 		}
+
+		// Transform vertices
+		for (int i = 0; i < positionVectors.Length; i++)
+		{
+			positionVectors[i] = this.transform.TransformPoint(positionVectors[i]);
+		}
+		
+		this.LastVertexPositionBuffer.SetData (positionVectors);
+		this.VertexPositionBuffer.SetData (positionVectors);
 
 		Debug.Log ("TressFX Loaded! Hair vertices: " + this.vertexCount);
 	}

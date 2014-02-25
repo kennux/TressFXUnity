@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class TressFXUtil
 {
+	/// <summary>
+	/// Quaternions from angle radian axis.
+	/// </summary>
+	/// <returns>Quaternion</returns>
+	/// <param name="angle_radian">Angle_radian.</param>
+	/// <param name="axis">Axis.</param>
 	public static Quaternion QuaternionFromAngleAxis(float angle_radian, Vector3 axis)
 	{
 		Quaternion ret = new Quaternion();
@@ -22,7 +28,7 @@ public class TressFXUtil
 
 /// <summary>
 /// Matrix3x3 implementation.
-/// Adaptive to unity's Matrix4x4.
+/// Gets used for calculating 
 /// </summary>
 public class Matrix3x3
 {
@@ -105,6 +111,7 @@ public class Matrix3x3
 	
 	/// <summary>
 	/// Calculates a quaternion with this matrix as rotation matrix
+	/// TODO: Rewrite!
 	/// </summary>
 	/// <returns>The quaternion.</returns>
 	public Quaternion ToQuaternion()
@@ -135,7 +142,6 @@ public class Matrix3x3
 				i = 2;
 			int j = s_iNext[i];
 			int k = s_iNext[j];
-			/*float[] apkQuat = new float[]{ quaternion.x, quaternion.y, quaternion.z };*/
 			
 			fRoot = Mathf.Sqrt(this.matrixData[i,i]-this.matrixData[j,j]-this.matrixData[k,k] + 1.0f);
 			// this.QuaternionHelper(i, ref quaternion, 0.5f*fRoot);
@@ -187,24 +193,6 @@ public class Matrix3x3
 		}
 		
 		return quaternion;
-	}
-
-	private void QuaternionHelper(int index, ref Quaternion quaternion, float val)
-	{
-		switch (index)
-		{
-		case 0:
-			quaternion.x = val;
-			break;
-
-		case 1:
-			quaternion.y = val;
-			break;
-
-		case 2:
-			quaternion.z = val;
-			break;
-		}
 	}
 
 	/// <summary>

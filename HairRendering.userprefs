@@ -2,15 +2,14 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\Compute\HairSimulation.compute">
     <Files>
-      <File FileName="Assets\TressFX\TressFX.cs" Line="141" Column="46" />
-      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="178" Column="3" />
-      <File FileName="Assets\TressFX\TressFXUtil.cs" Line="7" Column="50" />
-      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="26" Column="52" />
-      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="38" Column="14" />
-      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="21" Column="22" />
-      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="543" Column="40" />
-      <File FileName="Assets\TressFX\TressFXStructs.cs" Line="25" Column="23" />
-      <File FileName="Assets\TressFX\TressFXGui.cs" Line="51" Column="1" />
+      <File FileName="Assets\TressFX\TressFX.cs" Line="134" Column="6" />
+      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="115" Column="77" />
+      <File FileName="Assets\TressFX\TressFXRender.cs" Line="31" Column="26" />
+      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="118" Column="3" />
+      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="42" Column="26" />
+      <File FileName="Assets\TressFX\TressFXStructs.cs" Line="12" Column="2" />
+      <File FileName="Assets\TressFX\TressFXUtil.cs" Line="10" Column="25" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="548" Column="51" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
