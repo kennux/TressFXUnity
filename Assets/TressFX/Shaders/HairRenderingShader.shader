@@ -46,9 +46,6 @@
                 o.pos = mul (UNITY_MATRIX_VP, float4(worldPos,1.0f));
                 o.vertexIndex = id;
                 
-                TRANSFER_VERTEX_TO_FRAGMENT(o);
-                
-                
                 return o;
             }
 

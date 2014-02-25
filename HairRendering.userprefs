@@ -1,15 +1,16 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\Compute\HairSimulation.compute">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\HairRenderingShader.shader">
     <Files>
-      <File FileName="Assets\TressFX\TressFX.cs" Line="134" Column="6" />
-      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="115" Column="77" />
-      <File FileName="Assets\TressFX\TressFXRender.cs" Line="31" Column="26" />
-      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="118" Column="3" />
-      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="42" Column="26" />
-      <File FileName="Assets\TressFX\TressFXStructs.cs" Line="12" Column="2" />
-      <File FileName="Assets\TressFX\TressFXUtil.cs" Line="10" Column="25" />
-      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="548" Column="51" />
+      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="107" Column="141" />
+      <File FileName="Assets\TressFX\TressFX.cs" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\TressFXRender.cs" Line="68" Column="34" />
+      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\TressFXStructs.cs" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\TressFXUtil.cs" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="1" Column="1" />
+      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="47" Column="36" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -17,9 +18,7 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="TressFX" expanded="True">
               <Node name="Shaders" expanded="True">
-                <Node name="Compute" expanded="True">
-                  <Node name="HairSimulation.compute" selected="True" />
-                </Node>
+                <Node name="HairRenderingShader.shader" selected="True" />
               </Node>
             </Node>
           </Node>
