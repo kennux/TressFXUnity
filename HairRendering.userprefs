@@ -1,17 +1,51 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\TressFX.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\Compute\HairSimulation.compute">
     <Files>
-      <File FileName="Assets\TressFX\TressFX.cs" Line="128" Column="37" />
-      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="53" Column="3" />
-      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="107" Column="36" />
-      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="1" Column="1" />
-      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="1" Column="1" />
-      <File FileName="Assets\TressFX\Matrix3x3.cs" Line="10" Column="15" />
+      <File FileName="Assets\TressFX\TressFX.cs" Line="141" Column="46" />
+      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="178" Column="3" />
+      <File FileName="Assets\TressFX\TressFXUtil.cs" Line="7" Column="50" />
+      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="26" Column="52" />
+      <File FileName="Assets\TressFX\TressFXStrand.cs" Line="38" Column="14" />
+      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="21" Column="22" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="543" Column="40" />
+      <File FileName="Assets\TressFX\TressFXStructs.cs" Line="25" Column="23" />
+      <File FileName="Assets\TressFX\TressFXGui.cs" Line="51" Column="1" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Assembly-CSharp" expanded="True">
+            <Node name="TressFX" expanded="True">
+              <Node name="Shaders" expanded="True">
+                <Node name="Compute" expanded="True">
+                  <Node name="HairSimulation.compute" selected="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State>
+          <Value>positionVectors</Value>
+          <Value>referenceVectors</Value>
+          <Value>hairRestLengths</Value>
+          <Value>strandIndices</Value>
+          <Value>localRotations</Value>
+          <Value>globalRotations</Value>
+          <Value>referenceVectors</Value>
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
+    <Watch file="Assets\TressFX\TressFX.cs" line="77" offsetX="988" offsetY="1292" expression="hairRestLengths" liveUpdate="False" />
+  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
 </Properties>

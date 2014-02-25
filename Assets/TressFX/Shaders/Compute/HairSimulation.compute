@@ -4,6 +4,15 @@
 #pragma kernel LengthConstraintsAndWind
 #pragma kernel CollisionAndTangents
 
+
+struct TressFXHairConfig
+{
+	float globalStiffness;
+	float globalStiffnessMatchingRange;
+	float localStiffness;
+	float damping;
+};
+
 RWStructuredBuffer<float4> g_HairVertexPositions; 
 RWStructuredBuffer<float4> g_HairVertexPositionsPrev; 
 RWStructuredBuffer<float4> g_HairVertexTangents; 
@@ -15,6 +24,8 @@ RWStructuredBuffer<int>		g_HairVerticesOffsetsSRV;
 RWStructuredBuffer<float>	g_HairRestLengthSRV;
 RWStructuredBuffer<int>		g_HairStrandType; 
 RWStructuredBuffer<float3>	g_HairRefVecsInLocalFrame; 
+RWStructuredBuffer<struct TressFXHairConfig> g_Config;
+
 
 RWStructuredBuffer<uint3> debug;
 
@@ -271,6 +282,7 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     if( globalStrandIndex > 0 ) 
     {
         offset =  g_HairVerticesOffsetsSRV[globalStrandIndex - 1];
+        strandType = g_HairStrandType.Load(globalStrandIndex);
     }
 
 	uint globalVertexIndex = offset + localVertexIndex;
@@ -299,7 +311,7 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     //-----------
     if ( localVertexIndex < numVerticesInTheStrand ) 
     {  
-        float dampingCoeff = 0.5f;
+        float dampingCoeff = g_Config[strandType].damping;
 
         float4 oldPos = g_HairVertexPositionsPrev[globalVertexIndex];
         float4 force = float4(0, 0, 0, 0);
@@ -313,8 +325,8 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     //--------------------------------------------
     // Global shaping matching style enforcement
     //--------------------------------------------
-    float stiffnessForGlobalShapeMatching = 0.5f;
-    float globalShapeMatchingEffectiveRange = 0.6f;
+    float stiffnessForGlobalShapeMatching = g_Config[strandType].globalStiffness;
+    float globalShapeMatchingEffectiveRange = g_Config[strandType].globalStiffnessMatchingRange;
     
     if ( stiffnessForGlobalShapeMatching > 0 && globalShapeMatchingEffectiveRange )
     {
@@ -352,11 +364,12 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
     uint globalStrandIndex = THREAD_GROUP_SIZE*GId.x;
 	globalStrandIndex += GIndex;
 	
-	if (globalStrandIndex > numStrands -1)
+    int strandType = 0;
+	
+	if (globalStrandIndex > numStrands - 1)
 		return;
 
 	int offset = 0;
-    int strandType = 0;
 
 	if ( globalStrandIndex > 0 )
     {
@@ -365,12 +378,9 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
     }
 
     uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV.Load(globalStrandIndex) - offset;
-	
-	/*if (numVerticesInTheStrand < 1)
-		return;*/
 
 	// stiffness for local shape constraints
-	float stiffnessForLocalShapeMatching = 0.7f;
+	float stiffnessForLocalShapeMatching = g_Config[strandType].localStiffness;
 
 	// 1.0 for stiffness makes things unstable sometimes.
 	if ( stiffnessForLocalShapeMatching >= 0.95f )
@@ -511,7 +521,7 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 		{
 			// combining four winds.
 			float a = ((float)(globalStrandIndex % 20))/20.0f;
-			float3	w = a*float4(1,1,0,0).xyz + (1.0f-a)*float4(1,1,0,0).xyz + a*float4(1,1,0,0).xyz + (1.0f-a)*float4(1,1,0,0).xyz;
+			float3	w = a*float4(0,0,0,0).xyz + (1.0f-a)*float4(0,0,0,0).xyz + a*float4(0,0,0,0).xyz + (1.0f-a)*float4(0,0,0,0).xyz;
 
 			float3 v = sharedPos[indexForSharedMem].xyz - sharedPos[indexForSharedMem+1].xyz;
 			float3 force = -cross(cross(v, w), v);
@@ -530,7 +540,7 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 	uint a = floor(numVerticesInTheStrand/2.0f);
 	uint b = floor((numVerticesInTheStrand-1)/2.0f); 
 	
-	for ( int iterationE=0; iterationE < 2; iterationE++ )
+	for ( int iterationE=0; iterationE < 6; iterationE++ )
 	{
 		uint sharedIndex = localVertexIndex*2 + offsetForLocalVertexIndex;
 

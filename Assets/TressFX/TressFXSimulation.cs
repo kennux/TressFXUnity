@@ -19,11 +19,6 @@ public class TressFXSimulation : MonoBehaviour
 	[HideInInspector]
 	public float computationTime;
 
-	// Configuration
-	public float stiffnessForGlobalShapeMatching = 0.8f;
-	public float globalShapeMatchingEffectiveRange = 0.5f;
-	public float damping = 0.5f;
-
 	// Kernel ID's
 	private int IntegrationAndGlobalShapeConstraintsKernelId;
 	private int LocalShapeConstraintsKernelId;
@@ -38,14 +33,22 @@ public class TressFXSimulation : MonoBehaviour
 	private ComputeBuffer localRotationBuffer;
 	private ComputeBuffer referenceBuffer;
 	private ComputeBuffer verticeOffsetBuffer;
+	private ComputeBuffer configBuffer;
 	private ComputeBuffer debug;
+
+	// Config
+	public float[] globalStiffness;
+	public float[] globalStiffnessMatchingRange;
+	public float[] localStiffness;
+	public float[] damping;
 
 	private ComputeBuffer hairStrandVerticeNums;
 
 	/// <summary>
 	/// This loads the kernel ids from the compute buffer and also sets it's TressFX master.
 	/// </summary>
-	public void Initialize(TressFXCapsuleCollider headCollider, float[] hairRestLengths, Vector3[] referenceVectors, int[] verticesOffsets)
+	public void Initialize(TressFXCapsuleCollider headCollider, float[] hairRestLengths, Vector3[] referenceVectors, int[] verticesOffsets,
+	                       Quaternion[] localRotations, Quaternion[] globalRotations)
 	{
 		this.master = this.GetComponent<TressFX>();
 		if (this.master == null)
@@ -71,14 +74,9 @@ public class TressFXSimulation : MonoBehaviour
 		// Set rotation buffers
 		this.globalRotationBuffer = new ComputeBuffer(this.master.vertexCount, 16);
 		this.localRotationBuffer = new ComputeBuffer(this.master.vertexCount, 16);
-		Quaternion[] rotations = new Quaternion[this.master.vertexCount];
 
-		// Fill with identity quaternions
-		for (int i = 0; i < rotations.Length; i++)
-			rotations[i] = Quaternion.identity;
-
-		this.globalRotationBuffer.SetData(rotations);
-		this.localRotationBuffer.SetData(rotations);
+		this.globalRotationBuffer.SetData(globalRotations);
+		this.localRotationBuffer.SetData(localRotations);
 
 		// Set reference buffers
 		this.referenceBuffer = new ComputeBuffer(this.master.vertexCount, 12);
@@ -87,7 +85,22 @@ public class TressFXSimulation : MonoBehaviour
 		// Set offset buffer
 		this.verticeOffsetBuffer = new ComputeBuffer(this.master.strandCount, 4);
 		this.verticeOffsetBuffer.SetData (verticesOffsets);
-		
+
+		// Generate config buffer
+		TressFXHairConfig[] hairConfig = new TressFXHairConfig[this.globalStiffness.Length];
+
+		for (int i = 0; i < this.globalStiffness.Length; i++)
+		{
+			hairConfig[i] = new TressFXHairConfig();
+			hairConfig[i].globalStiffness = this.globalStiffness[i];
+			hairConfig[i].globalStiffnessMatchingRange = this.globalStiffnessMatchingRange[i];
+			hairConfig[i].localStiffness = this.localStiffness[i];
+			hairConfig[i].damping = this.damping[i];
+		}
+
+		this.configBuffer = new ComputeBuffer(hairConfig.Length, 16);
+		this.configBuffer.SetData(hairConfig);
+
 		this.debug = new ComputeBuffer(this.master.vertexCount, 12);
 		
 		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(Matrix4x4.identity.inverse));
@@ -96,15 +109,15 @@ public class TressFXSimulation : MonoBehaviour
 	/// <summary>
 	/// This functions dispatches the compute shader functions to simulate the hair behaviour
 	/// </summary>
-	public void Update()
+	public void LateUpdate()
 	{
 		long ticks = DateTime.Now.Ticks;
 
 		this.SetResources();
 		this.DispatchKernels();
 
-		int[] debugVectors = new int[this.master.vertexCount*3];
-		this.debug.GetData(debugVectors);
+		/*int[] debugVectors = new int[this.master.vertexCount*3];
+		this.debug.GetData(debugVectors);*/
 		
 		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 		
@@ -127,8 +140,6 @@ public class TressFXSimulation : MonoBehaviour
 		// Set model rotation quaternion
 		this.HairSimulationShader.SetFloats ("g_ModelRotateForHead", this.QuaternionToFloatArray(this.transform.rotation));
 
-		// Set vertice offset buffer
-		this.HairSimulationShader.SetBuffer (this.IntegrationAndGlobalShapeConstraintsKernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
 		this.HairSimulationShader.SetBuffer (this.LocalShapeConstraintsKernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
 		this.HairSimulationShader.SetBuffer (this.LengthConstraintsAndWindKernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
 		this.HairSimulationShader.SetBuffer (this.CollisionAndTangentsKernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
@@ -163,8 +174,17 @@ public class TressFXSimulation : MonoBehaviour
 		// this.HairSimulationShader.Dispatch(this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
 		this.HairSimulationShader.Dispatch(this.IntegrationAndGlobalShapeConstraintsKernelId, this.master.strandCount / 2, 1, 1);
 		this.HairSimulationShader.Dispatch(this.LocalShapeConstraintsKernelId, Mathf.CeilToInt((float) this.master.strandCount / 64.0f), 1, 1);
-		// this.HairSimulationShader.Dispatch(this.LengthConstraintsAndWindKernelId, this.master.strandCount / 2, 1, 1);
+		this.HairSimulationShader.Dispatch(this.LengthConstraintsAndWindKernelId, this.master.strandCount / 2, 1, 1);
 		this.HairSimulationShader.Dispatch(this.CollisionAndTangentsKernelId, this.master.strandCount / 2, 1, 1);
+	}
+	 
+	private void DispatchIterative(int kernelId, int threadsX, int threadsY, int threadsZ, int iterations)
+	{
+		for (int i = 0; i < iterations; i++)
+		{
+			this.SetResources();
+			this.HairSimulationShader.Dispatch(kernelId, threadsX, threadsY, threadsZ);
+		}
 	}
 
 	/// <summary>
@@ -213,5 +233,10 @@ public class TressFXSimulation : MonoBehaviour
 		this.HairSimulationShader.SetBuffer(kernelId, "g_InitialHairPositions", this.master.InitialVertexPositionBuffer);
 		this.HairSimulationShader.SetBuffer(kernelId, "g_HairVertexPositions", this.master.VertexPositionBuffer);
 		this.HairSimulationShader.SetBuffer(kernelId, "g_HairVertexPositionsPrev", this.master.LastVertexPositionBuffer);
+
+		// Set vertice offset buffer
+		this.HairSimulationShader.SetBuffer (kernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
+		this.HairSimulationShader.SetBuffer (kernelId, "g_HairStrandType", this.master.HairIndicesBuffer);
+		this.HairSimulationShader.SetBuffer (kernelId, "g_Config", this.configBuffer);
 	}
 }

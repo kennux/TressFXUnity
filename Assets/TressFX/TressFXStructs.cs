@@ -16,3 +16,11 @@ public struct TressFXCapsuleCollider
 	public Vector4 point1;
 	public Vector4 point2;
 }
+
+public struct TressFXHairConfig
+{
+	public float globalStiffness;
+	public float globalStiffnessMatchingRange;
+	public float localStiffness;
+	public float damping;
+}

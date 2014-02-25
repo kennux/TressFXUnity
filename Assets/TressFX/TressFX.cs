@@ -29,12 +29,17 @@ public class TressFX : MonoBehaviour
 	/// </summary>
 	[HideInInspector]
 	public ComputeBuffer VertexPositionBuffer;
-
+	
 	// Strand indices buffer.
 	// They will index every vertex in the hair strands, so the first vertex will have the index 0, the last for ex. 11
 	// This way weighted animation / simulation can be done.
 	[HideInInspector]
 	public ComputeBuffer StrandIndicesBuffer;
+
+	// Strand indices buffer.
+	// They will index every hair strand with it's hair id.
+	[HideInInspector]
+	public ComputeBuffer HairIndicesBuffer;
 
 	/// <summary>
 	/// Holds the vertex count.
@@ -61,13 +66,21 @@ public class TressFX : MonoBehaviour
 		float[] hairRestLengths = new float[numVertices];
 		int[] strandIndices = new int[numVertices];
 		int[] offsets = new int[strands.Length];
+		int[] hairIndices = new int[strands.Length];
 
-		float test = (new Vector3(24.233000f,87.055603f,19.246000f) - new Vector3(23.678499f,86.132896f,20.288401f)).magnitude;
+		// Rotations
+		Quaternion[] localRotations = new Quaternion[numVertices];
+		Quaternion[] globalRotations = new Quaternion[numVertices];
 
+		// Transforms
+		TressFXTransform[] localTransforms = new TressFXTransform[numVertices];
+		TressFXTransform[] globalTransforms = new TressFXTransform[numVertices];
 
 		int index = 0;
 		for (int i = 0; i < strands.Length; i++)
 		{
+			hairIndices[i] = strands[i].hairId;
+
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
 				positionVectors[index] = strands[i].GetTressFXVector(j);
@@ -79,66 +92,91 @@ public class TressFX : MonoBehaviour
 				{
 					hairRestLengths[index] = 0;
 				}
+
+				// Init transforms
+				globalTransforms[index] = new TressFXTransform();
+				localTransforms[index] = new TressFXTransform();
+				strands[i].localTransforms[j] = localTransforms[index];
+				strands[i].globalTransforms[j] = globalTransforms[index];
+
 				strandIndices[index] = j;
 				index++;
 			}
+
 			offsets[i] = index;
 		}
 
-		for (int i = 1; i < positionVectors.Length; i++)
+		// Init global / local frame
+		for (int i = 0; i < positionVectors.Length; i++)
 		{
-			// Calculate reference vector
-			if (i > 0 && i < numVertices - 1)
+			// Calculate rotations for vertex 0
+			if (i == 0)
 			{
-				Vector3 lastVector = new Vector3(positionVectors[i-1].x, positionVectors[i-1].y, positionVectors[i-1].z);
 				Vector3 currentVector = new Vector3(positionVectors[i].x, positionVectors[i].y, positionVectors[i].z);
 				Vector3 nextVector = new Vector3(positionVectors[i+1].x, positionVectors[i+1].y, positionVectors[i+1].z);
-
-				Vector3 X_i = (currentVector - lastVector);
-				Vector3 X_i1 = (nextVector - currentVector);
-
-				Vector3 X_i_norm = X_i.normalized;
-
-				// Rotation matrix
-				// X_i_norm.X, X_i_norm.Y, X_i_norm.Z
-				// X_i_norm.X, X_i_norm.Y, X_i_norm.Z
-				// X_i_norm.X, X_i_norm.Y, X_i_norm.Z
-				float[,] matrix = new float[,]
+				
+				Vector3 vec = nextVector - currentVector;
+				// Rotations for vertex 0 local = global
+				Vector3 vecX = vec.normalized;
+				
+				Vector3 vecZ = Vector3.Cross(vecX, new Vector3(1, 0, 0));
+				
+				if (vecZ.magnitude * vecZ.magnitude < 0.0001f)
 				{
-					{ X_i_norm.x, X_i_norm.x, X_i_norm.x },
-					{ X_i_norm.y, X_i_norm.y, X_i_norm.y },
-					{ X_i_norm.z, X_i_norm.z, X_i_norm.z }
-				};
-
-				Matrix4x4 rot = new Matrix4x4();
-				rot.m00 = X_i_norm.x;
-				rot.m01 = X_i_norm.x;
-				rot.m02 = X_i_norm.x;
-				rot.m03 = 0;
-				rot.m10 = X_i_norm.y;
-				rot.m11 = X_i_norm.y;
-				rot.m12 = X_i_norm.y;
-				rot.m13 = 0;
-				rot.m20 = X_i_norm.z;
-				rot.m21 = X_i_norm.z;
-				rot.m22 = X_i_norm.z;
-				rot.m23 = 0;
-				rot.m30 = 0;
-				rot.m31 = 0;
-				rot.m32 = 0;
-				rot.m33 = 0;
-
-				rot = rot.inverse;
-				rot.m03 = 0;
-				rot.m13 = 0;
-				rot.m23 = 0;
-				rot.m30 = 0;
-				rot.m31 = 0;
-				rot.m32 = 0;
-				rot.m33 = 0;
-
-				referenceVectors[i] = rot * X_i1;
+					vecZ = Vector3.Cross(vecX, new Vector3(0, 1, 0));
+				}
+				
+				vecZ.Normalize();
+				
+				Vector3 vecY = Vector3.Cross(vecZ, vecX).normalized;
+				
+				// Construct rotation matrix
+				Matrix3x3 rotL2W = new Matrix3x3();
+				rotL2W.matrixData[0,0] = vecX.x; rotL2W.matrixData[0,1] = vecY.x; rotL2W.matrixData[0,2] = vecZ.x;
+				rotL2W.matrixData[1,0] = vecX.y; rotL2W.matrixData[1,1] = vecY.y; rotL2W.matrixData[1,2] = vecZ.y;
+				rotL2W.matrixData[2,0] = vecX.z; rotL2W.matrixData[2,1] = vecY.z; rotL2W.matrixData[2,2] = vecZ.z;
+				
+				localTransforms[i].translation = currentVector;
+				localTransforms[i].rotation = rotL2W.ToQuaternion();
+				globalTransforms[i] = localTransforms[i];
 			}
+			else
+			{
+				// Normal rotation calculation
+				Vector3 lastVector = new Vector3(positionVectors[i-1].x, positionVectors[i-1].y, positionVectors[i-1].z);
+				Vector3 currentVector = new Vector3(positionVectors[i].x, positionVectors[i].y, positionVectors[i].z);
+				
+				Vector3 vec = Quaternion.Inverse(globalRotations[i-1]) * (currentVector - lastVector);
+				
+				Vector3 vecX = vec.normalized;
+				
+				Vector3 X = new Vector3(1.0f, 0, 0);
+				Vector3 rotAxis = Vector3.Cross(X, vecX);
+				float angle = Mathf.Acos(Vector3.Dot(X, vecX));
+				
+				
+				if ( Mathf.Abs(angle) < 0.001 || rotAxis.magnitude < 0.001 )
+				{
+					localRotations[i] = Quaternion.identity;
+				}
+				else
+				{
+					rotAxis.Normalize();
+					Quaternion rot = TressFXUtil.QuaternionFromAngleAxis(angle, rotAxis); // new Quaternion(rotAxis.x, rotAxis.y, rotAxis.z, angle);
+					localRotations[i] = rot;
+				}
+
+				localTransforms[i].translation = vec;
+				globalTransforms[i] = TressFXTransform.Multiply(globalTransforms[i-1], localTransforms[i]);
+			}
+		}
+
+		// Generate rotations and reference vectors
+		for (int i = 0; i < positionVectors.Length; i++)
+		{
+			referenceVectors[i] = localTransforms[i].translation;
+			localRotations[i] = localTransforms[i].rotation;
+			globalRotations[i] = localTransforms[i].rotation;
 		}
 
 		// Initialize compute buffers
@@ -146,11 +184,13 @@ public class TressFX : MonoBehaviour
 		this.LastVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
 		this.VertexPositionBuffer = new ComputeBuffer(numVertices, 16);
 		this.StrandIndicesBuffer = new ComputeBuffer(numVertices, 4);
+		this.HairIndicesBuffer = new ComputeBuffer(strands.Length, 4);
 
 		this.InitialVertexPositionBuffer.SetData(positionVectors);
 		this.LastVertexPositionBuffer.SetData (positionVectors);
 		this.VertexPositionBuffer.SetData (positionVectors);
 		this.StrandIndicesBuffer.SetData(strandIndices);
+		this.HairIndicesBuffer.SetData(hairIndices);
 
 		this.vertexCount = numVertices;
 		this.strandCount = strands.Length;
@@ -165,7 +205,7 @@ public class TressFX : MonoBehaviour
 		if (simulation != null)
 		{
 			// Initialize Simulation
-			simulation.Initialize(headCollider, hairRestLengths, referenceVectors, offsets);
+			simulation.Initialize(headCollider, hairRestLengths, referenceVectors, offsets, localRotations, globalRotations);
 		}
 		
 		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
