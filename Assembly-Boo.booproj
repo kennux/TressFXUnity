@@ -5,11 +5,11 @@
 	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 	<ProductVersion>10.0.20506</ProductVersion>
 	<SchemaVersion>2.0</SchemaVersion>
-	<ProjectGuid>{886DDFD4-5F7A-A23C-15B0-F958F2CADF49}</ProjectGuid>
+	<ProjectGuid>{25BDC04A-6D07-928B-FDB6-70FCF2B567FA}</ProjectGuid>
 	<OutputType>Library</OutputType>
 	<AppDesignerFolder>Properties</AppDesignerFolder>
 	<RootNamespace></RootNamespace>
-	<AssemblyName>Assembly-CSharp</AssemblyName>
+	<AssemblyName>Assembly-Boo</AssemblyName>
 	<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
 	<FileAlignment>512</FileAlignment>
 	<BaseDirectory>Assets</BaseDirectory>
@@ -46,16 +46,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\TressFX\TressFX.cs" />
-     <Compile Include="Assets\TressFX\TressFXCollisionDetector.cs" />
-     <Compile Include="Assets\TressFX\TressFXGui.cs" />
-     <Compile Include="Assets\TressFX\TressFXLoader.cs" />
-     <Compile Include="Assets\TressFX\TressFXRender.cs" />
-     <Compile Include="Assets\TressFX\TressFXSimulation.cs" />
-     <Compile Include="Assets\TressFX\TressFXStrand.cs" />
-     <Compile Include="Assets\TressFX\TressFXStructs.cs" />
-     <Compile Include="Assets\TressFX\TressFXUtil.cs" />
-     <Compile Include="Assets\Util\Parallel.cs" />
+     <Compile Include="Assets\TressFX\NewBehaviourScript.boo" />
      <None Include="Assets\TressFX\Shaders\TEst.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
@@ -64,9 +55,10 @@
      <None Include="Assets\TressFX\Materials\Media\hair_free.txt" />
      <None Include="Assets\TressFX\Shaders\HairShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_front_long.txt" />
- <Reference Include="Assembly-UnityScript-firstpass">
- <HintPath>Library\ScriptAssemblies\Assembly-UnityScript-firstpass.dll</HintPath>
- </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-UnityScript-firstpass.unityproj">
+      <Project>{3E6292A6-211A-FC46-4DFB-B05665371412}</Project>      <Name>Assembly-UnityScript-firstpass</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

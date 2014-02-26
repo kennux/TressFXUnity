@@ -18,3 +18,10 @@ public struct TressFXHairConfig
 	public float localStiffness;
 	public float damping;
 }
+
+public struct TressFXColliderData
+{
+	public Vector3 centerPoint;
+	public int colliderType;
+	public Vector3 size;
+}

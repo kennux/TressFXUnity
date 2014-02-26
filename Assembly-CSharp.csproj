@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\TressFX\TressFX.cs" />
+     <Compile Include="Assets\TressFX\TressFXCollisionDetector.cs" />
      <Compile Include="Assets\TressFX\TressFXGui.cs" />
      <Compile Include="Assets\TressFX\TressFXLoader.cs" />
      <Compile Include="Assets\TressFX\TressFXRender.cs" />

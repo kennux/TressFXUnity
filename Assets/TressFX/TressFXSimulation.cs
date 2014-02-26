@@ -50,6 +50,12 @@ public class TressFXSimulation : MonoBehaviour
 	public Vector4 windForce4;
 
 	private ComputeBuffer hairStrandVerticeNums;
+	private ComputeBuffer collisionTargetBuffer;
+
+	/// <summary>
+	/// The targets for checking the collisions.
+	/// </summary>
+	private List<Collider> collisionCheckTargets;
 
 	/// <summary>
 	/// This loads the kernel ids from the compute buffer and also sets it's TressFX master.
@@ -57,6 +63,9 @@ public class TressFXSimulation : MonoBehaviour
 	public void Initialize(float[] hairRestLengths, Vector3[] referenceVectors, int[] verticesOffsets,
 	                       Quaternion[] localRotations, Quaternion[] globalRotations)
 	{
+		// Initialize collision check targets
+		this.collisionCheckTargets = new List<Collider>();
+
 		this.master = this.GetComponent<TressFX>();
 		if (this.master == null)
 		{
@@ -116,11 +125,34 @@ public class TressFXSimulation : MonoBehaviour
 		
 		this.SetResources();
 		this.DispatchKernels();
+
+		// Do collision check
+		this.CheckCollisionTargets();
 		
 		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 		
 		// Set last inverse matrix
 		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.transform.localToWorldMatrix.inverse));
+	}
+
+	/// <summary>
+	/// Checks the collision targets.
+	/// This will rebuild the collisionTargetBuffer and fill it with the collision check target data.
+	/// It will also dispatch the collision check kernel.
+	/// </summary>
+	private void CheckCollisionTargets()
+	{
+		TressFXColliderData[] colliders = new TressFXColliderData[this.collisionCheckTargets.Count];
+
+		int index = 0;
+
+		foreach(Collider c in colliders)
+		{
+			colliders[index].centerPoint = c.bounds.center;
+			colliders[index].colliderType = 0; // Box collider
+			colliders[index].size = c.bounds.size;
+			index++;
+		}
 	}
 
 	/// <summary>
@@ -252,5 +284,17 @@ public class TressFXSimulation : MonoBehaviour
 		this.HairSimulationShader.SetBuffer (kernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
 		this.HairSimulationShader.SetBuffer (kernelId, "g_HairStrandType", this.master.HairIndicesBuffer);
 		this.HairSimulationShader.SetBuffer (kernelId, "g_Config", this.configBuffer);
+	}
+	
+	public void AddCollisionTarget(Collider collider)
+	{
+		this.collisionCheckTargets.Add(collider);
+		Debug.Log ("TressFX Collision target added: " + collider);
+	}
+	
+	public void RemoveCollisionTarget(Collider collider)
+	{
+		this.collisionCheckTargets.Remove(collider);
+		Debug.Log ("TressFX Collision target removed: " + collider);
 	}
 }
