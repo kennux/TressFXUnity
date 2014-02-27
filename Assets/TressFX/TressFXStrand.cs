@@ -10,12 +10,14 @@ public class TressFXStrand
 	public TressFXTransform[] globalTransforms;
 	public TressFXTransform[] localTransforms;
 	public int hairId;
+	public float strandLength;
 
 	public TressFXStrand(int numVertices)
 	{
 		this.vertices = new TressFXVertex[numVertices];
 		this.globalTransforms = new TressFXTransform[numVertices];
 		this.localTransforms = new TressFXTransform[numVertices];
+		this.texcoords = new Vector4();
 	}
 
 	public Vector4 GetTressFXVector(int index)
@@ -24,6 +26,10 @@ public class TressFXStrand
 	}
 }
 
+/// <summary>
+/// Tress FX transform.
+/// Each vertex has a global and local transform.
+/// </summary>
 public struct TressFXTransform
 {
 	public Vector3 translation;
@@ -39,8 +45,14 @@ public struct TressFXTransform
 	}
 }
 
+
+/// <summary>
+/// Tress FX vertex.
+/// xyz = pos, z = invMass
+/// </summary>
 public struct TressFXVertex
 {
 	public Vector3 pos;
 	public float invMass;
+	public Vector4 texcoords;
 }

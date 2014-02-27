@@ -146,7 +146,7 @@ public class TressFXSimulation : MonoBehaviour
 
 		int index = 0;
 
-		foreach(Collider c in colliders)
+		foreach(Collider c in this.collisionCheckTargets)
 		{
 			colliders[index].centerPoint = c.bounds.center;
 			colliders[index].colliderType = 0; // Box collider

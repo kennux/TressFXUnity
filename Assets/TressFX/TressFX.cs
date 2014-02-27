@@ -52,6 +52,20 @@ public class TressFX : MonoBehaviour
 	/// </summary>
 	[HideInInspector]
 	public int strandCount;
+
+	// TressFX Data
+	private Vector4[] positionVectors;
+	private Vector3[] referenceVectors;
+	private Vector3[] vectorTangents;
+	private float[] hairRestLengths;
+	private int[] strandIndices;
+	private int[] offsets;
+	private int[] hairIndices;
+	private Quaternion[] localRotations;
+	private Quaternion[] globalRotations;
+	private TressFXTransform[] localTransforms;
+	private TressFXTransform[] globalTransforms;
+	private TressFXStrand[] strands;
 	
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
@@ -61,25 +75,29 @@ public class TressFX : MonoBehaviour
 	/// <param name="strandIndices">Strand indices.</param>
 	public void Initialize (TressFXStrand[] strands, int numVertices)
 	{
-		this.strandCount = strandCount;
+		// Initialize data
+		this.vertexCount = numVertices;
+		this.strandCount = strands.Length;
+		this.strands = strands;
 
 		// Buffer resources
-		Vector4[] positionVectors = new Vector4[numVertices];
-		Vector3[] referenceVectors = new Vector3[numVertices];
-		float[] hairRestLengths = new float[numVertices];
-		int[] strandIndices = new int[numVertices]; 
-		int[] offsets = new int[strands.Length];
-		int[] hairIndices = new int[strands.Length];
+		positionVectors = new Vector4[numVertices];
+		referenceVectors = new Vector3[numVertices];
+		vectorTangents = new Vector3[numVertices];
+		hairRestLengths = new float[numVertices];
+		strandIndices = new int[numVertices]; 
+		offsets = new int[strands.Length];
+		hairIndices = new int[strands.Length];
 
 		// Rotations
-		Quaternion[] localRotations = new Quaternion[numVertices];
-		Quaternion[] globalRotations = new Quaternion[numVertices];
+		localRotations = new Quaternion[numVertices];
+		globalRotations = new Quaternion[numVertices];
 
 		// Transforms
-		TressFXTransform[] localTransforms = new TressFXTransform[numVertices];
-		TressFXTransform[] globalTransforms = new TressFXTransform[numVertices];
+		localTransforms = new TressFXTransform[numVertices];
+		globalTransforms = new TressFXTransform[numVertices];
 
-		// Fill transforms and already some buffers
+		// Initialize transforms and fill hair and strand indices, hair rest lengths and position vectors
 		int index = 0;
 		for (int i = 0; i < strands.Length; i++)
 		{
@@ -115,6 +133,48 @@ public class TressFX : MonoBehaviour
 			offsets[i] = index;
 		}
 
+		// Initialize frames
+		this.InitializeLocalGlobalFrame();
+
+		// Compute strand tangents
+		this.ComputeStrandTangents();
+
+		// Initialize compute buffers
+		this.InitialVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
+		this.LastVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
+		this.VertexPositionBuffer = new ComputeBuffer(numVertices, 16);
+		this.StrandIndicesBuffer = new ComputeBuffer(numVertices, 4);
+		this.HairIndicesBuffer = new ComputeBuffer(strands.Length, 4);
+
+		this.InitialVertexPositionBuffer.SetData(positionVectors);
+		this.StrandIndicesBuffer.SetData(strandIndices);
+		this.HairIndicesBuffer.SetData(hairIndices);
+
+		// Initialize simulation if existing
+		TressFXSimulation simulation = this.gameObject.GetComponent<TressFXSimulation>();
+		if (simulation != null)
+		{
+			simulation.Initialize(hairRestLengths, referenceVectors, offsets, localRotations, globalRotations);
+		}
+		
+		// Initialize Rendering if existing
+		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
+		if (render != null)
+		{
+			render.Initialize();
+		}
+		
+		this.LastVertexPositionBuffer.SetData (positionVectors);
+		this.VertexPositionBuffer.SetData (positionVectors);
+
+		Debug.Log ("TressFX Loaded! Hair vertices: " + this.vertexCount);
+	}
+
+	/// <summary>
+	/// Inititalizes the local and global frame.
+	/// </summary>
+	private void InitializeLocalGlobalFrame()
+	{
 		// Init global / local frame
 		for (int i = 0; i < positionVectors.Length; i++)
 		{
@@ -174,12 +234,12 @@ public class TressFX : MonoBehaviour
 					Quaternion rot = TressFXUtil.QuaternionFromAngleAxis(angle, rotAxis);
 					localRotations[i] = rot;
 				}
-
+				
 				localTransforms[i].translation = vec;
 				globalTransforms[i] = TressFXTransform.Multiply(globalTransforms[i-1], localTransforms[i]);
 			}
 		}
-
+		
 		// Generate rotations and reference vectors
 		for (int i = 0; i < positionVectors.Length; i++)
 		{
@@ -187,44 +247,64 @@ public class TressFX : MonoBehaviour
 			localRotations[i] = localTransforms[i].rotation;
 			globalRotations[i] = localTransforms[i].rotation;
 		}
+	}
 
-		// Initialize compute buffers
-		this.InitialVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
-		this.LastVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
-		this.VertexPositionBuffer = new ComputeBuffer(numVertices, 16);
-		this.StrandIndicesBuffer = new ComputeBuffer(numVertices, 4);
-		this.HairIndicesBuffer = new ComputeBuffer(strands.Length, 4);
+	/// <summary>
+	/// Computes the strand tangents.
+	/// </summary>
+	private void ComputeStrandTangents()
+	{
+		// Calculate the first vertex tangent
+		vectorTangents[0] = (positionVectors[1] - positionVectors[0]).normalized;
 
-		this.InitialVertexPositionBuffer.SetData(positionVectors);
-		this.StrandIndicesBuffer.SetData(strandIndices);
-		this.HairIndicesBuffer.SetData(hairIndices);
-
-		this.vertexCount = numVertices;
-		this.strandCount = strands.Length;
-
-		// Initialize simulation if existing
-		TressFXSimulation simulation = this.gameObject.GetComponent<TressFXSimulation>();
-		if (simulation != null)
+		// Calculate tangents
+		for (int i = 1; i < this.vertexCount - 1; i++)
 		{
-			simulation.Initialize(hairRestLengths, referenceVectors, offsets, localRotations, globalRotations);
-		}
-		
-		// Initialize Rendering if existing
-		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
-		if (render != null)
-		{
-			render.Initialize();
+			Vector3 tangent_pre = (positionVectors[i] - positionVectors[i-1]).normalized;
+			Vector3 tangent_next = (positionVectors[i+1] - positionVectors[i]).normalized;
+			vectorTangents[i] = (tangent_pre + tangent_next).normalized;
 		}
 
+		// Last tangent
+		vectorTangents[this.vertexCount-1] = (positionVectors[this.vertexCount-1] - positionVectors[this.vertexCount-2]).normalized;
+	}
+
+	/// <summary>
+	/// Calculates the parametric distance to the root for each vertex in the strand
+	/// </summary>
+	private void ComputeDistanceToRoot()
+	{
+		for (int i = 0; i < strands.Length; i++)
+		{
+			float strandLength = 0;
+
+			// Iterate over every strand
+			for (int j = 1; j < strand.vertices.Length; j++)
+			{
+				// Calculate segment length
+				float segmentLength = (strands[i].vertices[j].pos - strands[i].vertices[j-1].pos).magnitude;
+				strands[i].vertices[j].texcoords.z = strands[i].vertices[j-1].texcoords.z + segmentLength;
+
+				strandLength += segmentLength;
+			}
+
+			// Re-iterate...
+			for (int j = 1; j < strand.vertices.Length; j++)
+			{
+				strands[i].vertices[j].texcoords.z /= strandLength;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Transforms the vertices in positionVectors according the current gameobject's transform.
+	/// </summary>
+	private void TransformVertices()
+	{
 		// Transform vertices
 		for (int i = 0; i < positionVectors.Length; i++)
 		{
 			positionVectors[i] = this.transform.TransformPoint(positionVectors[i]);
 		}
-		
-		this.LastVertexPositionBuffer.SetData (positionVectors);
-		this.VertexPositionBuffer.SetData (positionVectors);
-
-		Debug.Log ("TressFX Loaded! Hair vertices: " + this.vertexCount);
 	}
 }
