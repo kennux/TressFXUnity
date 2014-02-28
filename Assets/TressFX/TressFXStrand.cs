@@ -17,7 +17,6 @@ public class TressFXStrand
 		this.vertices = new TressFXVertex[numVertices];
 		this.globalTransforms = new TressFXTransform[numVertices];
 		this.localTransforms = new TressFXTransform[numVertices];
-		this.texcoords = new Vector4();
 	}
 
 	public Vector4 GetTressFXVector(int index)

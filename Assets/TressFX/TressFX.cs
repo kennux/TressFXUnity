@@ -279,7 +279,7 @@ public class TressFX : MonoBehaviour
 			float strandLength = 0;
 
 			// Iterate over every strand
-			for (int j = 1; j < strand.vertices.Length; j++)
+			for (int j = 1; j < strands[i].vertices.Length; j++)
 			{
 				// Calculate segment length
 				float segmentLength = (strands[i].vertices[j].pos - strands[i].vertices[j-1].pos).magnitude;
@@ -289,7 +289,7 @@ public class TressFX : MonoBehaviour
 			}
 
 			// Re-iterate...
-			for (int j = 1; j < strand.vertices.Length; j++)
+			for (int j = 1; j < strands[i].vertices.Length; j++)
 			{
 				strands[i].vertices[j].texcoords.z /= strandLength;
 			}

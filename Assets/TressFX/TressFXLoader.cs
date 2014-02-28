@@ -15,6 +15,8 @@ public class TressFXLoader : MonoBehaviour
 	/// </summary>
 	public TextAsset[] hairs;
 
+	public bool[] makeBothEndsImmovable;
+
 	/// <summary>
 	/// This function will generate the vertice and strand index buffers used for initializing TressFX.
 	/// </summary>
@@ -104,6 +106,11 @@ public class TressFXLoader : MonoBehaviour
 					float invMass = 1.0f;
 
 					if (j == 0)
+					{
+						invMass = 0.0f;
+					}
+
+					if (j == numStrandVertices-1 && this.makeBothEndsImmovable[hairId])
 					{
 						invMass = 0.0f;
 					}
