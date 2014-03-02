@@ -50,12 +50,14 @@
      <Compile Include="Assets\TressFX\TressFXCollisionDetector.cs" />
      <Compile Include="Assets\TressFX\TressFXGui.cs" />
      <Compile Include="Assets\TressFX\TressFXLoader.cs" />
+     <Compile Include="Assets\TressFX\TressFXPostRender.cs" />
      <Compile Include="Assets\TressFX\TressFXRender.cs" />
      <Compile Include="Assets\TressFX\TressFXSimulation.cs" />
      <Compile Include="Assets\TressFX\TressFXStrand.cs" />
      <Compile Include="Assets\TressFX\TressFXStructs.cs" />
      <Compile Include="Assets\TressFX\TressFXUtil.cs" />
      <Compile Include="Assets\Util\Parallel.cs" />
+     <None Include="Assets\TressFX\Shaders\HairPostShader.shader" />
      <None Include="Assets\TressFX\Shaders\TEst.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
