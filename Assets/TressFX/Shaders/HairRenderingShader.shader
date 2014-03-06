@@ -4,23 +4,17 @@
     {
         Pass
         {
-    		Tags { "LightMode" = "ForwardBase" }
         	Blend SrcAlpha OneMinusSrcAlpha // turn on alpha blending
-        	ZWrite On
-        	
+        
             CGPROGRAM
-            #pragma debug
             #pragma target 5.0
             #pragma multi_compile_fwdbase
-            
-            #pragma exclude_renderers gles
  
             #pragma vertex vert
             #pragma fragment frag
 			#pragma geometry geom
  
             #include "UnityCG.cginc"
-            #include "AutoLight.cginc"
 
 			struct StrandIndex
 			{
@@ -37,8 +31,7 @@
             //A simple input struct for our pixel shader step containing a position.
             struct ps_input {
                 float4 pos : SV_POSITION;
-                int vertexIndex : COLOR0;
-                LIGHTING_COORDS(0,1)
+                int vertexIndex : TEXCOORD;
             };
             
  
@@ -49,9 +42,8 @@
                 ps_input o;
                 
                 // Position transformation
-                o.pos = mul (UNITY_MATRIX_VP, float4(_VertexPositionBuffer[id],1.0f));
-                TRANSFER_VERTEX_TO_FRAGMENT(o);
-                
+                float3 worldPos = _VertexPositionBuffer[id];
+                o.pos = mul (UNITY_MATRIX_VP, float4(worldPos,1.0f));
                 o.vertexIndex = id;
                 
                 return o;
@@ -71,7 +63,7 @@
             //Pixel function returns a solid color for each point.
             float4 frag (ps_input i) : COLOR
             {
-                return _HairColor * LIGHT_ATTENUATION(i);
+                return _HairColor;
             }
  
             ENDCG

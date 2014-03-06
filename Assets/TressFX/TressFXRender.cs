@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections.Generic;
+using System.Collections;
 using System;
 
 /// <summary>
@@ -10,17 +10,6 @@ using System;
 [RequireComponent(typeof(TressFX))]
 public class TressFXRender : MonoBehaviour
 {
-	public static List<TressFXRender> instances;
-
-	private static void AddInstance(TressFXRender instance)
-	{
-		if (instances == null)
-		{
-			instances = new List<TressFXRender>();
-		}
-		instances.Add (instance);
-	}
-
 	/// <summary>
 	/// This shader will get used by the Graphcis.DrawProcedural function.
 	/// </summary>
@@ -41,8 +30,6 @@ public class TressFXRender : MonoBehaviour
 	[HideInInspector]
 	public float renderTime;
 
-	public TressFXPostRender postRender;
-
 	/// <summary>
 	/// Initializes the renderer.
 	/// </summary>
@@ -55,8 +42,7 @@ public class TressFXRender : MonoBehaviour
 		}
 
 		// Initialize material
-		this.hairMaterial = new Material (this.hairRenderingShader);
-		AddInstance (this);
+		this.hairMaterial = new Material(this.hairRenderingShader);
 	}
 
 	/// <summary>
@@ -72,7 +58,7 @@ public class TressFXRender : MonoBehaviour
 	/// Raises the render object event.
 	/// This will render the hairs with the shader hairRenderingShader.
 	/// </summary>
-	public void RenderHair()
+	public void OnRenderObject()
 	{
 		long ticks = DateTime.Now.Ticks;
 
@@ -84,16 +70,9 @@ public class TressFXRender : MonoBehaviour
 			this.hairMaterial.SetBuffer ("_VertexPositionBuffer", this.master.VertexPositionBuffer);
 			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.StrandIndicesBuffer);
 
-			// Graphics.SetRenderTarget(this.postRender.hairRenderingTexture);
 			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);
-			// Graphics.SetRenderTarget(null);
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
-	}
-
-	public void OnRenderObject()
-	{
-		this.RenderHair ();
 	}
 }

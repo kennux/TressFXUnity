@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Standard Assets\Scripts\Camera Scripts\MouseOrbit.js" />
-     <None Include="Assets\TressFX\Shaders\HairPostShader.shader" />
      <None Include="Assets\TressFX\Shaders\TEst.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
