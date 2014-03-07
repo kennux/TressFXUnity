@@ -41,6 +41,8 @@ public class TressFXRender : MonoBehaviour
 	[HideInInspector]
 	public float renderTime;
 
+	public float hairThickness = 0.01f;
+
 	public TressFXPostRender postRender;
 
 	/// <summary>
@@ -83,6 +85,8 @@ public class TressFXRender : MonoBehaviour
 			this.hairMaterial.SetColor ("_HairColor", this.HairColor);
 			this.hairMaterial.SetBuffer ("_VertexPositionBuffer", this.master.VertexPositionBuffer);
 			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.StrandIndicesBuffer);
+			this.hairMaterial.SetFloat ("_HairThickness", this.hairThickness);
+			this.hairMaterial.SetVector("_CameraDirection", new Vector4(Camera.main.transform.forward.x, Camera.main.transform.forward.y, Camera.main.transform.forward.z, 0));
 
 			// Graphics.SetRenderTarget(this.postRender.hairRenderingTexture);
 			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);

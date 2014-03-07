@@ -20,6 +20,7 @@ public class TressFXPostRender : MonoBehaviour
 
 	public void OnRenderImage(RenderTexture src, RenderTexture dest)
 	{
+		Debug.Log (123);
 		/*RenderTexture renderTexture = RenderTexture.GetTemporary( Screen.width, Screen.height, 24 );
 
 		RenderTexture.active = renderTexture;
