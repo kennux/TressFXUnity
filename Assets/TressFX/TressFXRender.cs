@@ -81,7 +81,7 @@ public class TressFXRender : MonoBehaviour
 		// Hair material initialized?
 		if (this.hairMaterial != null)
 		{
-			this.hairMaterial.SetPass (0);
+			/*this.hairMaterial.SetPass (0);
 			this.hairMaterial.SetColor ("_HairColor", this.HairColor);
 			this.hairMaterial.SetBuffer ("_VertexPositionBuffer", this.master.VertexPositionBuffer);
 			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.StrandIndicesBuffer);
@@ -89,8 +89,17 @@ public class TressFXRender : MonoBehaviour
 			this.hairMaterial.SetVector("_CameraDirection", new Vector4(Camera.main.transform.forward.x, Camera.main.transform.forward.y, Camera.main.transform.forward.z, 0));
 
 			// Graphics.SetRenderTarget(this.postRender.hairRenderingTexture);
-			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);
+			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);*/
 			// Graphics.SetRenderTarget(null);
+			this.hairMaterial.SetPass(1);
+			this.hairMaterial.SetColor("_HairColor", this.HairColor);
+			this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
+			this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
+			this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
+			this.hairMaterial.SetVector("g_vEye", Camera.main.transform.position);
+			this.hairMaterial.SetVector("g_WinSize", new Vector4(Screen.width, Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+
+			Graphics.DrawProcedural(MeshTopology.Triangles, this.master.triangleIndexCount);
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;

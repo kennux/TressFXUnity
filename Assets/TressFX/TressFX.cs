@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// This class is the TressFX main class.
@@ -41,6 +41,12 @@ public class TressFX : MonoBehaviour
 	[HideInInspector]
 	public ComputeBuffer HairIndicesBuffer;
 
+	[HideInInspector]
+	public ComputeBuffer TriangleIndicesBuffer;
+
+	[HideInInspector]
+	public ComputeBuffer TangentsBuffer;
+
 	/// <summary>
 	/// Holds the vertex count.
 	/// </summary>
@@ -52,6 +58,11 @@ public class TressFX : MonoBehaviour
 	/// </summary>
 	[HideInInspector]
 	public int strandCount;
+
+	public int triangleIndexCount
+	{
+		get { return this.triangleIndices.Length; }
+	}
 
 	// TressFX Data
 	private Vector4[] positionVectors;
@@ -66,7 +77,8 @@ public class TressFX : MonoBehaviour
 	private TressFXTransform[] localTransforms;
 	private TressFXTransform[] globalTransforms;
 	private TressFXStrand[] strands;
-	
+	private int[] triangleIndices;
+
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
 	/// This function gets called from the TressFX Loader.
@@ -97,6 +109,8 @@ public class TressFX : MonoBehaviour
 		localTransforms = new TressFXTransform[numVertices];
 		globalTransforms = new TressFXTransform[numVertices];
 
+		List<int> triangleIndicesList = new List<int> ();
+
 		// Initialize transforms and fill hair and strand indices, hair rest lengths and position vectors
 		int index = 0;
 		for (int i = 0; i < strands.Length; i++)
@@ -124,6 +138,17 @@ public class TressFX : MonoBehaviour
 				strands[i].localTransforms[j] = localTransforms[index];
 				strands[i].globalTransforms[j] = globalTransforms[index];
 
+				// Set triangle indices
+				if (j < strands[i].vertices.Length - 1)
+				{
+					triangleIndicesList.Add(2*index);
+					triangleIndicesList.Add(2*index+1);
+					triangleIndicesList.Add(2*index+2);
+					triangleIndicesList.Add(2*index+2);
+					triangleIndicesList.Add(2*index+1);
+					triangleIndicesList.Add(2*index+3);
+				}
+
 				// Set strand indices currently used for cutting linestrips by a geometry shader
 				strandIndices[index] = j;
 				index++;
@@ -133,11 +158,17 @@ public class TressFX : MonoBehaviour
 			offsets[i] = index;
 		}
 
+		this.triangleIndices = triangleIndicesList.ToArray ();
+		this.TriangleIndicesBuffer = new ComputeBuffer (this.triangleIndices.Length, 4);
+		this.TriangleIndicesBuffer.SetData (this.triangleIndices);
+
 		// Initialize frames
 		this.InitializeLocalGlobalFrame();
 
 		// Compute strand tangents
 		this.ComputeStrandTangents();
+		this.TangentsBuffer = new ComputeBuffer (this.vectorTangents.Length, 12);
+		this.TangentsBuffer.SetData (this.vectorTangents);
 
 		// Initialize compute buffers
 		this.InitialVertexPositionBuffer = new ComputeBuffer(numVertices, 16);
