@@ -240,6 +240,19 @@ public class TressFXSimulation : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Raises the destroy event.
+	/// </summary>
+	public void OnDestroy()
+	{
+		this.hairLengthsBuffer.Release ();
+		this.localRotationBuffer.Release ();
+		this.globalRotationBuffer.Release ();
+		this.referenceBuffer.Release ();
+		this.verticeOffsetBuffer.Release ();
+		this.configBuffer.Release ();
+	}
+
+	/// <summary>
 	/// Convertes a Matrix4x4 to a float array.
 	/// </summary>
 	/// <returns>The to float array.</returns>

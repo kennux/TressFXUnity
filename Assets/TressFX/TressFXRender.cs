@@ -41,9 +41,20 @@ public class TressFXRender : MonoBehaviour
 	[HideInInspector]
 	public float renderTime;
 
-	public float hairThickness = 0.01f;
+	/// <summary>
+	/// The fiber radius (aka hair thickness)
+	/// </summary>
+	public float fiberRadius = 0.01f;
 
-	public TressFXPostRender postRender;
+	/// <summary>
+	/// The expand pixels.
+	/// </summary>
+	public bool expandPixels = true;
+
+	/// <summary>
+	/// Use thin tip?
+	/// </summary>
+	public bool thinTip = false;
 
 	/// <summary>
 	/// Initializes the renderer.
@@ -91,6 +102,9 @@ public class TressFXRender : MonoBehaviour
 			// Graphics.SetRenderTarget(this.postRender.hairRenderingTexture);
 			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);*/
 			// Graphics.SetRenderTarget(null);
+			RenderTexture LinkedListHeadUAV = RenderTexture.GetTemporary(Screen.width, Screen.height, 8, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+			LinkedListHeadUAV.DiscardContents();
+
 			this.hairMaterial.SetPass(1);
 			this.hairMaterial.SetColor("_HairColor", this.HairColor);
 			this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
@@ -98,6 +112,10 @@ public class TressFXRender : MonoBehaviour
 			this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
 			this.hairMaterial.SetVector("g_vEye", Camera.main.transform.position);
 			this.hairMaterial.SetVector("g_WinSize", new Vector4(Screen.width, Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+			this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
+			this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
+			this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
+			this.hairMaterial.SetTexture("LinkedListHeadUAV", LinkedListHeadUAV);
 
 			Graphics.DrawProcedural(MeshTopology.Triangles, this.master.triangleIndexCount);
 		}

@@ -47,6 +47,9 @@ public class TressFX : MonoBehaviour
 	[HideInInspector]
 	public ComputeBuffer TangentsBuffer;
 
+	[HideInInspector]
+	public ComputeBuffer ThicknessCoeffsBuffer;
+
 	/// <summary>
 	/// Holds the vertex count.
 	/// </summary>
@@ -78,6 +81,7 @@ public class TressFX : MonoBehaviour
 	private TressFXTransform[] globalTransforms;
 	private TressFXStrand[] strands;
 	private int[] triangleIndices;
+	private float[] thicknessCoeffs;
 
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
@@ -110,6 +114,7 @@ public class TressFX : MonoBehaviour
 		globalTransforms = new TressFXTransform[numVertices];
 
 		List<int> triangleIndicesList = new List<int> ();
+		thicknessCoeffs = new float[numVertices];
 
 		// Initialize transforms and fill hair and strand indices, hair rest lengths and position vectors
 		int index = 0;
@@ -149,6 +154,9 @@ public class TressFX : MonoBehaviour
 					triangleIndicesList.Add(2*index+3);
 				}
 
+				float tVal = strands[i].vertices[j].texcoords.z;
+				thicknessCoeffs[index] = Mathf.Sqrt(1.0f - tVal * tVal);
+
 				// Set strand indices currently used for cutting linestrips by a geometry shader
 				strandIndices[index] = j;
 				index++;
@@ -157,6 +165,9 @@ public class TressFX : MonoBehaviour
 			// Set strand offsets
 			offsets[i] = index;
 		}
+
+		this.ThicknessCoeffsBuffer = new ComputeBuffer (numVertices, 4);
+		this.ThicknessCoeffsBuffer.SetData (thicknessCoeffs);
 
 		this.triangleIndices = triangleIndicesList.ToArray ();
 		this.TriangleIndicesBuffer = new ComputeBuffer (this.triangleIndices.Length, 4);
@@ -199,6 +210,21 @@ public class TressFX : MonoBehaviour
 		this.VertexPositionBuffer.SetData (positionVectors);
 
 		Debug.Log ("TressFX Loaded! Hair vertices: " + this.vertexCount);
+	}
+
+	/// <summary>
+	/// Raises the destroy event.
+	/// </summary>
+	public void OnDestroy()
+	{
+		this.InitialVertexPositionBuffer.Release ();
+		this.VertexPositionBuffer.Release ();
+		this.LastVertexPositionBuffer.Release ();
+		this.TriangleIndicesBuffer.Release ();
+		this.HairIndicesBuffer.Release ();
+		this.StrandIndicesBuffer.Release ();
+		this.TangentsBuffer.Release ();
+		this.ThicknessCoeffsBuffer.Release ();
 	}
 
 	/// <summary>
