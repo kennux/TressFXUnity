@@ -56,6 +56,9 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public bool thinTip = false;
 
+	private ComputeBuffer LinkedListUAV;
+	private int oldWidth, oldHeight;
+
 	/// <summary>
 	/// Initializes the renderer.
 	/// </summary>
@@ -70,6 +73,22 @@ public class TressFXRender : MonoBehaviour
 		// Initialize material
 		this.hairMaterial = new Material (this.hairRenderingShader);
 		AddInstance (this);
+
+		// Linked list uav
+		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width, Screen.height, 12);
+
+		// Initialize old screen size
+		this.oldWidth = Screen.width;
+		this.oldHeight = Screen.height;
+	}
+
+	public void Update()
+	{
+		if (this.oldWidth != Screen.width || this.oldHeight != Screen.height)
+		{
+			// Re-create buffer
+			this.LinkedListUAV = new ComputeBuffer (8 * Screen.width, Screen.height, 12);
+		}
 	}
 
 	/// <summary>
@@ -115,9 +134,13 @@ public class TressFXRender : MonoBehaviour
 			this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
 			this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
 			this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
-			this.hairMaterial.SetTexture("LinkedListHeadUAV", LinkedListHeadUAV);
+			// this.hairMaterial.("LinkedListHeadUAV", LinkedListHeadUAV);
+			Graphics.SetRandomWriteTarget(0, LinkedListHeadUAV);
+			Graphics.SetRandomWriteTarget(1, this.LinkedListUAV);
 
 			Graphics.DrawProcedural(MeshTopology.Triangles, this.master.triangleIndexCount);
+
+			Graphics.ClearRandomWriteTargets();
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;

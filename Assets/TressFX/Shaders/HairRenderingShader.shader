@@ -108,8 +108,8 @@
             uniform float g_FiberRadius;
             uniform float g_bExpandPixels;
             uniform float g_bThinTip;
-            RWTexture2D<uint> LinkedListHeadUAV;
-            RWStructuredBuffer<PPLL_STRUCT>	LinkedListUAV;
+            RWTexture2D<uint> LinkedListHeadUAV : register(t0);
+            RWStructuredBuffer<PPLL_STRUCT>	LinkedListUAV : register(t1);
  
             //A simple input struct for our pixel shader step containing a position.
             struct PS_INPUT_HAIR_AA {
