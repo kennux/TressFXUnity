@@ -47,14 +47,13 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Standard Assets\Scripts\Camera Scripts\MouseOrbit.js" />
-     <None Include="Assets\TressFX\Shaders\TressFXShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
      <None Include="Assets\TressFX\Materials\Media\hair_tail.txt" />
      <None Include="Assets\TressFX\Shaders\HairRenderingShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_free.txt" />
-     <None Include="Assets\TressFX\Shaders\HairShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_front_long.txt" />
+     <None Include="Assets\TressFX\Shaders\TressFXInclude.cginc" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 using System;
 
 /// <summary>
@@ -75,7 +76,7 @@ public class TressFXRender : MonoBehaviour
 		AddInstance (this);
 
 		// Linked list uav
-		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width, Screen.height, 12);
+		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12);
 
 		// Initialize old screen size
 		this.oldWidth = Screen.width;
@@ -87,7 +88,7 @@ public class TressFXRender : MonoBehaviour
 		if (this.oldWidth != Screen.width || this.oldHeight != Screen.height)
 		{
 			// Re-create buffer
-			this.LinkedListUAV = new ComputeBuffer (8 * Screen.width, Screen.height, 12);
+			this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12);
 		}
 	}
 
@@ -111,34 +112,41 @@ public class TressFXRender : MonoBehaviour
 		// Hair material initialized?
 		if (this.hairMaterial != null)
 		{
-			/*this.hairMaterial.SetPass (0);
-			this.hairMaterial.SetColor ("_HairColor", this.HairColor);
-			this.hairMaterial.SetBuffer ("_VertexPositionBuffer", this.master.VertexPositionBuffer);
-			this.hairMaterial.SetBuffer ("_StrandIndicesBuffer", this.master.StrandIndicesBuffer);
-			this.hairMaterial.SetFloat ("_HairThickness", this.hairThickness);
-			this.hairMaterial.SetVector("_CameraDirection", new Vector4(Camera.main.transform.forward.x, Camera.main.transform.forward.y, Camera.main.transform.forward.z, 0));
+			this.hairMaterial.SetPass(0);
+			this.SetShaderData();
 
-			// Graphics.SetRenderTarget(this.postRender.hairRenderingTexture);
-			Graphics.DrawProcedural(MeshTopology.LineStrip, this.master.vertexCount);*/
-			// Graphics.SetRenderTarget(null);
-			RenderTexture LinkedListHeadUAV = RenderTexture.GetTemporary(Screen.width, Screen.height, 8, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-			LinkedListHeadUAV.DiscardContents();
-
-			this.hairMaterial.SetPass(1);
-			this.hairMaterial.SetColor("_HairColor", this.HairColor);
-			this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
-			this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
-			this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
-			this.hairMaterial.SetVector("g_vEye", Camera.main.transform.position);
-			this.hairMaterial.SetVector("g_WinSize", new Vector4(Screen.width, Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
-			this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
-			this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
-			this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
-			// this.hairMaterial.("LinkedListHeadUAV", LinkedListHeadUAV);
-			Graphics.SetRandomWriteTarget(0, LinkedListHeadUAV);
-			Graphics.SetRandomWriteTarget(1, this.LinkedListUAV);
-
+			// A-Buffer Pass
 			Graphics.DrawProcedural(MeshTopology.Triangles, this.master.triangleIndexCount);
+
+			// K-Buffer Pass
+
+			// Draw fullscreen quad
+			GL.PushMatrix();
+			{
+				GL.LoadOrtho();
+
+				this.hairMaterial.SetPass(1);
+				this.SetShaderData();
+
+				GL.Begin(GL.TRIANGLES);
+				{
+					GL.TexCoord2(0.0f, 1.0f);
+					GL.Vertex3(-1.0f, -1.0f, 0.0f);
+					GL.TexCoord2(0.0f, 0.0f);
+					GL.Vertex3(-1.0f, 1.0f, 0.0f);
+					GL.TexCoord2(1.0f, 1.0f);
+					GL.Vertex3(1.0f, -1.0f, 0.0f);
+					
+					GL.TexCoord2(1.0f, 1.0f);
+					GL.Vertex3(1.0f, -1.0f, 0.0f);
+					GL.TexCoord2(0.0f, 0.0f);
+					GL.Vertex3(-1.0f, 1.0f, 0.0f);
+					GL.TexCoord2(1.0f, 0.0f);
+					GL.Vertex3(1.0f, 1.0f, 0.0f);
+				}
+				GL.End();
+			}
+			GL.PopMatrix();
 
 			Graphics.ClearRandomWriteTargets();
 		}
@@ -146,6 +154,27 @@ public class TressFXRender : MonoBehaviour
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}
 
+	private void SetShaderData()
+	{
+		RenderTexture LinkedListHeadUAV = RenderTexture.GetTemporary(Screen.width, Screen.height, 8, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+		LinkedListHeadUAV.DiscardContents();
+
+		this.hairMaterial.SetColor("_HairColor", this.HairColor);
+		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
+		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
+		this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
+		this.hairMaterial.SetVector("g_vEye", Camera.main.transform.position);
+		this.hairMaterial.SetVector("g_WinSize", new Vector4(Screen.width, Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+		this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
+		this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
+		this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
+		this.hairMaterial.SetMatrix("g_mInvViewProj", (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse);
+		this.hairMaterial.SetFloat ("g_FiberAlpha", this.HairColor.a);
+		this.hairMaterial.SetFloat ("g_alphaThreshold", this.HairColor.a);
+		Graphics.SetRandomWriteTarget(0, LinkedListHeadUAV);
+		Graphics.SetRandomWriteTarget(1, this.LinkedListUAV);
+	}
+	
 	public void OnRenderObject()
 	{
 		this.RenderHair ();

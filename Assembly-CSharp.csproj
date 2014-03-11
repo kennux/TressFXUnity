@@ -56,14 +56,13 @@
      <Compile Include="Assets\TressFX\TressFXStructs.cs" />
      <Compile Include="Assets\TressFX\TressFXUtil.cs" />
      <Compile Include="Assets\Util\Parallel.cs" />
-     <None Include="Assets\TressFX\Shaders\TressFXShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
      <None Include="Assets\TressFX\Materials\Media\hair_tail.txt" />
      <None Include="Assets\TressFX\Shaders\HairRenderingShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_free.txt" />
-     <None Include="Assets\TressFX\Shaders\HairShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_front_long.txt" />
+     <None Include="Assets\TressFX\Shaders\TressFXInclude.cginc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-UnityScript-firstpass.unityproj">
