@@ -191,26 +191,17 @@
 			Stencil
 			{
 				Ref 1
-				WriteMask 0
 				CompFront LEqual
-				PassFront keep
+				PassFront Zero
 				FailFront keep
 				ZFailFront keep
 				CompBack LEqual
-				PassBack keep
+				PassBack Zero
 				FailBack keep
 				ZFailBack keep
 			}
 			
-			// Blend state
-			/*Blend SrcColor One
-			Blend DstColor SrcAlpha
-			BlendOp Add
-			Blend SrcAlpha Zero
-			Blend DstAlpha Zero
-			BlendOp Add*/
-			
-			// Cull Off
+			Blend SrcAlpha OneMinusSrcAlpha     // Alpha blending
 			
             CGPROGRAM
             #pragma debug
@@ -221,13 +212,240 @@
             
             #pragma exclude_renderers gles
  
-            #pragma vertex vert_img
+            #pragma vertex vert
             #pragma fragment frag
             
+			#define KBUFFER_SIZE 8
+			#define NULLPOINTER 0xFFFFFFFF
+			#define g_iMaxFragments 768
+			#define COLORDEBUG 1
             
-            float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
+            VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
-            	return _HairColor;
+			    VS_OUTPUT_SCREENQUAD output = (VS_OUTPUT_SCREENQUAD)0;
+
+			    output.vPosition = float4(input.Position.xyz, 1.0);
+			    output.vTex = input.Texcoord.xy;
+
+			    return output;
+            }
+            
+            float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
+            {
+            	float4 fcolor = float4(0,0,0,1);
+			    float amountLight;
+			    float lightIntensity;
+				float4 fragmentColor = float4(0,0,0,0);
+				float4 vWorldPosition = float4(0,0,0,0);
+				float3 vTangent = float3(0,0,0);
+				float coverage;
+				uint tangentAndCoverage;
+
+				// get the start of the linked list from the head pointer
+				uint pointer = LinkedListHeadUAV[In.vPosition.xy];
+
+			    // A local Array to store the top k fragments(depth and color), where k = KBUFFER_SIZE
+			#ifdef ALU_INDEXING
+
+			    uint4 kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215;
+			    uint4 kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215;
+			    kBufferDepthV03 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
+			    kBufferDepthV47 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
+			    kBufferDepthV811 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
+			    kBufferDepthV1215 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
+			    kBufferPackedTangentV03 = uint4(0,0,0,0);
+			    kBufferPackedTangentV47 = uint4(0,0,0,0);
+			    kBufferPackedTangentV811 = uint4(0,0,0,0);
+			    kBufferPackedTangentV1215 = uint4(0,0,0,0);
+
+			    // Get the first k elements in the linked list
+			    int nNumFragments = 0;
+			    for(int p=0; p<KBUFFER_SIZE; p++)
+			    {
+			        if (pointer != NULLPOINTER)
+			        {
+			            StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, p, LinkedListUAV[pointer].depth);
+			            StoreUintAtIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, p, LinkedListUAV[pointer].TangentAndCoverage);
+			            pointer = LinkedListUAV[pointer].uNext;
+			#ifdef COLORDEBUG
+			            nNumFragments++;
+			#endif
+			        }
+			    }
+
+			#else
+
+			    KBuffer_STRUCT kBuffer[KBUFFER_SIZE];
+
+				[unroll]for(int t=0; t<KBUFFER_SIZE; t++)
+				{
+			        kBuffer[t].depthAndPackedtangent.x = asuint(100000.0f);	// must be larger than the maximum possible depth value
+			        kBuffer[t].depthAndPackedtangent.y = 0;
+				}
+
+			    // Get the first k elements in the linked list
+			    int nNumFragments = 0;
+			    for(int p=0; p<KBUFFER_SIZE; p++)
+			    {
+			        if (pointer != NULLPOINTER)
+			        {
+			            kBuffer[p].depthAndPackedtangent.x	= LinkedListUAV[pointer].depth;
+			            kBuffer[p].depthAndPackedtangent.y	= LinkedListUAV[pointer].TangentAndCoverage;
+			            pointer								= LinkedListUAV[pointer].uNext;
+			#ifdef COLORDEBUG
+			            nNumFragments++;
+			#endif
+			        }
+			    }
+
+			#endif
+				
+			    // Go through the rest of the linked list, and keep the closest k fragments, but not in sorted order.
+			    [allow_uav_condition]
+			    for(int l=0; l < g_iMaxFragments; l++)
+			    {
+			        if(pointer == NULLPOINTER)	break;
+
+			#ifdef COLORDEBUG
+			        nNumFragments++;
+			#endif
+
+			        int id = 0;
+			        float max_depth = 0;
+
+					// find the furthest node in array
+			        [unroll]for(int i=0; i<KBUFFER_SIZE; i++)
+			        {	
+			#ifdef ALU_INDEXING
+			            float fDepth = asfloat(GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, i));
+			#else
+						float fDepth = asfloat(kBuffer[i].depthAndPackedtangent.x);
+			#endif
+			            if(max_depth < fDepth)
+			            {
+			                max_depth = fDepth;
+			                id = i;
+			            }
+			        }
+
+			        uint nodePackedTangent = LinkedListUAV[pointer].TangentAndCoverage;
+					uint nodeDepth         = LinkedListUAV[pointer].depth;
+					float fNodeDepth       = asfloat(nodeDepth);
+
+			        // If the node in the linked list is nearer than the furthest one in the local array, exchange the node 
+			        // in the local array for the one in the linked list.
+			        if (max_depth > fNodeDepth)
+			        {
+			#ifdef ALU_INDEXING
+			            uint tmp								= GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id);
+			            StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811,  kBufferDepthV1215, id, nodeDepth);
+			            fNodeDepth								= asfloat(tmp);
+			            tmp										= GetUintFromIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id);
+			            StoreUintAtIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id, nodePackedTangent);
+						nodePackedTangent						= tmp;
+			#else
+			            uint tmp								= kBuffer[id].depthAndPackedtangent.x;
+			            kBuffer[id].depthAndPackedtangent.x	= nodeDepth;
+			            fNodeDepth								= asfloat(tmp);
+			            tmp										= kBuffer[id].depthAndPackedtangent.y;
+			            kBuffer[id].depthAndPackedtangent.y	= nodePackedTangent;
+						nodePackedTangent						= tmp;
+			#endif
+			        }
+
+			        // Do simple shading and out of order blending for nodes that are not part of the k closest fragments
+			        vWorldPosition = mul(float4(In.vPosition.xy, fNodeDepth, 1), g_mInvViewProj);
+					vWorldPosition.xyz /= vWorldPosition.www;
+
+			/* #ifdef SIMPLESHADOWING
+					amountLight = ComputeSimpleShadow(vWorldPosition.xyz, g_HairShadowAlpha, g_iTechSM);
+			#else
+			        amountLight = ComputeShadow(vWorldPosition.xyz, g_HairShadowAlpha, g_iTechSM);
+			#endif */
+
+			        fragmentColor.w = GetCoverage(nodePackedTangent);
+			        vTangent = GetTangent(nodePackedTangent);
+					
+			/* #ifdef SIMPLESHADING
+			        fragmentColor.xyz = SimpleHairShading( vWorldPosition.xyz, vTangent, float4(0,0,0,0), amountLight);
+			#else
+					fragmentColor.xyz = ComputeHairShading( vWorldPosition.xyz, vTangent, float4(0,0,0,0), amountLight);
+			#endif */
+			        
+			        // Blend the fragment color
+			        fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
+					fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
+
+			        // Retrieve next node pointer
+			        pointer = LinkedListUAV[pointer].uNext;
+			    }
+
+
+			    // Blend the k nearest layers of fragments from back to front, where k = KBUFFER_SIZE
+			    for(int j=0; j<KBUFFER_SIZE; j++)
+			    {
+			        int id = 0;
+			        float max_depth = 0;
+					float initialized = 1;
+
+					// find the furthest node in the array
+			        for(int i=0; i<KBUFFER_SIZE; i++)
+			        {
+			#ifdef ALU_INDEXING
+			            float fDepth = asfloat(GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, i));
+			#else
+						float fDepth = asfloat(kBuffer[i].depthAndPackedtangent.x);
+			#endif
+			            if(max_depth < fDepth)
+			            {
+			                max_depth = fDepth;
+			                id = i;
+			            }
+			        }
+
+
+			        // take this node out of the next search
+			#ifdef ALU_INDEXING
+			        uint nodePackedTangent = GetUintFromIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id);
+			        uint nodeDepth         = GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id);
+
+			        StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id, 0);
+			#else
+					uint nodePackedTangent = kBuffer[id].depthAndPackedtangent.y;
+			        uint nodeDepth         = kBuffer[id].depthAndPackedtangent.x;
+
+					// take this node out of the next search
+			        kBuffer[id].depthAndPackedtangent.x = 0;
+			#endif
+
+					// Use high quality shading for the nearest k fragments
+					float fDepth = asfloat(nodeDepth);
+			        vWorldPosition = mul(float4(In.vPosition.xy, fDepth, 1), g_mInvViewProj);
+					vWorldPosition.xyz /= vWorldPosition.www;
+
+					amountLight = 1; // ComputeShadow(vWorldPosition.xyz, g_HairShadowAlpha, g_iTechSM); 
+
+			        // Get tangent and coverage
+			        vTangent        = GetTangent(nodePackedTangent);
+			        fragmentColor.w = GetCoverage(nodePackedTangent);
+
+			        // Shading
+					fragmentColor.xyz = ComputeHairShading( vWorldPosition.xyz, vTangent, float4(0,0,0,0), amountLight);
+
+					// Blend the fragment color
+			        fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
+					fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
+			    }
+
+
+			#ifdef COLORDEBUG
+			    fcolor.xyz = float3(0,1,0);
+			    if (nNumFragments>32) fcolor.xyz = float3(1,1,0);
+			    if (nNumFragments>64) fcolor.xyz = float3(1,0.5,0);
+			    if (nNumFragments>128) fcolor.xyz = float3(1,0,0);
+			#endif
+
+			    return fcolor;
             }
             
             ENDCG

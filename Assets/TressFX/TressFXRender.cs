@@ -148,7 +148,7 @@ public class TressFXRender : MonoBehaviour
 			}
 			GL.PopMatrix();
 
-			Graphics.ClearRandomWriteTargets();
+			// Graphics.ClearRandomWriteTargets();
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
@@ -171,8 +171,10 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetMatrix("g_mInvViewProj", (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse);
 		this.hairMaterial.SetFloat ("g_FiberAlpha", this.HairColor.a);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", this.HairColor.a);
-		Graphics.SetRandomWriteTarget(0, LinkedListHeadUAV);
-		Graphics.SetRandomWriteTarget(1, this.LinkedListUAV);
+		this.hairMaterial.SetTexture("LinkedListHeadUAV", LinkedListHeadUAV);
+		this.hairMaterial.SetBuffer("LinkedListUAV", this.LinkedListUAV);
+		/*Graphics.SetRandomWriteTarget(0, LinkedListHeadUAV);
+		Graphics.SetRandomWriteTarget(1, this.LinkedListUAV);*/
 	}
 	
 	public void OnRenderObject()
