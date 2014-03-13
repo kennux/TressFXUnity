@@ -24,8 +24,10 @@ uniform float g_bThinTip;
 uniform matrix g_mInvViewProj;
 uniform float g_FiberAlpha;
 uniform float g_alphaThreshold;
-RWTexture2D<uint> LinkedListHeadUAV : register(t0);
-RWStructuredBuffer<PPLL_STRUCT>	LinkedListUAV : register(t1);
+RWTexture2D<uint> LinkedListHeadUAV : register(u1);
+RWStructuredBuffer<PPLL_STRUCT>	LinkedListUAV : register(u2);
+RWStructuredBuffer<float> debug : register(u3);
+
 
 // K-Buffer struct
 struct KBuffer_STRUCT
@@ -103,10 +105,10 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 	float outside = any( float2(step(hairWidth, p0dist), step(hairWidth, p1dist)) );
 	
 	// if outside, set sign to -1, else set sign to 1
-	float sign = outside > 0.f ? -1.f : 1.f;
+	float _sign = outside > 0.f ? -1.f : 1.f;
 	
 	// signed distance (positive if inside hair, negative if outside hair)
-	float relDist = sign * saturate( min(p0dist, p1dist) );
+	float relDist = _sign * saturate( min(p0dist, p1dist) );
 	
 	// returns coverage based on the relative distance
 	// 0, if completely outside hair edge

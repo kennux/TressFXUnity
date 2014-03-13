@@ -7,7 +7,8 @@
     		Tags { "LightMode" = "ForwardBase" }
         	Blend SrcAlpha OneMinusSrcAlpha // turn on alpha blending
         	ZWrite On
-        	Cull Off
+        	ZTest Off
+        	Cull Back
         	
             CGPROGRAM
             #pragma debug
@@ -72,8 +73,8 @@
         // A-Buffer fill pass
         Pass
         {
-        	ColorMask 0
-        	ZWrite On
+        	// ColorMask 0
+        	ZWrite Off
         	ZTest LEqual
 			Stencil
 			{
@@ -87,8 +88,8 @@
 				FailBack keep
 				ZFailBack keep
 			}
-			Blend SrcColor One
-			Blend DstColor Zero
+			/*Blend SrcColor One
+			Blend DstColor Zero*/
 			
             CGPROGRAM
             #pragma debug
@@ -116,7 +117,7 @@
 			    float3 v = g_HairVertexPositions[index].xyz;
 
 			    // Get hair strand thickness
-			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0;
+			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(v - g_vEye) ) );
@@ -145,26 +146,28 @@
             }
             
             // A-Buffer pass
+            [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
-			{ 
-			    // Render AA Line, calculate pixel coverage
+			{
+			     // Render AA Line, calculate pixel coverage
 			    float4 proj_pos = float4(   2*In.Position.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
 			                                1 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
 
-			    float4 original_pos = mul(proj_pos, g_mInvViewProj);
+			    float4 original_pos = mul(g_mInvViewProj, proj_pos);
 			    
 			    float curve_scale = 1;
-			    if (g_bThinTip > 0 )
-			        curve_scale = In.Tangent.w;
+			    /*if (g_bThinTip > 0 )
+			        curve_scale = In.Tangent.w;*/
 			    
 			    float fiber_radius = curve_scale * g_FiberRadius;
 				
 				float coverage = 1.f;
+				float initialCoverage = 1.f;
 				if(true)
 				{	
-			        coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
+			        initialCoverage = coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
 				}
 
 				coverage *= g_FiberAlpha;
@@ -172,10 +175,10 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
+			        // StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
 			    }
 			    // output a mask RT for final pass    
-			    return float4(1, 0, 0, 0);
+			    return float4(g_FiberRadius, 0, 0, 0);
 			}
             
             ENDCG
