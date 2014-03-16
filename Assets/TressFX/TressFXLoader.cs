@@ -105,7 +105,7 @@ public class TressFXLoader : MonoBehaviour
 					// invMass = 1 means strand movable, 0 means not movable
 					float invMass = 1.0f;
 
-					if (j == 0 || (j == numStrandVertices-1 && this.makeBothEndsImmovable[hairId]))
+					if (j == 0 || j == 1 || (j == numStrandVertices-1 && this.makeBothEndsImmovable[hairId]))
 					{
 						invMass = 0.0f;
 					}
