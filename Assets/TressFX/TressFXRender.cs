@@ -140,8 +140,6 @@ public class TressFXRender : MonoBehaviour
 			}*/
 
 			// Graphics.DrawTexture(new Rect(0,0,200,200), LinkedListHeadUAV);
-			float[] debugData = new float[10];
-			this.debug.GetData (debugData);
 
 			// K-Buffer Pass
 

@@ -91,7 +91,8 @@ float GetCoverage(uint packedCoverage)
 float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 {
 	// p0, p1, pixelLoc are in d3d clip space (-1 to 1)x(-1 to 1)
-
+	
+	
 	// Scale positions so 1.f = half pixel width
 	p0 *= g_WinSize.xy;
 	p1 *= g_WinSize.xy;
@@ -113,7 +114,7 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 	// returns coverage based on the relative distance
 	// 0, if completely outside hair edge
 	// 1, if completely inside hair edge
-	return (relDist + 1.f) * 0.5f;
+	return p0dist - 0.5f; // (relDist + 1.f) * 0.5f;
 }
 
 

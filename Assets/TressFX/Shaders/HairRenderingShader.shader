@@ -88,8 +88,6 @@
 				FailBack keep
 				ZFailBack keep
 			}
-			/*Blend SrcColor One
-			Blend DstColor Zero*/
 			
             CGPROGRAM
             #pragma debug
@@ -154,8 +152,6 @@
 			                                1 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
-
-			    float4 original_pos = mul(g_mInvViewProj, proj_pos);
 			    
 			    float curve_scale = 1;
 			    /*if (g_bThinTip > 0 )
@@ -178,7 +174,7 @@
 			        // StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
 			    }
 			    // output a mask RT for final pass    
-			    return float4(g_FiberRadius, 0, 0, 0);
+			    return float4(coverage, 0, 0, 0);
 			}
             
             ENDCG
