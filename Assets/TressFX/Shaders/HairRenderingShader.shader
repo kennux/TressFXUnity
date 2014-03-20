@@ -73,6 +73,7 @@
         // A-Buffer fill pass
         Pass
         {
+        	Tags { "LightMode" = "ForwardAdd" }
         	// ColorMask 0
         	ZWrite Off
         	ZTest LEqual
@@ -94,12 +95,17 @@
             #pragma target 5.0
             
             #pragma exclude_renderers gles
+            #pragma multi_compile_fwdadd_fullshadows
  
             #pragma vertex vert
             #pragma fragment frag
             
             #include "UnityCG.cginc"
+            #include "AutoLight.cginc"
             #include "TressFXInclude.cginc"
+            
+            #define TRANSFER_VERTEX_TO_FRAGMENT_TFX(a) a._LightCoord = mul(_LightMatrix0, mul(_World2Object, mul(_Object2World, v.vertex))).xyz; TRANSFER_SHADOW_TFX(a)
+            #define TRANSFER_SHADOW_TFX(a) a._ShadowCoord = mul( unity_World2Shadow[0], mul(_World2Object, mul(_Object2World, v.vertex)) );
  
             //Our vertex function simply fetches a point from the buffer corresponding to the vertex index
             //which we transform with the view-projection matrix before passing to the pixel program.
@@ -128,6 +134,8 @@
 				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
+				float4 edge1 = hairEdgePositions[0];
+				float4 edge2 = hairEdgePositions[1];
 				hairEdgePositions[0] = mul(UNITY_MATRIX_VP, hairEdgePositions[0]);
 				hairEdgePositions[1] = mul(UNITY_MATRIX_VP, hairEdgePositions[1]);
 				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
@@ -139,7 +147,11 @@
 			    Output.Position = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
-
+			    VS_DATA v;
+			    v.vertex = (fDirIndex==-1.0 ? edge1 : edge2);
+			    
+			    TRANSFER_VERTEX_TO_FRAGMENT_TFX(Output);
+			    
 			    return Output;
             }
             
@@ -147,6 +159,8 @@
             [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
 			{
+				In.Position.y -= 35; // Why is this offset needed?
+				
 			     // Render AA Line, calculate pixel coverage
 			    float4 proj_pos = float4(   2*In.Position.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
 			                                1 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
@@ -171,10 +185,10 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        // StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
+			        StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
 			    }
 			    // output a mask RT for final pass    
-			    return float4(coverage, 0, 0, 0);
+			    return float4(1, 0, 0, 0) * LIGHT_ATTENUATION(In); // float4(LinkedListHeadUAV[uint2(1,1)], LinkedListUAV[0].TangentAndCoverage, 0, 0);
 			}
             
             ENDCG
@@ -244,35 +258,6 @@
 				uint pointer = LinkedListHeadUAV[In.vPosition.xy];
 
 			    // A local Array to store the top k fragments(depth and color), where k = KBUFFER_SIZE
-			#ifdef ALU_INDEXING
-
-			    uint4 kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215;
-			    uint4 kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215;
-			    kBufferDepthV03 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
-			    kBufferDepthV47 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
-			    kBufferDepthV811 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
-			    kBufferDepthV1215 = uint4(asuint(100000.0f), asuint(100000.0f), asuint(100000.0f), asuint(100000.0f)); 
-			    kBufferPackedTangentV03 = uint4(0,0,0,0);
-			    kBufferPackedTangentV47 = uint4(0,0,0,0);
-			    kBufferPackedTangentV811 = uint4(0,0,0,0);
-			    kBufferPackedTangentV1215 = uint4(0,0,0,0);
-
-			    // Get the first k elements in the linked list
-			    int nNumFragments = 0;
-			    for(int p=0; p<KBUFFER_SIZE; p++)
-			    {
-			        if (pointer != NULLPOINTER)
-			        {
-			            StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, p, LinkedListUAV[pointer].depth);
-			            StoreUintAtIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, p, LinkedListUAV[pointer].TangentAndCoverage);
-			            pointer = LinkedListUAV[pointer].uNext;
-			#ifdef COLORDEBUG
-			            nNumFragments++;
-			#endif
-			        }
-			    }
-
-			#else
 
 			    KBuffer_STRUCT kBuffer[KBUFFER_SIZE];
 
@@ -296,8 +281,6 @@
 			#endif
 			        }
 			    }
-
-			#endif
 				
 			    // Go through the rest of the linked list, and keep the closest k fragments, but not in sorted order.
 			    [allow_uav_condition]
@@ -315,11 +298,7 @@
 					// find the furthest node in array
 			        [unroll]for(int i=0; i<KBUFFER_SIZE; i++)
 			        {	
-			#ifdef ALU_INDEXING
-			            float fDepth = asfloat(GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, i));
-			#else
 						float fDepth = asfloat(kBuffer[i].depthAndPackedtangent.x);
-			#endif
 			            if(max_depth < fDepth)
 			            {
 			                max_depth = fDepth;
@@ -335,21 +314,12 @@
 			        // in the local array for the one in the linked list.
 			        if (max_depth > fNodeDepth)
 			        {
-			#ifdef ALU_INDEXING
-			            uint tmp								= GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id);
-			            StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811,  kBufferDepthV1215, id, nodeDepth);
-			            fNodeDepth								= asfloat(tmp);
-			            tmp										= GetUintFromIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id);
-			            StoreUintAtIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id, nodePackedTangent);
-						nodePackedTangent						= tmp;
-			#else
 			            uint tmp								= kBuffer[id].depthAndPackedtangent.x;
 			            kBuffer[id].depthAndPackedtangent.x	= nodeDepth;
 			            fNodeDepth								= asfloat(tmp);
 			            tmp										= kBuffer[id].depthAndPackedtangent.y;
 			            kBuffer[id].depthAndPackedtangent.y	= nodePackedTangent;
 						nodePackedTangent						= tmp;
-			#endif
 			        }
 
 			        // Do simple shading and out of order blending for nodes that are not part of the k closest fragments
@@ -390,11 +360,7 @@
 					// find the furthest node in the array
 			        for(int i=0; i<KBUFFER_SIZE; i++)
 			        {
-			#ifdef ALU_INDEXING
-			            float fDepth = asfloat(GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, i));
-			#else
 						float fDepth = asfloat(kBuffer[i].depthAndPackedtangent.x);
-			#endif
 			            if(max_depth < fDepth)
 			            {
 			                max_depth = fDepth;
@@ -404,18 +370,11 @@
 
 
 			        // take this node out of the next search
-			#ifdef ALU_INDEXING
-			        uint nodePackedTangent = GetUintFromIndex_Size16(kBufferPackedTangentV03, kBufferPackedTangentV47, kBufferPackedTangentV811, kBufferPackedTangentV1215, id);
-			        uint nodeDepth         = GetUintFromIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id);
-
-			        StoreUintAtIndex_Size16(kBufferDepthV03, kBufferDepthV47, kBufferDepthV811, kBufferDepthV1215, id, 0);
-			#else
 					uint nodePackedTangent = kBuffer[id].depthAndPackedtangent.y;
 			        uint nodeDepth         = kBuffer[id].depthAndPackedtangent.x;
 
 					// take this node out of the next search
 			        kBuffer[id].depthAndPackedtangent.x = 0;
-			#endif
 
 					// Use high quality shading for the nearest k fragments
 					float fDepth = asfloat(nodeDepth);

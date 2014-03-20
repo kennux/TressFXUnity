@@ -56,10 +56,10 @@ public class TressFXRender : MonoBehaviour
 	/// Use thin tip?
 	/// </summary>
 	public bool thinTip = false;
-
+	
 	private ComputeBuffer LinkedListUAV;
+	private RenderTexture LinkedListHeadUAV;
 	private int oldWidth, oldHeight;
-
 	private ComputeBuffer debug;
 
 	/// <summary>
@@ -77,24 +77,39 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial = new Material (this.hairRenderingShader);
 		AddInstance (this);
 
-		// Linked list uav
-		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12);
-
 		// Initialize old screen size
 		this.oldWidth = Screen.width;
 		this.oldHeight = Screen.height;
 
 		this.debug = new ComputeBuffer(10, 4);
-		this.debug.SetData (new float[] { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f });
+
+		this.CreateResources();
 	}
 
 	public void Update()
 	{
 		if (this.oldWidth != Screen.width || this.oldHeight != Screen.height)
 		{
-			// Re-create buffer
-			this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12);
+			// Re-create resources
+			this.CreateResources();
 		}
+	}
+
+	private void CreateResources()
+	{
+		this.LinkedListHeadUAV = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+		this.LinkedListHeadUAV.enableRandomWrite = true;
+		this.LinkedListHeadUAV.Create();
+
+		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12, ComputeBufferType.Counter);
+
+		// Initialize
+		/*PPL_Struct[] initialData = new PPL_Struct[8 * Screen.width * Screen.height];
+		for (int i = 0; i < 8 * Screen.width * Screen.height; i++)
+		{
+			initialData[i] = new PPL_Struct();
+		}
+		this.LinkedListUAV.SetData(initialData);*/
 	}
 
 	/// <summary>
@@ -117,12 +132,12 @@ public class TressFXRender : MonoBehaviour
 		// Hair material initialized?
 		if (this.hairMaterial != null)
 		{
-			RenderTexture LinkedListHeadUAV = RenderTexture.GetTemporary(Screen.width, Screen.height, 8, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-			RenderTexture.active = LinkedListHeadUAV;
-			GL.Clear (true, true, Color.white);
-			RenderTexture.active = null;
+			Graphics.SetRandomWriteTarget(1, this.LinkedListHeadUAV);
+			Graphics.SetRandomWriteTarget(2, this.LinkedListUAV);
+			Graphics.SetRandomWriteTarget(3, this.debug);
+			// Clear render texture
 
-			this.SetShaderData(LinkedListHeadUAV);
+			this.SetShaderData();
 			this.hairMaterial.SetPass(0);
 
 			// A-Buffer Pass
@@ -139,8 +154,6 @@ public class TressFXRender : MonoBehaviour
 				}
 			}*/
 
-			// Graphics.DrawTexture(new Rect(0,0,200,200), LinkedListHeadUAV);
-
 			// K-Buffer Pass
 
 			// Draw fullscreen quad
@@ -149,7 +162,7 @@ public class TressFXRender : MonoBehaviour
 				GL.LoadOrtho();
 
 				this.hairMaterial.SetPass(1);
-				this.SetShaderData(LinkedListHeadUAV);
+				this.SetShaderData();
 
 				GL.Begin(GL.TRIANGLES);
 				{
@@ -171,16 +184,19 @@ public class TressFXRender : MonoBehaviour
 			}
 			GL.PopMatrix();*/
 
-			// Graphics.ClearRandomWriteTargets();
+			Graphics.ClearRandomWriteTargets();
+			
+			/*float[] data = new float[10];
+			this.debug.GetData (data);
+
+			Debug.Log (data[0]);*/
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}
 
-	private void SetShaderData(RenderTexture LinkedListHeadUAV)
+	private void SetShaderData()
 	{
-		Graphics.SetRandomWriteTarget(3, this.debug);
-		// this.hairMaterial.SetBuffer("debug", this.debug);
 		this.hairMaterial.SetColor("_HairColor", this.HairColor);
 		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
@@ -193,10 +209,6 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetMatrix("g_mInvViewProj", (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse);
 		this.hairMaterial.SetFloat ("g_FiberAlpha", 1.0f); // 0.33f); // this.HairColor.a);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", 0.003f); // this.HairColor.a);
-		/*this.hairMaterial.SetTexture("LinkedListHeadUAV", LinkedListHeadUAV);
-		this.hairMaterial.SetBuffer("LinkedListUAV", this.LinkedListUAV);*/
-		Graphics.SetRandomWriteTarget(1, LinkedListHeadUAV);
-		Graphics.SetRandomWriteTarget(2, this.LinkedListUAV);
 	}
 	
 	public void OnRenderObject()

@@ -1,13 +1,12 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\TressFXInclude.cginc">
     <Files>
-      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="137" Column="48" />
-      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="455" Column="2" />
-      <File FileName="Assets\TressFX\TressFXRender.cs" Line="1" Column="1" />
-      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="1" Column="1" />
-      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="1" Column="1" />
-      <File FileName="Assets\TressFX\Shaders\TressFXInclude.cginc" Line="97" Column="21" />
+      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="414" Column="2" />
+      <File FileName="Assets\TressFX\Shaders\HairRenderingShader.shader" Line="114" Column="54" />
+      <File FileName="Assets\TressFX\Shaders\TressFXInclude.cginc" Line="47" Column="21" />
+      <File FileName="Assets\TressFX\TressFXRender.cs" Line="185" Column="21" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="11" Column="16" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

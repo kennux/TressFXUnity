@@ -1,9 +1,4 @@
-//The buffer containing the points we want to draw.
-StructuredBuffer<float3> g_HairVertexTangents;
-StructuredBuffer<float3> g_HairVertexPositions;
-StructuredBuffer<int> g_TriangleIndicesBuffer;
-StructuredBuffer<float> g_HairThicknessCoeffs;
-
+#include "AutoLight.cginc"
 //--------------------------------------------------------------------------------------
 // Per-Pixel Linked List (PPLL) structure
 //--------------------------------------------------------------------------------------
@@ -13,6 +8,16 @@ struct PPLL_STRUCT
     uint	depth;
     uint    uNext;
 };
+
+RWTexture2D<uint> LinkedListHeadUAV : register(u1);
+RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV : register(u2);
+RWStructuredBuffer<float> debug : register(u3);
+
+//The buffer containing the points we want to draw.
+StructuredBuffer<float3> g_HairVertexTangents;
+StructuredBuffer<float3> g_HairVertexPositions;
+StructuredBuffer<int> g_TriangleIndicesBuffer;
+StructuredBuffer<float> g_HairThicknessCoeffs;
 
 // Configurations
 uniform float4 _HairColor;
@@ -24,10 +29,9 @@ uniform float g_bThinTip;
 uniform matrix g_mInvViewProj;
 uniform float g_FiberAlpha;
 uniform float g_alphaThreshold;
-RWTexture2D<uint> LinkedListHeadUAV : register(u1);
-RWStructuredBuffer<PPLL_STRUCT>	LinkedListUAV : register(u2);
-RWStructuredBuffer<float> debug : register(u3);
-
+uniform float4 g_MatKValue;
+uniform float g_fHairEx2;
+uniform float g_fHairKs2;
 
 // K-Buffer struct
 struct KBuffer_STRUCT
@@ -40,6 +44,11 @@ struct PS_INPUT_HAIR_AA {
 	    float4 Position	: SV_POSITION;
 	    float4 Tangent	: Tangent;
 	    float4 p0p1		: TEXCOORD0;
+	    LIGHTING_COORDS(1,2)
+};
+
+struct VS_DATA {
+	float4 vertex;
 };
 
 struct VS_OUTPUT_SCREENQUAD
@@ -114,10 +123,10 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 	// returns coverage based on the relative distance
 	// 0, if completely outside hair edge
 	// 1, if completely inside hair edge
-	return p0dist - 0.5f; // (relDist + 1.f) * 0.5f;
+	return (relDist + 1.f) * 0.5f;
 }
 
-
+#define g_MatBaseColor _HairColor
 //--------------------------------------------------------------------------------------
 // ComputeHairShading
 //
@@ -138,7 +147,7 @@ float3 ComputeHairShading(float3 iPos, float3 iTangent, float4 iTex, float amoun
           Ks1 = g_MatKValue.z, Ex1 = g_MatKValue.w,
           Ks2 = g_fHairKs2, Ex2 = g_fHairEx2;
 
-    float3 lightPos = g_PointLightPos.xyz;
+    float3 lightPos = _ObjectSpaceLightPos.xyz; // g_PointLightPos.xyz;
     float3 vLightDir = normalize(lightPos - iPos.xyz);
     float3 vEyeDir = normalize(g_vEye.xyz - iPos.xyz);
     float3 tangent = normalize(iTangent);
@@ -216,7 +225,7 @@ void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float de
 {
     // Retrieve current pixel count and increase counter
     uint uPixelCount = LinkedListUAV.IncrementCounter();
-    uint uOldStartOffset;
+    uint uOldStartOffset = 0;
 
     // Exchange indices in LinkedListHead texture corresponding to pixel location 
     InterlockedExchange(LinkedListHeadUAV[address], uPixelCount, uOldStartOffset);  // link head texture
