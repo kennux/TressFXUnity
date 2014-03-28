@@ -59,6 +59,7 @@ public class TressFXRender : MonoBehaviour
 	
 	private ComputeBuffer LinkedListUAV;
 	private RenderTexture LinkedListHeadUAV;
+	private ComputeBuffer LinkedListHeadUAVBuffer;
 	private int oldWidth, oldHeight;
 	private ComputeBuffer debug;
 
@@ -82,6 +83,7 @@ public class TressFXRender : MonoBehaviour
 		this.oldHeight = Screen.height;
 
 		this.debug = new ComputeBuffer(10, 4);
+		this.debug.SetData (new float[] { 1 });
 
 		this.CreateResources();
 	}
@@ -102,6 +104,12 @@ public class TressFXRender : MonoBehaviour
 		this.LinkedListHeadUAV.Create();
 
 		this.LinkedListUAV = new ComputeBuffer (8 * Screen.width * Screen.height, 12, ComputeBufferType.Counter);
+		this.LinkedListHeadUAVBuffer = new ComputeBuffer(Screen.width * Screen.height, 4);
+
+		Graphics.ClearRandomWriteTargets();
+		Graphics.SetRandomWriteTarget(1, this.LinkedListHeadUAV);
+		Graphics.SetRandomWriteTarget(2, this.LinkedListUAV);
+		Graphics.SetRandomWriteTarget(3, this.debug);
 
 		// Initialize
 		/*PPL_Struct[] initialData = new PPL_Struct[8 * Screen.width * Screen.height];
@@ -132,9 +140,6 @@ public class TressFXRender : MonoBehaviour
 		// Hair material initialized?
 		if (this.hairMaterial != null)
 		{
-			Graphics.SetRandomWriteTarget(1, this.LinkedListHeadUAV);
-			Graphics.SetRandomWriteTarget(2, this.LinkedListUAV);
-			Graphics.SetRandomWriteTarget(3, this.debug);
 			// Clear render texture
 
 			this.SetShaderData();
@@ -155,6 +160,15 @@ public class TressFXRender : MonoBehaviour
 			}*/
 
 			// K-Buffer Pass
+			/*int[] test2 = new int[Screen.width * Screen.height];
+			this.LinkedListHeadUAVBuffer.GetData(test2);
+			foreach (int da in test2)
+			{
+				if (da != 0)
+				{
+					int te = 1;
+				}
+			}*/
 
 			// Draw fullscreen quad
 			/*GL.PushMatrix();
@@ -162,6 +176,8 @@ public class TressFXRender : MonoBehaviour
 				GL.LoadOrtho();
 
 				this.hairMaterial.SetPass(1);
+				this.hairMaterial.SetTexture("LinkedListHeadSRV", this.LinkedListHeadUAV);
+				this.hairMaterial.SetBuffer("LinkedListSRV", this.LinkedListUAV);
 				this.SetShaderData();
 
 				GL.Begin(GL.TRIANGLES);
@@ -183,13 +199,6 @@ public class TressFXRender : MonoBehaviour
 				GL.End();
 			}
 			GL.PopMatrix();*/
-
-			Graphics.ClearRandomWriteTargets();
-			
-			/*float[] data = new float[10];
-			this.debug.GetData (data);
-
-			Debug.Log (data[0]);*/
 		}
 
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
@@ -197,6 +206,28 @@ public class TressFXRender : MonoBehaviour
 
 	private void SetShaderData()
 	{
+		Matrix4x4 g_mInvViewProjViewport = new Matrix4x4();
+		Matrix4x4 mViewport = new Matrix4x4();
+		
+		mViewport[0,0] = 2.0f / Screen.width;
+		mViewport[0,1] = 0.0f;
+		mViewport[0,2] = 0.0f;
+		mViewport[0,3] = 0.0f;
+		mViewport[1,0] = 0.0f;
+		mViewport[1,1] = 2.0f / Screen.height;
+		mViewport[1,2] = 0.0f;
+		mViewport[1,3] = 0.0f;
+		mViewport[2,0] = 0.0f;
+		mViewport[2,1] = 0.0f;
+		mViewport[2,2] = 1.0f;
+		mViewport[2,3] = 0.0f;
+		mViewport[3,0] = -1.0f;
+		mViewport[3,1] = 1.0f;
+		mViewport[3,2] = 0.0f;
+		mViewport[3,3] = 1.0f;
+
+		g_mInvViewProjViewport = (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse * mViewport;
+
 		this.hairMaterial.SetColor("_HairColor", this.HairColor);
 		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
@@ -207,6 +238,7 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
 		this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
 		this.hairMaterial.SetMatrix("g_mInvViewProj", (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse);
+		this.hairMaterial.SetMatrix("g_mInvViewProjViewport", g_mInvViewProjViewport);
 		this.hairMaterial.SetFloat ("g_FiberAlpha", 1.0f); // 0.33f); // this.HairColor.a);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", 0.003f); // this.HairColor.a);
 	}

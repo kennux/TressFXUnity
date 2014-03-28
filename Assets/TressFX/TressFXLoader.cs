@@ -58,6 +58,12 @@ public class TressFXLoader : MonoBehaviour
 		// Start parsing hair file
 		string[] hairLines = hairData.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
 		
+		// Wrong line endings?
+		if (hairLines.Length < 2)
+		{
+			hairLines = hairData.Split(new string[] { "\n" }, StringSplitOptions.None);
+		}
+		
 		// Properties
 		int numStrands = 0; 
 		int numVertices = 0;

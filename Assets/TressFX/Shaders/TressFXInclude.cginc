@@ -1,4 +1,3 @@
-#include "AutoLight.cginc"
 //--------------------------------------------------------------------------------------
 // Per-Pixel Linked List (PPLL) structure
 //--------------------------------------------------------------------------------------
@@ -13,11 +12,16 @@ RWTexture2D<uint> LinkedListHeadUAV : register(u1);
 RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV : register(u2);
 RWStructuredBuffer<float> debug : register(u3);
 
+RWTexture2D<uint> LinkedListHeadSRV;
+StructuredBuffer<struct PPLL_STRUCT> LinkedListSRV;
+
 //The buffer containing the points we want to draw.
 StructuredBuffer<float3> g_HairVertexTangents;
 StructuredBuffer<float3> g_HairVertexPositions;
 StructuredBuffer<int> g_TriangleIndicesBuffer;
 StructuredBuffer<float> g_HairThicknessCoeffs;
+
+static const float PI = 3.14159265f;
 
 // Configurations
 uniform float4 _HairColor;
@@ -27,6 +31,7 @@ uniform float g_FiberRadius;
 uniform float g_bExpandPixels;
 uniform float g_bThinTip;
 uniform matrix g_mInvViewProj;
+uniform matrix g_mInvViewProjViewport;
 uniform float g_FiberAlpha;
 uniform float g_alphaThreshold;
 uniform float4 g_MatKValue;
@@ -44,7 +49,6 @@ struct PS_INPUT_HAIR_AA {
 	    float4 Position	: SV_POSITION;
 	    float4 Tangent	: Tangent;
 	    float4 p0p1		: TEXCOORD0;
-	    LIGHTING_COORDS(1,2)
 };
 
 struct VS_DATA {
@@ -123,7 +127,7 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 	// returns coverage based on the relative distance
 	// 0, if completely outside hair edge
 	// 1, if completely inside hair edge
-	return (relDist + 1.f) * 0.5f;
+	return p0dist - 0.5f; // (relDist + 1.f) * 0.5f;
 }
 
 #define g_MatBaseColor _HairColor
@@ -136,18 +140,18 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 //--------------------------------------------------------------------------------------
 float3 ComputeHairShading(float3 iPos, float3 iTangent, float4 iTex, float amountLight)
 {
-    /*float3 baseColor = g_MatBaseColor.xyz;
+    float3 baseColor = _HairColor.xyz;
     float rand_value = 1;
     
-    if(abs(iTex.x) + abs(iTex.y) >1e-5) // if texcoord is available, use texture map
-        rand_value = g_txNoise.SampleLevel(g_samLinearWrap, iTex.xy, 0).x;
+    /*if(abs(iTex.x) + abs(iTex.y) >1e-5) // if texcoord is available, use texture map
+        rand_value = g_txNoise.SampleLevel(g_samLinearWrap, iTex.xy, 0).x;*/
     
     // define baseColor and Ka Kd Ks coefficient for hair
     float Ka = g_MatKValue.x, Kd = g_MatKValue.y, 
           Ks1 = g_MatKValue.z, Ex1 = g_MatKValue.w,
           Ks2 = g_fHairKs2, Ex2 = g_fHairEx2;
 
-    float3 lightPos = _ObjectSpaceLightPos.xyz; // g_PointLightPos.xyz;
+    float3 lightPos = float4(421,306,343,0).xyz; // g_PointLightPos.xyz;
     float3 vLightDir = normalize(lightPos - iPos.xyz);
     float3 vEyeDir = normalize(g_vEye.xyz - iPos.xyz);
     float3 tangent = normalize(iTangent);
@@ -175,13 +179,13 @@ float3 ComputeHairShading(float3 iPos, float3 iTangent, float4 iTex, float amoun
     float sinTRL_tip = sqrt(1 - cosTRL_tip * cosTRL_tip);
     float specular_tip = max(0, cosTRL_tip * cosTE + sinTRL_tip * sinTE);
 
-    float3 vColor = Ka * g_AmbientLightColor.xyz * baseColor + // ambient
-                    amountLight * g_PointLightColor.xyz * (
+    float3 vColor = Ka * float4(1,1,1,1).xyz * baseColor + // ambient
+                    amountLight * float4(0.15f,0.15f,0.15f,0.15f).xyz * (
                     Kd * diffuse * baseColor + // diffuse
                     Ks1 * pow(specular_root, Ex1)  + // primary hightlight r
-                    Ks2 * pow(specular_tip, Ex2) * baseColor); // secondary highlight rtr */
+                    Ks2 * pow(specular_tip, Ex2) * baseColor); // secondary highlight rtr
 
-   return _HairColor; // vColor;
+   return vColor;
 }
 
 //--------------------------------------------------------------------------------------
@@ -221,12 +225,18 @@ float3 SimpleHairShading(float3 iPos, float3 iTangent, float4 iTex, float amount
     return _HairColor; // vColor;
 }
 
+uint ListIndex(uint2 address)
+{
+	return (address.x * _ScreenParams.y) + address.y;
+}
+
 void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth)
 {
     // Retrieve current pixel count and increase counter
     uint uPixelCount = LinkedListUAV.IncrementCounter();
     uint uOldStartOffset = 0;
-
+    
+    // uint address_i = ListIndex(address);
     // Exchange indices in LinkedListHead texture corresponding to pixel location 
     InterlockedExchange(LinkedListHeadUAV[address], uPixelCount, uOldStartOffset);  // link head texture
 

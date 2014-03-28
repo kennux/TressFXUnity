@@ -101,11 +101,7 @@
             #pragma fragment frag
             
             #include "UnityCG.cginc"
-            #include "AutoLight.cginc"
             #include "TressFXInclude.cginc"
-            
-            #define TRANSFER_VERTEX_TO_FRAGMENT_TFX(a) a._LightCoord = mul(_LightMatrix0, mul(_World2Object, mul(_Object2World, v.vertex))).xyz; TRANSFER_SHADOW_TFX(a)
-            #define TRANSFER_SHADOW_TFX(a) a._ShadowCoord = mul( unity_World2Shadow[0], mul(_World2Object, mul(_Object2World, v.vertex)) );
  
             //Our vertex function simply fetches a point from the buffer corresponding to the vertex index
             //which we transform with the view-projection matrix before passing to the pixel program.
@@ -134,8 +130,6 @@
 				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				float4 edge1 = hairEdgePositions[0];
-				float4 edge2 = hairEdgePositions[1];
 				hairEdgePositions[0] = mul(UNITY_MATRIX_VP, hairEdgePositions[0]);
 				hairEdgePositions[1] = mul(UNITY_MATRIX_VP, hairEdgePositions[1]);
 				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
@@ -147,19 +141,16 @@
 			    Output.Position = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
-			    VS_DATA v;
-			    v.vertex = (fDirIndex==-1.0 ? edge1 : edge2);
-			    
-			    TRANSFER_VERTEX_TO_FRAGMENT_TFX(Output);
 			    
 			    return Output;
             }
-            
-            // A-Buffer pass
+			
+			// A-Buffer pass
             [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
 			{
 				In.Position.y -= 35; // Why is this offset needed?
+				In.Position.x -= 5; // Why is this offset needed?
 				
 			     // Render AA Line, calculate pixel coverage
 			    float4 proj_pos = float4(   2*In.Position.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
@@ -168,15 +159,12 @@
 			                                1);
 			    
 			    float curve_scale = 1;
-			    /*if (g_bThinTip > 0 )
-			        curve_scale = In.Tangent.w;*/
-			    
 			    float fiber_radius = curve_scale * g_FiberRadius;
 				
 				float coverage = 1.f;
 				float initialCoverage = 1.f;
 				if(true)
-				{	
+				{
 			        initialCoverage = coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
 				}
 
@@ -185,10 +173,10 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
+			        // StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
 			    }
 			    // output a mask RT for final pass    
-			    return float4(1, 0, 0, 0) * LIGHT_ATTENUATION(In); // float4(LinkedListHeadUAV[uint2(1,1)], LinkedListUAV[0].TangentAndCoverage, 0, 0);
+			    return float4(coverage, 0, 0, 0);
 			}
             
             ENDCG
@@ -229,9 +217,9 @@
             #pragma fragment frag
             
 			#define KBUFFER_SIZE 8
-			#define NULLPOINTER 0xFFFFFFFF
+			#define NULLPOINTER 0x000000 // FFFFFFFF
 			#define g_iMaxFragments 768
-			#define COLORDEBUG 1
+			#define COLORDEBUG
             
             VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
@@ -245,6 +233,9 @@
             
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
+				In.vPosition.y -= 35; // Why is this offset needed?
+				In.vPosition.x -= 5; // Why is this offset needed?
+				
             	float4 fcolor = float4(0,0,0,1);
 			    float amountLight;
 			    float lightIntensity;
@@ -255,13 +246,13 @@
 				uint tangentAndCoverage;
 
 				// get the start of the linked list from the head pointer
-				uint pointer = LinkedListHeadUAV[In.vPosition.xy];
+				uint pointer = LinkedListHeadSRV[In.vPosition.xy];
 
 			    // A local Array to store the top k fragments(depth and color), where k = KBUFFER_SIZE
 
 			    KBuffer_STRUCT kBuffer[KBUFFER_SIZE];
 
-				[unroll]for(int t=0; t<KBUFFER_SIZE; t++)
+				for(int t=0; t<KBUFFER_SIZE; t++)
 				{
 			        kBuffer[t].depthAndPackedtangent.x = asuint(100000.0f);	// must be larger than the maximum possible depth value
 			        kBuffer[t].depthAndPackedtangent.y = 0;
@@ -273,9 +264,9 @@
 			    {
 			        if (pointer != NULLPOINTER)
 			        {
-			            kBuffer[p].depthAndPackedtangent.x	= LinkedListUAV[pointer].depth;
-			            kBuffer[p].depthAndPackedtangent.y	= LinkedListUAV[pointer].TangentAndCoverage;
-			            pointer								= LinkedListUAV[pointer].uNext;
+			            kBuffer[p].depthAndPackedtangent.x	= LinkedListSRV[pointer].depth;
+			            kBuffer[p].depthAndPackedtangent.y	= LinkedListSRV[pointer].TangentAndCoverage;
+			            pointer								= LinkedListSRV[pointer].uNext;
 			#ifdef COLORDEBUG
 			            nNumFragments++;
 			#endif
@@ -296,7 +287,7 @@
 			        float max_depth = 0;
 
 					// find the furthest node in array
-			        [unroll]for(int i=0; i<KBUFFER_SIZE; i++)
+			        for(int i=0; i<KBUFFER_SIZE; i++)
 			        {	
 						float fDepth = asfloat(kBuffer[i].depthAndPackedtangent.x);
 			            if(max_depth < fDepth)
@@ -306,8 +297,8 @@
 			            }
 			        }
 
-			        uint nodePackedTangent = LinkedListUAV[pointer].TangentAndCoverage;
-					uint nodeDepth         = LinkedListUAV[pointer].depth;
+			        uint nodePackedTangent = LinkedListSRV[pointer].TangentAndCoverage;
+					uint nodeDepth         = LinkedListSRV[pointer].depth;
 					float fNodeDepth       = asfloat(nodeDepth);
 
 			        // If the node in the linked list is nearer than the furthest one in the local array, exchange the node 
@@ -323,7 +314,7 @@
 			        }
 
 			        // Do simple shading and out of order blending for nodes that are not part of the k closest fragments
-			        vWorldPosition = mul(float4(In.vPosition.xy, fNodeDepth, 1), g_mInvViewProj);
+			        vWorldPosition = mul(float4(In.vPosition.xy, fNodeDepth, 1), g_mInvViewProjViewport);
 					vWorldPosition.xyz /= vWorldPosition.www;
 
 			/* #ifdef SIMPLESHADOWING
@@ -346,7 +337,7 @@
 					fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
 
 			        // Retrieve next node pointer
-			        pointer = LinkedListUAV[pointer].uNext;
+			        pointer = LinkedListSRV[pointer].uNext;
 			    }
 
 
@@ -403,7 +394,7 @@
 			    if (nNumFragments>128) fcolor.xyz = float3(1,0,0);
 			#endif
 
-			    return fcolor;
+			    return float4(nNumFragments / 900, 0, 0,0); // float4(LinkedListHeadSRV[ListIndex(uint2(0,0))], 0, 0, 1);
             }
             
             ENDCG
