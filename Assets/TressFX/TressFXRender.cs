@@ -141,6 +141,9 @@ public class TressFXRender : MonoBehaviour
 		if (this.hairMaterial != null)
 		{
 			// Clear render texture
+			RenderTexture.active = this.LinkedListHeadUAV;
+			GL.Clear(true, true, Color.white);
+			RenderTexture.active = null;
 
 			this.SetShaderData();
 			this.hairMaterial.SetPass(0);
@@ -171,7 +174,7 @@ public class TressFXRender : MonoBehaviour
 			}*/
 
 			// Draw fullscreen quad
-			/*GL.PushMatrix();
+			GL.PushMatrix();
 			{
 				GL.LoadOrtho();
 
@@ -198,9 +201,12 @@ public class TressFXRender : MonoBehaviour
 				}
 				GL.End();
 			}
-			GL.PopMatrix();*/
+			GL.PopMatrix();
 		}
 
+		Graphics.DrawTexture(new Rect(0,0,100,100), this.LinkedListHeadUAV);
+
+		Debug.Log (Screen.width + " " + Screen.height);
 		this.renderTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}
 
@@ -227,8 +233,9 @@ public class TressFXRender : MonoBehaviour
 		mViewport[3,3] = 1.0f;
 
 		g_mInvViewProjViewport = (Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix).inverse * mViewport;
-
+		
 		this.hairMaterial.SetColor("_HairColor", this.HairColor);
+		this.hairMaterial.SetMatrix("_VPMatrix", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix);
 		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
 		this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);

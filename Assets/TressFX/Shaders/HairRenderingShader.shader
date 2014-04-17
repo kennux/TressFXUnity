@@ -74,7 +74,7 @@
         Pass
         {
         	Tags { "LightMode" = "ForwardAdd" }
-        	// ColorMask 0
+        	ColorMask 0
         	ZWrite Off
         	ZTest LEqual
 			Stencil
@@ -102,7 +102,9 @@
             
             #include "UnityCG.cginc"
             #include "TressFXInclude.cginc"
- 
+            
+            uniform matrix _VPMatrix;
+              
             //Our vertex function simply fetches a point from the buffer corresponding to the vertex index
             //which we transform with the view-projection matrix before passing to the pixel program.
             PS_INPUT_HAIR_AA vert (uint id : SV_VertexID)
@@ -149,12 +151,14 @@
             [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
 			{
-				In.Position.y -= 35; // Why is this offset needed?
-				In.Position.x -= 5; // Why is this offset needed?
+				In.Position.y -= 36; // Why is this offset needed?
+				In.Position.x -= 1; // Why is this offset needed?
+				
+				// return float4(In.Position.x, 0, 0, 1);
 				
 			     // Render AA Line, calculate pixel coverage
 			    float4 proj_pos = float4(   2*In.Position.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
-			                                1 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
+			                                1.0 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
 			    
@@ -173,7 +177,7 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        // StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
+			        StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
 			    }
 			    // output a mask RT for final pass    
 			    return float4(coverage, 0, 0, 0);
@@ -217,9 +221,8 @@
             #pragma fragment frag
             
 			#define KBUFFER_SIZE 8
-			#define NULLPOINTER 0x000000 // FFFFFFFF
+			#define NULLPOINTER 0xFFFFFFFF
 			#define g_iMaxFragments 768
-			#define COLORDEBUG
             
             VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
@@ -233,9 +236,6 @@
             
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
-				In.vPosition.y -= 35; // Why is this offset needed?
-				In.vPosition.x -= 5; // Why is this offset needed?
-				
             	float4 fcolor = float4(0,0,0,1);
 			    float amountLight;
 			    float lightIntensity;
@@ -393,8 +393,7 @@
 			    if (nNumFragments>64) fcolor.xyz = float3(1,0.5,0);
 			    if (nNumFragments>128) fcolor.xyz = float3(1,0,0);
 			#endif
-
-			    return float4(nNumFragments / 900, 0, 0,0); // float4(LinkedListHeadSRV[ListIndex(uint2(0,0))], 0, 0, 1);
+				return fcolor;
             }
             
             ENDCG

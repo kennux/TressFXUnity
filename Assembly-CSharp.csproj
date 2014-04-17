@@ -57,6 +57,7 @@
      <Compile Include="Assets\TressFX\TressFXUtil.cs" />
      <Compile Include="Assets\Util\Parallel.cs" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
+     <None Include="Assets\TressFX\Shaders\test.shader" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
      <None Include="Assets\TressFX\Materials\Media\hair_tail.txt" />
      <None Include="Assets\TressFX\Shaders\HairRenderingShader.shader" />

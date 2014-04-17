@@ -127,7 +127,7 @@ float ComputeCoverage(float2 p0, float2 p1, float2 pixelLoc)
 	// returns coverage based on the relative distance
 	// 0, if completely outside hair edge
 	// 1, if completely inside hair edge
-	return p0dist - 0.5f; // (relDist + 1.f) * 0.5f;
+	return (relDist + 1.f) * 0.5f;
 }
 
 #define g_MatBaseColor _HairColor
@@ -234,7 +234,7 @@ void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float de
 {
     // Retrieve current pixel count and increase counter
     uint uPixelCount = LinkedListUAV.IncrementCounter();
-    uint uOldStartOffset = 0;
+    uint uOldStartOffset;
     
     // uint address_i = ListIndex(address);
     // Exchange indices in LinkedListHead texture corresponding to pixel location 
