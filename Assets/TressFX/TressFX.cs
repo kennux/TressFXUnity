@@ -79,7 +79,7 @@ public class TressFX : MonoBehaviour
 	private Quaternion[] globalRotations;
 	private TressFXTransform[] localTransforms;
 	private TressFXTransform[] globalTransforms;
-	private TressFXStrand[] strands;
+	public TressFXStrand[] strands;
 	private int[] triangleIndices;
 	private float[] thicknessCoeffs;
 

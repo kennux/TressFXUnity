@@ -22,27 +22,54 @@ public class TressFXRender : MonoBehaviour
 
 	public MeshFilter test;
 
+	private Bounds meshBounds;
+
 	public void Initialize(Mesh[] meshes)
 	{
 		this.master = this.gameObject.GetComponent<TressFX> ();
 
-		// Initialize mesh rendering
-		/*for (int i = 0; i < meshes.Length; i++)
+		// Calculate mesh bounds
+		Vector3 addedVertices = Vector3.zero;
+		float highestXDistance = 0;
+		float highestYDistance = 0;
+		float highestZDistance = 0;
+		int vertices = 0;
+
+		// Add all vertices to a vector for calculating the center point
+		for (int sI = 0; sI < this.master.strands.Length; sI++)
 		{
-			// Init game object
-			GameObject g = new GameObject();
-			g.transform.name = "Hair Mesh #"+i;
-			g.transform.parent = this.transform;
-			g.transform.localPosition = Vector3.zero;
+			for (int vI = 0; vI < this.master.strands[sI].vertices.Length; vI++)
+			{
+				Vector3 vertexPos = this.master.strands[sI].vertices[vI].pos;
+				addedVertices += vertexPos;
 
-			// Add renderers
-			MeshFilter meshFilter = g.AddComponent<MeshFilter>();
-			MeshRenderer meshRenderer = g.AddComponent<MeshRenderer>();
+				// Highest distances
+				if (Mathf.Abs(vertexPos.x) > highestXDistance)
+				{
+					highestXDistance = Mathf.Abs(vertexPos.x);
+				}
+				if (Mathf.Abs(vertexPos.y) > highestYDistance)
+				{
+					highestYDistance = Mathf.Abs(vertexPos.y);
+				}
+				if (Mathf.Abs(vertexPos.z) > highestZDistance)
+				{
+					highestZDistance = Mathf.Abs(vertexPos.z);
+				}
 
-			meshFilter.sharedMesh = meshes[i];
-			meshRenderer.sharedMaterial = this.hairMaterial;
-		}*/
+				vertices++;
+			}
+		}
+
+		this.meshBounds = new Bounds ((addedVertices / vertices), new Vector3 (highestXDistance, highestYDistance, highestZDistance));
+
+		// Initialize mesh rendering
 		this.meshes = meshes;
+		for (int i = 0; i < meshes.Length; i++)
+		{
+			this.meshes[i].bounds = this.meshBounds;
+		}
+
 	}
 
 	public void LateUpdate()
@@ -57,22 +84,6 @@ public class TressFXRender : MonoBehaviour
 
 		for (int i = 0; i < this.meshes.Length; i++)
 		{
-			// TEMPORARY BOUNDING BOX FIX!
-			// QUICK & DIRTY
-			// boundsTarget is the center of the camera's frustum, in world coordinates:
-			Vector3 camPosition = Camera.main.transform.position;
-			Vector3 normCamForward = Vector3.Normalize(Camera.main.transform.forward);
-			float boundsDistance = (Camera.main.farClipPlane - Camera.main.nearClipPlane) / 2 + Camera.main.nearClipPlane;
-			Vector3 boundsTarget = camPosition + (normCamForward * boundsDistance);
-			
-			// The game object's transform will be applied to the mesh's bounds for frustum culling checking.
-			// We need to "undo" this transform by making the boundsTarget relative to the game object's transform:
-			Vector3 realtiveBoundsTarget = this.transform.InverseTransformPoint(boundsTarget);
-			
-			// Set the bounds of the mesh to be a 1x1x1 cube (actually doesn't matter what the size is)
-			this.meshes[i].bounds = new Bounds(realtiveBoundsTarget, new Vector3(200,200,200));
-			
-			//Graphics.DrawMesh(this.meshes[i], this.transform.localToWorldMatrix, this.hairMaterial, 1);
 			Graphics.DrawMesh(this.meshes[i], Vector3.zero, this.transform.rotation, this.hairMaterial, 8);
 		}
 	}

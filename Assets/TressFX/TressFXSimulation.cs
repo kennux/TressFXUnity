@@ -43,11 +43,14 @@ public class TressFXSimulation : MonoBehaviour
 	public float gravityMagnitude = 9.82f;
 	public int lengthConstraintIterations = 5;
 	public int localShapeConstraintIterations = 2;
-	
-	public Vector4 windForce1;
-	public Vector4 windForce2;
-	public Vector4 windForce3;
-	public Vector4 windForce4;
+
+	public Vector4 windDirection;
+	public float windMagnitude;
+
+	private Vector4 windForce1;
+	private Vector4 windForce2;
+	private Vector4 windForce3;
+	private Vector4 windForce4;
 
 	private ComputeBuffer hairStrandVerticeNums;
 	private ComputeBuffer collisionTargetBuffer;
@@ -122,6 +125,55 @@ public class TressFXSimulation : MonoBehaviour
 	public void LateUpdate()
 	{
 		long ticks = DateTime.Now.Ticks;
+
+		// Simulate wind
+		float wM = windMagnitude * (Mathf.Pow( Mathf.Sin(Time.frameCount*0.05f), 2.0f ) + 0.5f);
+		
+		Vector3 windDirN = this.windDirection.normalized;
+		
+		Vector3 XAxis = new Vector3(1,0,0);
+		Vector3 xCrossW = Vector3.Cross (XAxis, windDirN);
+		
+		Quaternion rotFromXAxisToWindDir = Quaternion.identity;
+		
+		float angle = Mathf.Asin(xCrossW.magnitude);
+		
+		if ( angle > 0.001 )
+		{
+			rotFromXAxisToWindDir = Quaternion.AngleAxis(angle, xCrossW.normalized);
+		}
+		
+		float angleToWideWindCone = 40.0f;
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 1.0f, 0);
+
+			// Radians?
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis; 
+			this.windForce1 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, -1.0f, 0);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce2 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 0, 1.0f);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce3 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 0, -1.0f);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce4 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
 		
 		this.SetResources();
 		this.DispatchKernels();
