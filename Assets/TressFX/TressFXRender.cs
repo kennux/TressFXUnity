@@ -57,7 +57,8 @@ public class TressFXRender : MonoBehaviour
 
 		for (int i = 0; i < this.meshes.Length; i++)
 		{
-			
+			// TEMPORARY BOUNDING BOX FIX!
+			// QUICK & DIRTY
 			// boundsTarget is the center of the camera's frustum, in world coordinates:
 			Vector3 camPosition = Camera.main.transform.position;
 			Vector3 normCamForward = Vector3.Normalize(Camera.main.transform.forward);
@@ -69,10 +70,10 @@ public class TressFXRender : MonoBehaviour
 			Vector3 realtiveBoundsTarget = this.transform.InverseTransformPoint(boundsTarget);
 			
 			// Set the bounds of the mesh to be a 1x1x1 cube (actually doesn't matter what the size is)
-			this.meshes[i].bounds = test.sharedMesh.bounds; // new Bounds(realtiveBoundsTarget, Vector3.one);
+			this.meshes[i].bounds = new Bounds(realtiveBoundsTarget, new Vector3(200,200,200));
 			
 			//Graphics.DrawMesh(this.meshes[i], this.transform.localToWorldMatrix, this.hairMaterial, 1);
-			Graphics.DrawMesh(this.meshes[i], Vector3.zero, this.transform.rotation, this.hairMaterial, 1);
+			Graphics.DrawMesh(this.meshes[i], Vector3.zero, this.transform.rotation, this.hairMaterial, 8);
 		}
 	}
 }
