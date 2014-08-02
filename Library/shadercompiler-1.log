@@ -1,17 +1,137 @@
 Base path: C:/Program Files (x86)/Unity/Editor/Data
-Pipe name: \\.\pipe\UnityShaderCompiler-1-744
+Pipe name: \\.\pipe\UnityShaderCompiler-1-4832
 Cmd: getPlatforms
 Cmd: preprocess
-  insize=14090 outsize=3324 ok=1
+  insize=2700 outsize=175 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=4211 outsize=3687 kw=POINT SHADOWS_OFF ok=1
+  api=4 type=0 insize=2822 outsize=3557 kw= ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=4211 outsize=3492 kw=POINT SHADOWS_OFF ok=1
+  api=4 type=1 insize=2822 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2700 outsize=175 ok=1
+Cmd: preprocess
+  insize=2709 outsize=175 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=6915 outsize=787 kw= ok=1
+  api=4 type=0 insize=2831 outsize=3647 kw= ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=6915 outsize=12405 kw= ok=1
+  api=4 type=1 insize=2831 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2585 outsize=175 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=4211 outsize=3687 kw=DIRECTIONAL SHADOWS_OFF ok=1
+  api=4 type=0 insize=2707 outsize=3647 kw= ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=4211 outsize=3492 kw=DIRECTIONAL SHADOWS_OFF ok=1
+  api=4 type=1 insize=2707 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2601 outsize=174 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2723 outsize=1006 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2723 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2631 outsize=175 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (42): incorrect number of arguments to numeric-type constructor
+  error: 1 plat 4 at (42): 'mul': implicit truncation of vector type
+  api=4 type=0 insize=2753 outsize=0 kw= ok=0
+Cmd: preprocess
+  insize=2635 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2757 outsize=1266 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2757 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2636 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2758 outsize=1266 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2758 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2562 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2684 outsize=3557 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2684 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2554 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2676 outsize=3557 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2676 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2558 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2680 outsize=2842 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2680 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2548 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2670 outsize=3557 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2670 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2873 outsize=175 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (36): incorrect number of arguments to numeric-type constructor
+  api=4 type=0 insize=2995 outsize=0 kw= ok=0
+Cmd: preprocess
+  insize=2910 outsize=175 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (36): incorrect number of arguments to numeric-type constructor
+  api=4 type=0 insize=3032 outsize=0 kw= ok=0
+Cmd: preprocess
+  insize=2916 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3038 outsize=1201 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3038 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2919 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3041 outsize=1323 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3041 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2985 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3107 outsize=1664 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3107 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2985 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3107 outsize=1502 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3107 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2985 outsize=175 ok=1
+Cmd: preprocess
+  insize=3074 outsize=175 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3196 outsize=2395 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3196 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=2985 outsize=175 ok=1
+Cmd: preprocess
+  insize=3016 outsize=206 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3109 outsize=1664 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3109 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=3020 outsize=210 ok=1
+Cmd: preprocess
+  insize=3023 outsize=210 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3112 outsize=1664 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3112 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=3029 outsize=210 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3118 outsize=3590 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3118 outsize=510 kw= ok=1
+Cmd: preprocess
+  insize=433 outsize=1179 ok=1

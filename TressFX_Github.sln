@@ -5,6 +5,8 @@ Project("{8FE227F9-A4C2-FF15-3B7C-CC3575A32365}") = "TressFX_Github", "Assembly-
 EndProject
 Project("{8FE227F9-A4C2-FF15-3B7C-CC3575A32365}") = "TressFX_Github", "Assembly-UnityScript-firstpass.unityproj", "{288588D2-FBFE-48C7-D821-DF2777F13487}"
 EndProject
+Project("{8FE227F9-A4C2-FF15-3B7C-CC3575A32365}") = "TressFX_Github", "Assembly-UnityScript.unityproj", "{F5291E53-9D77-CBAC-9F47-1FA23A1FF2FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,11 +21,15 @@ Global
 		{288588D2-FBFE-48C7-D821-DF2777F13487}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{288588D2-FBFE-48C7-D821-DF2777F13487}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{288588D2-FBFE-48C7-D821-DF2777F13487}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5291E53-9D77-CBAC-9F47-1FA23A1FF2FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5291E53-9D77-CBAC-9F47-1FA23A1FF2FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5291E53-9D77-CBAC-9F47-1FA23A1FF2FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5291E53-9D77-CBAC-9F47-1FA23A1FF2FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
+													GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1
@@ -41,4 +47,5 @@ Global
 		$3.inheritsScope = text/plain
 		$3.scope = text/plain
 	EndGlobalSection
+
 EndGlobal
