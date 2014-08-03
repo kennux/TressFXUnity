@@ -38,6 +38,7 @@
 			StructuredBuffer<float3> g_HairVertexTangents;
 			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
+			StructuredBuffer<int> g_HairThicknessCoeffs;
 			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
@@ -47,6 +48,7 @@
 			uniform fixed _Gloss;
 			uniform fixed4 _SpecularColor1;
           	uniform fixed4 _SpecularColor2;
+			uniform float g_bThinTip;
 			
 			v2f vert (appdata_base input)
 	        {
@@ -75,7 +77,7 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
@@ -222,6 +224,7 @@
 			uniform fixed4 _HairColor;
 			uniform fixed _Shininess;
 			uniform fixed _Gloss;
+			uniform float g_bThinTip;
 			
 			v2f vert (appdata_base input)
 	        {
@@ -235,7 +238,7 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
@@ -351,10 +354,12 @@
 			StructuredBuffer<float3> g_HairVertexTangents;
 			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
+			StructuredBuffer<int> g_HairThicknessCoeffs;
 			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
+			uniform float g_bThinTip;
 
 			struct v2f
 			{ 
@@ -371,10 +376,10 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceLightPos0) ) );
+			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
 			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
@@ -429,10 +434,12 @@
 			StructuredBuffer<float3> g_HairVertexTangents;
 			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
+			StructuredBuffer<float> g_HairThicknessCoeffs;
 			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
+			uniform float g_bThinTip;
 
 	        struct v2f {
 	            V2F_SHADOW_COLLECTOR;
@@ -448,7 +455,7 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
