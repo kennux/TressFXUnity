@@ -53,7 +53,7 @@ public class TressFXGui : MonoBehaviour
 		}
 
 		// Test
-		this.simulation.windMagnitude = Mathf.Lerp (-20, 20, Mathf.Abs(Mathf.Sin(Time.time * 2)) );
+		// this.simulation.windMagnitude = Mathf.Lerp (-20, 20, Mathf.Abs(Mathf.Sin(Time.time * 2)) );
 	}
 
 	/// <summary>
@@ -112,7 +112,7 @@ public class TressFXGui : MonoBehaviour
 
 		// Wind
 		GUI.Label (new Rect (10, 60, 150, 20), "Wind Magnitude:");
-		this.simulation.windMagnitude = GUI.HorizontalSlider (new Rect (160, 60, 180, 20), this.simulation.windMagnitude, -20, 20);
+		this.simulation.windMagnitude = GUI.HorizontalSlider (new Rect (160, 60, 180, 20), this.simulation.windMagnitude, -40, 40);
 	}
 
 

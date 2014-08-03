@@ -510,3 +510,5 @@ Cmd: compileSnippet
   api=4 type=0 insize=2869 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
 Cmd: compileSnippet
   api=4 type=1 insize=2869 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: preprocess
+  insize=952 outsize=348 ok=1

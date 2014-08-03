@@ -70,6 +70,11 @@ public class MeshBuilder
 
 	public Mesh[] GetMeshes()
 	{
+		if (this.currentVertices.Count > 0)
+		{
+			this.GenerateCurrentMesh ();
+		}
+
 		return this.meshes.ToArray ();
 	}
 
