@@ -181,7 +181,7 @@
 					float spec = pow (nh, _Shininess*128.0) * _Gloss;
 					
 					
-					c.rgb = (_HairColor.rgb * unity_LightColor[0].rgb * diff + unity_LightColor[0].rgb * _SpecColor.rgb * spec) * (atten * 2);
+					c.rgb = (_HairColor.rgb * _LightColor0.rgb * diff + _LightColor0.rgb * _SpecColor.rgb * spec) * (atten * 2);
 				}
 				
 				// c.a = s.Alpha + _LightColor0.a * _SpecColor.a * spec * atten;
@@ -354,7 +354,7 @@
 			StructuredBuffer<float3> g_HairVertexTangents;
 			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
-			StructuredBuffer<int> g_HairThicknessCoeffs;
+			StructuredBuffer<float> g_HairThicknessCoeffs;
 			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
@@ -427,6 +427,7 @@
 	        #pragma vertex vert
 	        #pragma fragment frag
 	        #pragma multi_compile_shadowcollector
+			#pragma target 5.0
 
 	        #define SHADOW_COLLECTOR_PASS
 	        #include "UnityCG.cginc"

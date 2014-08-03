@@ -25,6 +25,7 @@ public class TressFXRender : MonoBehaviour
 	public void Initialize(Mesh[] meshes)
 	{
 		this.master = this.gameObject.GetComponent<TressFX> ();
+		this.hairMaterial = new Material (this.hairMaterial);
 
 		// Calculate mesh bounds
 		Vector3 addedVertices = Vector3.zero;

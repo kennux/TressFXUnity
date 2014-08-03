@@ -1,41 +1,128 @@
 Base path: C:/Program Files (x86)/Unity/Editor/Data
-Pipe name: \\.\pipe\UnityShaderCompiler-6-5896
+Pipe name: \\.\pipe\UnityShaderCompiler-6-5240
 Cmd: getPlatforms
 Cmd: compileSnippet
-  api=8 type=0 insize=4279 outsize=2048 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_ON DIRLIGHTMAP_OFF ok=1
+  api=4 type=0 insize=6994 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF VERTEXLIGHT_ON ok=1
 Cmd: compileSnippet
-  api=0 type=0 insize=4279 outsize=540 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_ON DIRLIGHTMAP_ON ok=1
+  api=4 type=1 insize=2726 outsize=973 kw=SHADOWS_CUBE ok=1
 Cmd: compileSnippet
-  api=0 type=0 insize=4279 outsize=1566 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF VERTEXLIGHT_ON ok=1
+  error: 2 plat 0 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (434): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
+  error: 1 plat 0 at (435): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (436): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (437): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
+  error: 2 plat 0 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
+  error: 1 plat 0 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
+  error: 1 plat 0 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
+  error: 1 plat 0 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
+  error: 1 plat 0 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
+  error: 2 plat 0 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
+  error: 1 plat 0 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (481): invalid type in type constructor
+  error: 2 plat 0 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 1 plat 0 at (484): implicit cast from "float4" to "float3"
+  error: 2 plat 0 at (488): in and out can't be used on local variable "i"
+  error: 2 plat 0 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 2 plat 0 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 0 at (490): size of dimension cannot be less than 1; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 0 at (490): syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 1 plat 0 at (490): unrecognized profile specifier "fromCenter0" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter1" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter2" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter3" unrecognized profile specifier "float3"
+  api=0 type=0 insize=2839 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NONATIVE ok=0
 Cmd: compileSnippet
-  api=0 type=0 insize=4279 outsize=1693 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF VERTEXLIGHT_ON ok=1
+  api=4 type=1 insize=2839 outsize=2290 kw=SHADOWS_NATIVE ok=1
 Cmd: compileSnippet
-  api=1 type=1 insize=4279 outsize=270 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  error: 2 plat 0 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (434): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
+  error: 1 plat 0 at (435): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (436): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 0 at (437): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 0 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
+  error: 2 plat 0 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
+  error: 1 plat 0 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
+  error: 1 plat 0 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
+  error: 1 plat 0 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
+  error: 1 plat 0 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
+  error: 2 plat 0 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
+  error: 1 plat 0 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
+  error: 2 plat 0 at (481): invalid type in type constructor
+  error: 2 plat 0 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 1 plat 0 at (484): implicit cast from "float4" to "float3"
+  error: 2 plat 0 at (490): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  api=0 type=0 insize=2839 outsize=0 kw=SHADOWS_NONATIVE ok=0
 Cmd: compileSnippet
-  api=1 type=1 insize=4279 outsize=325 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  error: 2 plat 1 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (434): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
+  error: 1 plat 1 at (435): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (436): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (437): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
+  error: 2 plat 1 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
+  error: 1 plat 1 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
+  error: 1 plat 1 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
+  error: 1 plat 1 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
+  error: 1 plat 1 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
+  error: 2 plat 1 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
+  error: 1 plat 1 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (481): invalid type in type constructor
+  error: 2 plat 1 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 1 plat 1 at (484): implicit cast from "float4" to "float3"
+  error: 2 plat 1 at (488): in and out can't be used on local variable "i"
+  error: 2 plat 1 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 2 plat 1 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 1 at (490): size of dimension cannot be less than 1; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 1 at (490): syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 1 plat 1 at (490): unrecognized profile specifier "fromCenter0" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter1" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter2" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter3" unrecognized profile specifier "float3"
+  api=1 type=0 insize=2839 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=0
 Cmd: compileSnippet
-  api=8 type=1 insize=4279 outsize=2275 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=1 type=0 insize=2255 outsize=402 kw=SPOT ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=2255 outsize=2875 kw=POINT_COOKIE ok=1
-Cmd: compileSnippet
-  api=8 type=0 insize=2255 outsize=3608 kw=DIRECTIONAL_COOKIE ok=1
-Cmd: compileSnippet
-  api=8 type=1 insize=2255 outsize=1698 kw=DIRECTIONAL ok=1
-Cmd: compileSnippet
-  api=8 type=1 insize=2255 outsize=2990 kw=SPOT ok=1
-Cmd: compileSnippet
-  api=0 type=1 insize=1783 outsize=159 kw= ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=3996 outsize=2883 kw=LIGHTMAP_ON DIRLIGHTMAP_OFF HDR_LIGHT_PREPASS_OFF ok=1
-Cmd: compileSnippet
-  api=1 type=0 insize=3996 outsize=313 kw=LIGHTMAP_ON DIRLIGHTMAP_ON HDR_LIGHT_PREPASS_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=3996 outsize=2883 kw=LIGHTMAP_ON DIRLIGHTMAP_OFF HDR_LIGHT_PREPASS_ON ok=1
-Cmd: compileSnippet
-  api=0 type=1 insize=3996 outsize=297 kw=LIGHTMAP_OFF DIRLIGHTMAP_OFF HDR_LIGHT_PREPASS_OFF ok=1
-Cmd: compileSnippet
-  api=1 type=1 insize=3996 outsize=304 kw=LIGHTMAP_ON DIRLIGHTMAP_ON HDR_LIGHT_PREPASS_OFF ok=1
-Cmd: compileSnippet
-  api=8 type=1 insize=3996 outsize=2982 kw=LIGHTMAP_ON DIRLIGHTMAP_OFF HDR_LIGHT_PREPASS_ON ok=1
+  error: 2 plat 1 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (434): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
+  error: 1 plat 1 at (435): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (436): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
+  error: 1 plat 1 at (437): unrecognized profile specifier "StructuredBuffer"
+  error: 2 plat 1 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
+  error: 2 plat 1 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
+  error: 1 plat 1 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
+  error: 1 plat 1 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
+  error: 1 plat 1 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
+  error: 1 plat 1 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
+  error: 2 plat 1 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
+  error: 1 plat 1 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
+  error: 2 plat 1 at (481): invalid type in type constructor
+  error: 2 plat 1 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 1 plat 1 at (484): implicit cast from "float4" to "float3"
+  error: 2 plat 1 at (488): in and out can't be used on local variable "i"
+  error: 2 plat 1 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
+  error: 2 plat 1 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 1 at (490): size of dimension cannot be less than 1; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 2 plat 1 at (490): syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
+  error: 1 plat 1 at (490): unrecognized profile specifier "fromCenter0" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter1" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter2" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter3" unrecognized profile specifier "float3"
+  api=1 type=1 insize=2839 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NONATIVE ok=0
+Unhandled exception: Readfile from pipe failed. GLE=Die Pipe wurde beendet.
+
+
+Quitting shader compiler process
