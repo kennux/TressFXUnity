@@ -20,12 +20,15 @@ public class MeshBuilder
 	private List<int> currentIndices;
 	private List<Vector2> currentUv;
 
-	public MeshBuilder()
+	private MeshTopology topology;
+
+	public MeshBuilder(MeshTopology topology)
 	{
 		this.meshes = new List<Mesh> ();
 		this.currentIndices = new List<int> ();
 		this.currentVertices = new List<Vector3> ();
 		this.currentUv = new List<Vector2> ();
+		this.topology = topology;
 	}
 
 	public bool HasSpace(int count)
@@ -81,8 +84,7 @@ public class MeshBuilder
 		// Set vertices and indices
 		mesh.vertices = this.currentVertices.ToArray ();
 		mesh.uv = this.currentUv.ToArray ();
-		mesh.SetIndices (this.currentIndices.ToArray (), MeshTopology.Triangles, 0);
-		mesh.RecalculateNormals ();
+		mesh.SetIndices (this.currentIndices.ToArray (), this.topology, 0);
 
 		// Add mesh to the list
 		this.meshes.Add (mesh);

@@ -47,15 +47,13 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\FreeFlyCamera.js" />
-     <None Include="Assets\TressFX\Shaders\HairSurfaceShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\Test.shader" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
      <None Include="Assets\TressFX\Materials\Media\hair_tail.txt" />
-     <None Include="Assets\TressFX\Shaders\HairRenderingShader.shader" />
+     <None Include="Assets\TressFX\Shaders\HairShadowShader.shader" />
      <None Include="Assets\TressFX\Materials\Media\hair_free.txt" />
      <None Include="Assets\TressFX\Materials\Media\hair_front_long.txt" />
-     <None Include="Assets\TressFX\Shaders\TressFXInclude.cginc" />
      <None Include="Assets\TressFX\Shaders\HairShader.shader" />
  <Reference Include="Assembly-UnityScript-firstpass">
  <HintPath>D:/Unity/TressFX_Github/Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll</HintPath>

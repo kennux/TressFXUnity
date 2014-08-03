@@ -118,21 +118,10 @@ public class TressFX : MonoBehaviour
 
 		// Initialize transforms and fill hair and strand indices, hair rest lengths and position vectors
 		int index = 0;
-		int indexCounter = 0;
-		int vertexCounter = 0;
-		MeshBuilder meshBuilder = new MeshBuilder ();
 
 		for (int i = 0; i < strands.Length; i++)
 		{
 			hairIndices[i] = strands[i].hairId;
-			List<Vector3> meshVertices = new List<Vector3>();
-			List<int> meshIndices = new List<int>();
-
-			// Reset index counter?
-			if (!meshBuilder.HasSpace(strands[i].vertices.Length * 6))
-			{
-				indexCounter = 0;
-			}
 
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
@@ -164,13 +153,6 @@ public class TressFX : MonoBehaviour
 					triangleIndicesList.Add(2*index+2);
 					triangleIndicesList.Add(2*index+1);
 					triangleIndicesList.Add(2*index+3);
-
-					// Add mesh data
-					meshVertices.AddRange (new Vector3[] { new Vector3(vertexCounter,0,0), new Vector3(vertexCounter + 1,0,0), new Vector3(vertexCounter + 2,0,0), new Vector3(vertexCounter + 3,0,0), new Vector3(vertexCounter + 4,0,0), new Vector3(vertexCounter + 5,0,0) });
-					meshIndices.AddRange (new int[] { indexCounter, indexCounter + 1, indexCounter + 2, indexCounter + 3, indexCounter + 4, indexCounter + 5 });
-
-					indexCounter += 6;
-					vertexCounter += 6;
 				}
 
 				float tVal = strands[i].vertices[j].texcoords.z;
@@ -180,9 +162,6 @@ public class TressFX : MonoBehaviour
 				strandIndices[index] = j;
 				index++;
 			}
-
-			// Add to mesh builder
-			meshBuilder.AddVertices(meshVertices.ToArray(), meshIndices.ToArray());
 
 			// Set strand offsets
 			offsets[i] = index;
@@ -225,7 +204,7 @@ public class TressFX : MonoBehaviour
 		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
 		if (render != null)
 		{
-			render.Initialize(meshBuilder.GetMeshes());
+			render.Initialize();
 		}
 		
 		this.LastVertexPositionBuffer.SetData (positionVectors);

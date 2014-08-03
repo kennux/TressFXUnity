@@ -51,6 +51,9 @@ public class TressFXGui : MonoBehaviour
 		{
 			this.simulationWindowRect = GUI.Window (0, this.simulationWindowRect, this.SimulationWindowFunc, "Simulation Menu");
 		}
+
+		// Test
+		this.simulation.windMagnitude = Mathf.Lerp (-20, 20, Mathf.Abs(Mathf.Sin(Time.time * 2)) );
 	}
 
 	/// <summary>
@@ -63,7 +66,7 @@ public class TressFXGui : MonoBehaviour
 		GUI.DragWindow (new Rect (0, 0, 300, 20));
 
 		// Color
-		Color c = this.renderer.hairMaterial.GetColor ("_HairColor");
+		Color c = this.renderer.hairColor;
 		
 		GUI.Label (new Rect (10, 20, 100, 20), "Hair Color Red:");
 		c.r = GUI.HorizontalSlider (new Rect (110, 20, 150, 20), c.r, 0, 1);
@@ -72,7 +75,7 @@ public class TressFXGui : MonoBehaviour
 		GUI.Label (new Rect (10, 60, 100, 20), "Hair Color Blue:");
 		c.b = GUI.HorizontalSlider (new Rect (110, 60, 150, 20), c.b, 0, 1);
 
-		this.renderer.hairMaterial.SetColor ("_HairColor", c);
+		this.renderer.hairColor = c;
 
 		// Parameters
 		GUI.Label (new Rect (10, 80, 100, 20), "Expand pixels: ");
@@ -81,6 +84,10 @@ public class TressFXGui : MonoBehaviour
 		this.renderer.thinTip = GUI.Toggle (new Rect (110, 100, 150, 20), this.renderer.thinTip, "");
 		GUI.Label (new Rect (10, 120, 100, 20), "Fiber Radius: ");
 		this.renderer.fiberRadius = GUI.HorizontalSlider (new Rect (110, 120, 150, 20), this.renderer.fiberRadius, 0, 1);
+		GUI.Label (new Rect (10, 140, 100, 20), "Shininess: ");
+		this.renderer.shininess = GUI.HorizontalSlider (new Rect (110, 140, 150, 20), this.renderer.shininess, 0, 1);
+		GUI.Label (new Rect (10, 160, 100, 20), "Gloss: ");
+		this.renderer.gloss = GUI.HorizontalSlider (new Rect (110, 160, 150, 20), this.renderer.gloss, 0, 1);
 	}
 
 	/// <summary>
@@ -105,7 +112,7 @@ public class TressFXGui : MonoBehaviour
 
 		// Wind
 		GUI.Label (new Rect (10, 60, 150, 20), "Wind Magnitude:");
-		this.simulation.windMagnitude = GUI.HorizontalSlider (new Rect (160, 60, 180, 20), this.simulation.windMagnitude, 0, 20);
+		this.simulation.windMagnitude = GUI.HorizontalSlider (new Rect (160, 60, 180, 20), this.simulation.windMagnitude, -20, 20);
 	}
 
 

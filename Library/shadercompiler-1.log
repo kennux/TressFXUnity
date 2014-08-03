@@ -1,186 +1,512 @@
 Base path: C:/Program Files (x86)/Unity/Editor/Data
-Pipe name: \\.\pipe\UnityShaderCompiler-1-2016
+Pipe name: \\.\pipe\UnityShaderCompiler-1-5176
 Cmd: getPlatforms
-Cmd: compileSnippet
-  api=4 type=0 insize=6994 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_ON DIRLIGHTMAP_ON ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=6994 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_ON DIRLIGHTMAP_ON ok=1
-Cmd: compileSnippet
-  error: 2 plat 0 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (434): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
-  error: 1 plat 0 at (435): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (436): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (437): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
-  error: 2 plat 0 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
-  error: 1 plat 0 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
-  error: 1 plat 0 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
-  error: 1 plat 0 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
-  error: 1 plat 0 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
-  error: 2 plat 0 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
-  error: 1 plat 0 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (481): invalid type in type constructor
-  error: 2 plat 0 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  error: 1 plat 0 at (484): implicit cast from "float4" to "float3"
-  error: 2 plat 0 at (490): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  api=0 type=0 insize=2839 outsize=0 kw=SHADOWS_NATIVE ok=0
-Cmd: compileSnippet
-  error: 2 plat 1 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (434): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
-  error: 1 plat 1 at (435): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (436): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (437): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
-  error: 2 plat 1 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
-  error: 1 plat 1 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
-  error: 1 plat 1 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
-  error: 1 plat 1 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
-  error: 1 plat 1 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
-  error: 2 plat 1 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
-  error: 1 plat 1 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (481): invalid type in type constructor
-  error: 2 plat 1 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  error: 1 plat 1 at (484): implicit cast from "float4" to "float3"
-  error: 2 plat 1 at (490): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  api=1 type=1 insize=2839 outsize=0 kw=SHADOWS_NATIVE ok=0
 Cmd: preprocess
-  insize=18385 outsize=6806 ok=1
+  insize=18411 outsize=6806 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=2728 outsize=3760 kw=SHADOWS_DEPTH ok=1
+  api=4 type=0 insize=2746 outsize=3793 kw=SHADOWS_DEPTH ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=2728 outsize=445 kw=SHADOWS_DEPTH ok=1
-Cmd: compileSnippet
-  error: 2 plat 1 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (434): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
-  error: 1 plat 1 at (435): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (436): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 1 at (437): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 1 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
-  error: 2 plat 1 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
-  error: 1 plat 1 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
-  error: 1 plat 1 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
-  error: 1 plat 1 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
-  error: 1 plat 1 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
-  error: 2 plat 1 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
-  error: 1 plat 1 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
-  error: 2 plat 1 at (481): invalid type in type constructor
-  error: 2 plat 1 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  error: 1 plat 1 at (484): implicit cast from "float4" to "float3"
-  error: 2 plat 1 at (490): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  api=1 type=0 insize=2839 outsize=0 kw=SHADOWS_NATIVE ok=0
-Cmd: compileSnippet
-  error: 2 plat 0 at (434): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (434): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (435): syntax error, unexpected '<' at token "<" type name expected at token "<" declaration of "float3" conflicts with previous declaration at (434)
-  error: 1 plat 0 at (435): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (436): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (436): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (437): syntax error, unexpected '<' at token "<" type name expected at token "<"
-  error: 1 plat 0 at (437): unrecognized profile specifier "StructuredBuffer"
-  error: 2 plat 0 at (438): syntax error, unexpected identifier at token "float3" type name expected at token "float3" declaration of "float3" conflicts with previous declaration at (434)
-  error: 2 plat 0 at (445): syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":" syntax error, unexpected ':' at token ":" type name expected at token ":"
-  error: 1 plat 0 at (445): unrecognized profile specifier "_ShadowCoord0" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord1" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord2" unrecognized profile specifier "float3" unrecognized profile specifier "_ShadowCoord3" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (456): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "."
-  error: 1 plat 0 at (456): unrecognized profile specifier "t" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (457): syntax error, unexpected '=' at token "=" type name expected at token "=" non constant expression for array size; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (456)
-  error: 1 plat 0 at (457): unrecognized profile specifier "vert" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (461): syntax error, unexpected '=' at token "=" type name expected at token "=" syntax error, unexpected '(' at token "(" type name expected at token "(" syntax error, unexpected '(' at token "(" type name expected at token "("
-  error: 1 plat 0 at (461): unrecognized profile specifier "right" unrecognized profile specifier "float3" unrecognized profile specifier "cross" unrecognized profile specifier "normalize"
-  error: 2 plat 0 at (476): syntax error, unexpected '=' at token "=" type name expected at token "=" cast not allowed
-  error: 1 plat 0 at (476): unrecognized profile specifier "pos" unrecognized profile specifier "float3"
-  error: 2 plat 0 at (481): invalid type in type constructor
-  error: 2 plat 0 at (484): expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  error: 1 plat 0 at (484): implicit cast from "float4" to "float3"
-  error: 2 plat 0 at (488): in and out can't be used on local variable "i"
-  error: 2 plat 0 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) expression left of ."_ShadowCoord0" is not a struct or array; expression left of ."_ShadowCoord1" is not a struct or array; expression left of ."_ShadowCoord2" is not a struct or array; expression left of ."_ShadowCoord3" is not a struct or array
-  error: 2 plat 0 at (490): declaration of "_WorldPosViewZ" conflicts with previous declaration at (490) declaration of "xyz" conflicts with previous declaration at (490) declaration of "unity_ShadowSplitSpheres" conflicts with previous declaration at (490) syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
-  error: 2 plat 0 at (490): size of dimension cannot be less than 1; syntax error, unexpected '.', expecting ',' or ';' at token "." type name expected at token "." declaration of "xyz" conflicts with previous declaration at (490) syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
-  error: 2 plat 0 at (490): syntax error, unexpected '=' at token "=" type name expected at token "=" declaration of "i" conflicts with previous declaration at (488)
-  error: 1 plat 0 at (490): unrecognized profile specifier "fromCenter0" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter1" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter2" unrecognized profile specifier "float3" unrecognized profile specifier "fromCenter3" unrecognized profile specifier "float3"
-  api=0 type=1 insize=2839 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NONATIVE ok=0
+  api=4 type=1 insize=2746 outsize=445 kw=SHADOWS_DEPTH ok=1
 Cmd: preprocess
-  insize=18407 outsize=6806 ok=1
+  insize=18427 outsize=6806 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2762 outsize=3980 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2762 outsize=445 kw=SHADOWS_DEPTH ok=1
+Cmd: preprocess
+  insize=18427 outsize=6807 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2762 outsize=3972 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2762 outsize=445 kw=SHADOWS_DEPTH ok=1
+Cmd: preprocess
+  insize=18404 outsize=6806 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2739 outsize=3890 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2739 outsize=445 kw=SHADOWS_DEPTH ok=1
+Cmd: preprocess
+  insize=18393 outsize=6807 ok=1
+Cmd: preprocess
+  insize=440 outsize=1186 ok=1
+Cmd: preprocess
+  insize=1277 outsize=671 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (38): implicit truncation of vector type
+  error: 2 plat 4 at (41): invalid subscript 'xyz'
+  api=4 type=0 insize=939 outsize=0 kw=SHADOWS_DEPTH ok=0
+Cmd: preprocess
+  insize=18397 outsize=9198 ok=1
+Cmd: preprocess
+  insize=1274 outsize=671 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (38): implicit truncation of vector type
+  error: 2 plat 4 at (41): invalid subscript 'xyz'
+  api=4 type=0 insize=936 outsize=0 kw=SHADOWS_DEPTH ok=0
+Cmd: preprocess
+  insize=1275 outsize=671 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=937 outsize=1388 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=937 outsize=445 kw=SHADOWS_DEPTH ok=1
+Cmd: preprocess
+  insize=1281 outsize=677 ok=1
+Cmd: preprocess
+  insize=971 outsize=367 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=937 outsize=1388 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=937 outsize=445 kw=SHADOWS_DEPTH ok=1
 Cmd: compileSnippet
   api=4 type=0 insize=2861 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
 Cmd: compileSnippet
   api=4 type=1 insize=2861 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=2861 outsize=5751 kw=SHADOWS_NATIVE ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=2861 outsize=2314 kw=SHADOWS_NATIVE ok=1
 Cmd: preprocess
-  insize=18407 outsize=11747 ok=1
+  insize=1788 outsize=569 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=919 outsize=1047 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=919 outsize=445 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=937 outsize=1388 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=937 outsize=445 kw=SHADOWS_DEPTH ok=1
 Cmd: preprocess
-  insize=18421 outsize=11748 ok=1
+  insize=1795 outsize=1191 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=7008 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  api=4 type=0 insize=937 outsize=1388 kw=SHADOWS_DEPTH ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=7008 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=7008 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=7008 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  api=4 type=1 insize=937 outsize=445 kw=SHADOWS_DEPTH ok=1
 Cmd: preprocess
-  insize=18416 outsize=11746 ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=7005 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=7005 outsize=657 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  insize=18393 outsize=6807 ok=1
 Cmd: preprocess
-  insize=18423 outsize=11745 ok=1
+  insize=18397 outsize=9198 ok=1
+Cmd: preprocess
+  insize=18405 outsize=9196 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6984 outsize=5028 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6984 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2865 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2865 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6984 outsize=5450 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6984 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=18401 outsize=9197 ok=1
+Cmd: preprocess
+  insize=18400 outsize=9197 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2864 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2864 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: preprocess
+  insize=18432 outsize=9197 ok=1
 Cmd: compileSnippet
   api=4 type=0 insize=7012 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=7012 outsize=657 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  api=4 type=1 insize=7012 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2864 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2864 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=7012 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=7012 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: preprocess
-  insize=18437 outsize=11745 ok=1
+  insize=18399 outsize=9163 ok=1
 Cmd: compileSnippet
-  api=4 type=0 insize=7026 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  api=4 type=0 insize=6979 outsize=5231 kw= ok=1
 Cmd: compileSnippet
-  api=4 type=1 insize=7026 outsize=697 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  api=4 type=1 insize=6979 outsize=640 kw= ok=1
 Cmd: preprocess
-  insize=18439 outsize=11747 ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=7026 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=7026 outsize=746 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  insize=18432 outsize=9197 ok=1
 Cmd: preprocess
-  insize=18432 outsize=11748 ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=7019 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=7019 outsize=697 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=0 insize=7019 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
-Cmd: compileSnippet
-  api=4 type=1 insize=7019 outsize=746 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+  insize=438 outsize=1184 ok=1
 Cmd: preprocess
-  insize=18393 outsize=11748 ok=1
+  insize=3639 outsize=322 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (33): unrecognized identifier 'LIGHTING_COORDS'
+  api=4 type=0 insize=3618 outsize=0 kw= ok=0
+Cmd: preprocess
+  insize=3698 outsize=322 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3677 outsize=1242 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3677 outsize=1932 kw= ok=1
+Cmd: preprocess
+  insize=3965 outsize=589 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3677 outsize=1242 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3677 outsize=1932 kw= ok=1
+Cmd: preprocess
+  insize=3943 outsize=567 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=3677 outsize=1242 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=3677 outsize=1932 kw= ok=1
+Cmd: preprocess
+  insize=3944 outsize=568 ok=1
+Cmd: preprocess
+  insize=18400 outsize=9197 ok=1
+Cmd: preprocess
+  insize=2133 outsize=566 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1866 outsize=1242 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1866 outsize=640 kw= ok=1
+Cmd: preprocess
+  insize=2160 outsize=599 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (44): Output variable vert contains a system-interpreted value (SV_POSITION) which must be written in every execution path of the shader.  Unconditional initialization may help.
+  error: 1 plat 4 at (44): Output value 'vert' is not completely initialized
+  error: 1 plat 4 at (50): implicit truncation of vector type
+  error: 1 plat 4 at (68): 'dot': implicit truncation of vector type
+  error: 1 plat 4 at (70): 'dot': implicit truncation of vector type
+  api=4 type=0 insize=1893 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=2228 outsize=600 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1961 outsize=1242 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1961 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1961 outsize=1632 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1961 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2214 outsize=600 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (49): undeclared identifier 'v'
+  api=4 type=0 insize=1947 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=2230 outsize=599 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1963 outsize=1461 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1963 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1963 outsize=1908 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1963 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2209 outsize=578 ok=1
+Cmd: preprocess
+  insize=2209 outsize=579 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (49): incorrect number of arguments to numeric-type constructor
+  error: 1 plat 4 at (49): 'mul': implicit truncation of vector type
+  api=4 type=0 insize=1963 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=2213 outsize=578 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1967 outsize=1437 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1967 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1967 outsize=1924 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1967 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2991 outsize=2373 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=919 outsize=1047 kw= ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=919 outsize=445 kw= ok=1
+Cmd: preprocess
+  insize=3665 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (112): implicit truncation of vector type
+  error: 2 plat 4 at (127): invalid subscript 'lightDir'
+  api=4 type=0 insize=1593 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3813 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (112): undeclared identifier 'v'
+  api=4 type=0 insize=1741 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3830 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (112): incorrect number of arguments to numeric-type constructor
+  error: 1 plat 4 at (112): 'mul': implicit truncation of vector type
+  api=4 type=0 insize=1758 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3834 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (112): 'mul': implicit truncation of vector type
+  error: 2 plat 4 at (113): invalid subscript 'normal'
+  api=4 type=0 insize=1762 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3948 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (116): 'mul': implicit truncation of vector type
+  error: 2 plat 4 at (117): 'vert': identifier represents a function, not a variable
+  api=4 type=0 insize=1876 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3958 outsize=2407 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (116): 'mul': implicit truncation of vector type
+  error: 1 plat 4 at (137): 'dot': implicit truncation of vector type
+  error: 1 plat 4 at (139): 'dot': implicit truncation of vector type
+  error: 2 plat 4 at (140): undeclared identifier '_Shininess'
+  api=4 type=0 insize=1886 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3954 outsize=2289 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (101): redefinition of '_SpecColor'
+  api=4 type=0 insize=2000 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=3924 outsize=2289 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1970 outsize=2257 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1970 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1970 outsize=2712 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1970 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=3891 outsize=2256 ok=1
+Cmd: preprocess
+  insize=3855 outsize=2220 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1970 outsize=2257 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1970 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=18388 outsize=9186 ok=1
 Cmd: compileSnippet
   api=4 type=0 insize=6980 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: compileSnippet
   api=4 type=1 insize=6980 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: compileSnippet
+  api=4 type=0 insize=1970 outsize=2712 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1970 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2864 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2864 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
   api=4 type=0 insize=6980 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: compileSnippet
   api=4 type=1 insize=6980 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
 Cmd: preprocess
-  insize=18393 outsize=6807 ok=1
+  insize=2028 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2037 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1909 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1909 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=17944 outsize=9185 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6536 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6536 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1909 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1909 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2063 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1935 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1935 outsize=657 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1935 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1935 outsize=705 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=974 outsize=370 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=937 outsize=1388 kw=SHADOWS_DEPTH ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=937 outsize=445 kw=SHADOWS_DEPTH ok=1
+Cmd: preprocess
+  insize=2037 outsize=461 ok=1
+Cmd: preprocess
+  insize=17918 outsize=9185 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5142 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2864 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2864 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5564 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2050 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1922 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1922 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1922 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1922 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=17918 outsize=9183 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5272 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5694 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=1995 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1867 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1867 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1867 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1867 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=1968 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1840 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1840 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1840 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1840 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2028 outsize=461 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2121 outsize=554 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2175 outsize=554 ok=1
+Cmd: compileSnippet
+  error: 1 plat 4 at (69): 'dot': implicit truncation of vector type
+  error: 1 plat 4 at (71): 'dot': implicit truncation of vector type
+  error: 2 plat 4 at (81): incorrect number of arguments to numeric-type constructor
+  api=4 type=0 insize=1954 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=2176 outsize=553 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1955 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1955 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1955 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1955 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2177 outsize=553 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1956 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1956 outsize=640 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1956 outsize=2696 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1956 outsize=689 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=2201 outsize=577 ok=1
+Cmd: preprocess
+  insize=2145 outsize=578 ok=1
+Cmd: preprocess
+  insize=2142 outsize=575 ok=1
+Cmd: preprocess
+  insize=2145 outsize=578 ok=1
+Cmd: preprocess
+  insize=17942 outsize=9207 ok=1
+Cmd: preprocess
+  insize=17945 outsize=9210 ok=1
+Cmd: preprocess
+  insize=2145 outsize=578 ok=1
+Cmd: preprocess
+  insize=17918 outsize=9183 ok=1
+Cmd: preprocess
+  insize=17608 outsize=8876 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5272 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2864 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2864 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=6510 outsize=5694 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=6510 outsize=2355 kw=DIRECTIONAL SHADOWS_SCREEN LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=1860 outsize=292 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=1900 outsize=2282 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=1900 outsize=1932 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=1
+Cmd: preprocess
+  insize=3185 outsize=594 ok=1
+Cmd: preprocess
+  insize=2884 outsize=593 ok=1
+Cmd: preprocess
+  insize=2932 outsize=594 ok=1
+Cmd: preprocess
+  insize=9211 outsize=571 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (76): undeclared identifier 'vertexId'
+  api=4 type=0 insize=6452 outsize=0 kw=DIRECTIONAL SHADOWS_OFF LIGHTMAP_OFF DIRLIGHTMAP_OFF ok=0
+Cmd: preprocess
+  insize=9269 outsize=572 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (228): undeclared identifier 'vertexId'
+  api=4 type=0 insize=2829 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=0
+Cmd: compileSnippet
+  error: 2 plat 4 at (228): undeclared identifier 'vertexId'
+  api=4 type=1 insize=2829 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=0
+Cmd: preprocess
+  insize=9310 outsize=571 ok=1
+Cmd: compileSnippet
+  error: 2 plat 4 at (208): redefinition of 'index'
+  api=4 type=0 insize=2870 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=0
+Cmd: compileSnippet
+  error: 2 plat 4 at (208): redefinition of 'index'
+  api=4 type=1 insize=2870 outsize=0 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=0
+Cmd: preprocess
+  insize=9309 outsize=572 ok=1
+Cmd: compileSnippet
+  api=4 type=0 insize=2869 outsize=5751 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
+Cmd: compileSnippet
+  api=4 type=1 insize=2869 outsize=3062 kw=SHADOWS_SPLIT_SPHERES SHADOWS_NATIVE ok=1
