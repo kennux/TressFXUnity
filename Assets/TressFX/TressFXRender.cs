@@ -170,7 +170,7 @@ public class TressFXRender : MonoBehaviour
 
 		for (int i = 0; i < this.meshes.Length; i++)
 		{
-			Graphics.DrawMesh(this.meshes[i], Vector3.zero, this.transform.rotation, this.hairMaterial, 8);
+            Graphics.DrawMesh(this.meshes[i], Vector3.one, this.transform.rotation, this.hairMaterial, 8);
 		}
 
 		// Render shadows

@@ -2,13 +2,15 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\TressFX.cs">
     <Files>
-      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="33" Column="1" />
-      <File FileName="Assets\TressFX\TressFXGui.cs" Line="86" Column="116" />
-      <File FileName="Assets\TressFX\Shaders\HairShader.shader" Line="458" Column="26" />
-      <File FileName="Assets\TressFX\TressFXRender.cs" Line="28" Column="29" />
-      <File FileName="Assets\TressFX\TressFX.cs" Line="228" Column="41" />
-      <File FileName="Assets\TressFX\Helper\MeshBuilder.cs" Line="74" Column="3" />
-      <File FileName="Assets\TressFX\Shaders\HairShadowShader.shader" Line="36" Column="52" />
+      <File FileName="Assets\TressFX\TressFXLoader.cs" Line="121" Column="31" />
+      <File FileName="Assets\TressFX\TressFXGui.cs" Line="56" Column="6" />
+      <File FileName="Assets\TressFX\Shaders\HairShader.shader" Line="224" Column="82" />
+      <File FileName="Assets\TressFX\TressFXRender.cs" Line="66" Column="5" />
+      <File FileName="Assets\TressFX\TressFX.cs" Line="327" Column="39" />
+      <File FileName="Assets\TressFX\Helper\MeshBuilder.cs" Line="71" Column="27" />
+      <File FileName="Assets\TressFX\Shaders\HairShadowShader.shader" Line="25" Column="14" />
+      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="235" Column="96" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="311" Column="81" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -55,6 +55,8 @@ public class TressFXSimulation : MonoBehaviour
 	private ComputeBuffer hairStrandVerticeNums;
 	private ComputeBuffer collisionTargetBuffer;
 
+	private Matrix4x4 lastModelMatrix;
+
 	/// <summary>
 	/// The targets for checking the collisions.
 	/// </summary>
@@ -68,6 +70,8 @@ public class TressFXSimulation : MonoBehaviour
 	{
 		// Initialize collision check targets
 		this.collisionCheckTargets = new List<Collider>();
+
+		this.lastModelMatrix = this.transform.localToWorldMatrix;
 
 		this.master = this.GetComponent<TressFX>();
 		if (this.master == null)
@@ -233,6 +237,9 @@ public class TressFXSimulation : MonoBehaviour
 
 		// Set rest lengths buffer
 		this.HairSimulationShader.SetBuffer(this.LengthConstraintsAndWindKernelId, "g_HairRestLengthSRV", this.hairLengthsBuffer);
+		
+		this.HairSimulationShader.SetFloats ("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.lastModelMatrix.inverse));
+		this.HairSimulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray(this.transform.localToWorldMatrix));
 
 		// Set vertex position buffers to skip simulate kernel
 		this.SetVerticeInfoBuffers(this.SkipSimulationKernelId);
@@ -240,6 +247,8 @@ public class TressFXSimulation : MonoBehaviour
 		this.SetVerticeInfoBuffers(this.LocalShapeConstraintsKernelId);
 		this.SetVerticeInfoBuffers(this.LengthConstraintsAndWindKernelId);
 		this.SetVerticeInfoBuffers(this.CollisionAndTangentsKernelId);
+
+		this.lastModelMatrix = this.transform.localToWorldMatrix;
 	}
 
 	/// <summary>
