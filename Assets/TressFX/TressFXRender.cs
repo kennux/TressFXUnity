@@ -132,7 +132,7 @@ public class TressFXRender : MonoBehaviour
 			lineMeshBuilder.AddVertices(lineMeshVertices.ToArray(), lineMeshIndices.ToArray());
 		}
 
-		this.meshBounds = new Bounds ((addedVertices / vertices), new Vector3 ((highestXDistance-lowestXDistance)*2, (highestYDistance-lowestYDistance)*2, (highestZDistance-lowestZDistance)*2));
+		this.meshBounds = new Bounds ((addedVertices / vertices), new Vector3 ((highestXDistance-lowestXDistance), (highestYDistance-lowestYDistance), (highestZDistance-lowestZDistance)));
 
 		BoxCollider c = this.gameObject.AddComponent<BoxCollider> ();
 		c.size = new Vector3 ((highestXDistance-lowestXDistance)*2, (highestYDistance-lowestYDistance)*2, (highestZDistance-lowestZDistance)*2);
@@ -170,14 +170,14 @@ public class TressFXRender : MonoBehaviour
 
 		for (int i = 0; i < this.meshes.Length; i++)
 		{
-            Graphics.DrawMesh(this.meshes[i], Vector3.one, this.transform.rotation, this.hairMaterial, 8);
+            Graphics.DrawMesh(this.meshes[i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8);
 		}
 
 		// Render shadows
 		this.hairShadowMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 		for (int i = 0; i < this.lineMeshes.Length; i++)
 		{
-			Graphics.DrawMesh(this.lineMeshes[i], Vector3.zero, this.transform.rotation, this.hairShadowMaterial, 8);
+			Graphics.DrawMesh(this.lineMeshes[i], Vector3.zero, Quaternion.identity, this.hairShadowMaterial, 8);
 		}
 	}
 }

@@ -1,11 +1,12 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace />
-  <MonoDevelop.Ide.Workbench ActiveDocument="..\VoxelEngine\Assets\Examples\Creative Example\Scripts\BlockAdder.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TressFX\Shaders\HairShader.shader">
     <Files>
-      <File FileName="..\VoxelEngine\Assets\VoxelEngine\Scripts\CubicTerrain.cs" Line="404" Column="82" />
-      <File FileName="..\VoxelEngine\Assets\VoxelEngine\Scripts\CubicTerrainData.cs" Line="29" Column="2" />
-      <File FileName="..\VoxelEngine\Assets\Examples\Creative Example\Scripts\BlockRemoval.cs" Line="60" Column="5" />
-      <File FileName="..\VoxelEngine\Assets\Examples\Creative Example\Scripts\BlockAdder.cs" Line="110" Column="6" />
+      <File FileName="Assets\TressFX\TressFXSimulation.cs" Line="268" Column="36" />
+      <File FileName="Assets\TressFX\Shaders\HairShader.shader" Line="61" Column="78" />
+      <File FileName="Assets\TressFX\TressFXRender.cs" Line="155" Column="2" />
+      <File FileName="Assets\TressFX\TressFX.cs" Line="123" Column="43" />
+      <File FileName="Assets\TressFX\Shaders\Compute\HairSimulation.compute" Line="311" Column="81" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

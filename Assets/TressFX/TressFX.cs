@@ -98,6 +98,7 @@ public class TressFX : MonoBehaviour
 
 		// Buffer resources
 		positionVectors = new Vector4[numVertices];
+		Vector4[] initialPositionVectors = new Vector4[numVertices];
 		referenceVectors = new Vector3[numVertices];
 		vectorTangents = new Vector3[numVertices];
 		hairRestLengths = new float[numVertices];
@@ -126,7 +127,8 @@ public class TressFX : MonoBehaviour
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
 				// Load position of the strand
-				positionVectors[index] = strands[i].GetTressFXVector(j);
+				positionVectors[index] = new Vector4(this.transform.position.x, this.transform.position.y, this.transform.position.z, 0) + strands[i].GetTressFXVector(j);
+				initialPositionVectors[index] = strands[i].GetTressFXVector(j);
 
 				// Get rest length
 				if (j < strands[i].vertices.Length - 1)
@@ -189,7 +191,7 @@ public class TressFX : MonoBehaviour
 		this.StrandIndicesBuffer = new ComputeBuffer(numVertices, 4);
 		this.HairIndicesBuffer = new ComputeBuffer(strands.Length, 4);
 
-		this.InitialVertexPositionBuffer.SetData(positionVectors);
+		this.InitialVertexPositionBuffer.SetData(initialPositionVectors);
 		this.StrandIndicesBuffer.SetData(strandIndices);
 		this.HairIndicesBuffer.SetData(hairIndices);
 

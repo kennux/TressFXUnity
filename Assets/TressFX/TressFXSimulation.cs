@@ -119,8 +119,16 @@ public class TressFXSimulation : MonoBehaviour
 
 		this.configBuffer = new ComputeBuffer(hairConfig.Length, 16);
 		this.configBuffer.SetData(hairConfig);
-		
-		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.transform.localToWorldMatrix.inverse));
+
+		// Initialize simulation
+		this.SetResources ();
+		Vector3 pos = this.transform.position;
+
+		this.transform.position = Vector3.zero;
+		this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
+
+		this.transform.position = pos;
+		this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
 	}
 
 	/// <summary>
@@ -178,17 +186,15 @@ public class TressFXSimulation : MonoBehaviour
 			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
 			this.windForce4 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
 		}
-		
 		this.SetResources();
 		this.DispatchKernels();
+		
+		// this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
 
 		// Do collision check
 		this.CheckCollisionTargets();
 		
 		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
-		
-		// Set last inverse matrix
-		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.transform.localToWorldMatrix.inverse));
 	}
 
 	/// <summary>
@@ -238,17 +244,12 @@ public class TressFXSimulation : MonoBehaviour
 		// Set rest lengths buffer
 		this.HairSimulationShader.SetBuffer(this.LengthConstraintsAndWindKernelId, "g_HairRestLengthSRV", this.hairLengthsBuffer);
 		
-		this.HairSimulationShader.SetFloats ("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.lastModelMatrix.inverse));
-		this.HairSimulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray(this.transform.localToWorldMatrix));
-
 		// Set vertex position buffers to skip simulate kernel
 		this.SetVerticeInfoBuffers(this.SkipSimulationKernelId);
 		this.SetVerticeInfoBuffers(this.IntegrationAndGlobalShapeConstraintsKernelId);
 		this.SetVerticeInfoBuffers(this.LocalShapeConstraintsKernelId);
 		this.SetVerticeInfoBuffers(this.LengthConstraintsAndWindKernelId);
 		this.SetVerticeInfoBuffers(this.CollisionAndTangentsKernelId);
-
-		this.lastModelMatrix = this.transform.localToWorldMatrix;
 	}
 
 	/// <summary>
@@ -294,10 +295,13 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	private void SetMatrices()
 	{
-		Matrix4x4 HeadModelMatrix = this.transform.localToWorldMatrix;
-
-		// this.HairSimulationShader.SetFloats("InverseHeadModelMatrix", this.MatrixToFloatArray(HeadModelMatrix.inverse));
-		this.HairSimulationShader.SetFloats("g_ModelTransformForHead", this.MatrixToFloatArray(HeadModelMatrix));
+		// Set last inverse matrix
+		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.lastModelMatrix.inverse));
+		
+		// Set current matrix
+		this.HairSimulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (this.transform.localToWorldMatrix));
+		
+		this.lastModelMatrix = this.transform.localToWorldMatrix;
 	}
 
 	/// <summary>
