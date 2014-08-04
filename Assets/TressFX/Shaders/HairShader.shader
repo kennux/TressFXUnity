@@ -43,6 +43,7 @@
 			uniform fixed4 _SpecularColor1;
           	uniform fixed4 _SpecularColor2;
 			uniform float g_bThinTip;
+			uniform float4 modelTransform;
 			
 			v2f vert (appdata_base input)
 	        {
@@ -56,7 +57,8 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float3 vertexNormal = normalize(g_HairInitialVertexPositions[index].xyz);
+			    float3 vertexNormal = normalize(modelTransform.xyz - g_HairVertexPositions[index].xyz);
+			    vertexNormal.y = abs(vertexNormal.y);
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
