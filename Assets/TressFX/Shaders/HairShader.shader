@@ -30,6 +30,7 @@
 			
 			StructuredBuffer<float3> g_HairVertexTangents;
 			StructuredBuffer<float3> g_HairVertexPositions;
+			StructuredBuffer<float3> g_HairInitialVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
 			StructuredBuffer<int> g_HairThicknessCoeffs;
 			uniform float3 g_vEye;
@@ -55,11 +56,12 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
+			    float3 vertexNormal = normalize(g_HairInitialVertexPositions[index].xyz);
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
+			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
@@ -83,9 +85,9 @@
 			    float3 posi = (fDirIndex==-1.0 ? hairEdgePositionsNormal[0] : hairEdgePositionsNormal[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
 			    
 				o.pos = float4(pos, 1);
-				o.normal = normalize(float4(vert,1));
+				o.normal = float4(vertexNormal, 1);
                 
-				o.lightDir = ObjSpaceLightDir( float4(posi,1) );
+				o.lightDir = WorldSpaceLightDir( float4(posi,1) );
 				o.viewDir = WorldSpaceViewDir( float4(posi,1) );
 				
 				appdata_base v;

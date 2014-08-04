@@ -167,6 +167,7 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
 		this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
 		this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
+		this.hairMaterial.SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
 
 		for (int i = 0; i < this.meshes.Length; i++)
 		{
