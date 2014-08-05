@@ -27,9 +27,15 @@ public class TressFXRender : MonoBehaviour
 	public float fiberRadius = 0.14f;
 	public bool thinTip = true;
 	public Color hairColor;
-	public Color specColor;
+	/*public Color specularColor1;
+	public Color specularColor2;
 	public float shininess = 0.5f;
 	public float gloss = 0.5f;
+	public float specularShift = 0.5f;
+	public float primaryShift = 0.5f;
+	public float secondaryShift = 0.5f;
+	public float rimStrength = 0.5f;
+	public Vector4 anisoDir = new Vector4(0,1,0,0);*/
 
 	public void Initialize()
 	{
@@ -156,9 +162,16 @@ public class TressFXRender : MonoBehaviour
 	public void LateUpdate()
 	{
 		this.hairMaterial.SetColor("_HairColor", this.hairColor);
-		this.hairMaterial.SetColor("_SpecColor", this.specColor);
+		/* this.hairMaterial.SetColor("_SpecColor", this.specColor);
+		this.hairMaterial.SetColor("_SpecularColor1", this.specularColor1);
+		this.hairMaterial.SetColor("_SpecularColor2", this.specularColor2);
+		this.hairMaterial.SetVector("_AnisoDir", this.anisoDir);
 		this.hairMaterial.SetFloat("_Shininess", this.shininess);
-		this.hairMaterial.SetFloat("_Gloss", this.gloss);
+		this.hairMaterial.SetFloat("_SpecShift", this.specularShift);
+		this.hairMaterial.SetFloat("_PrimaryShift", this.primaryShift);
+		this.hairMaterial.SetFloat("_SecondaryShiftf", this.secondaryShift);
+		this.hairMaterial.SetFloat("_RimStrength", this.rimStrength);
+		this.hairMaterial.SetFloat("_Gloss", this.gloss);*/
 		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
 		this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);

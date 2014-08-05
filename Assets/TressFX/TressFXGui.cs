@@ -84,10 +84,10 @@ public class TressFXGui : MonoBehaviour
 		this.renderer.thinTip = GUI.Toggle (new Rect (110, 100, 150, 20), this.renderer.thinTip, "");
 		GUI.Label (new Rect (10, 120, 100, 20), "Fiber Radius: ");
 		this.renderer.fiberRadius = GUI.HorizontalSlider (new Rect (110, 120, 150, 20), this.renderer.fiberRadius, 0, 1);
-		GUI.Label (new Rect (10, 140, 100, 20), "Shininess: ");
+		/*GUI.Label (new Rect (10, 140, 100, 20), "Shininess: ");
 		this.renderer.shininess = GUI.HorizontalSlider (new Rect (110, 140, 150, 20), this.renderer.shininess, 0, 1);
 		GUI.Label (new Rect (10, 160, 100, 20), "Gloss: ");
-		this.renderer.gloss = GUI.HorizontalSlider (new Rect (110, 160, 150, 20), this.renderer.gloss, 0, 1);
+		this.renderer.gloss = GUI.HorizontalSlider (new Rect (110, 160, 150, 20), this.renderer.gloss, 0, 1);*/
 	}
 
 	/// <summary>
