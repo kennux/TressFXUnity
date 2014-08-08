@@ -11,14 +11,13 @@ public class TressFXRender : MonoBehaviour
 {
 	// Resources
 	private TressFX master;
-	private Material hairMaterial;
+	public Material[] hairMaterial;
 	private Material hairShadowMaterial;
 
-	public Shader standardHairShader;
 	public Shader hairShadowShader;
 
 	// Bouding boxes
-	private Mesh[] meshes;
+	private List<Mesh[]> meshes;
 	private Mesh[] lineMeshes;
 	private Bounds meshBounds;
 
@@ -27,20 +26,11 @@ public class TressFXRender : MonoBehaviour
 	public float fiberRadius = 0.14f;
 	public bool thinTip = true;
 	public Color hairColor;
-	/*public Color specularColor1;
-	public Color specularColor2;
-	public float shininess = 0.5f;
-	public float gloss = 0.5f;
-	public float specularShift = 0.5f;
-	public float primaryShift = 0.5f;
-	public float secondaryShift = 0.5f;
-	public float rimStrength = 0.5f;
-	public Vector4 anisoDir = new Vector4(0,1,0,0);*/
 
 	public void Initialize()
 	{
 		this.master = this.gameObject.GetComponent<TressFX> ();
-		this.hairMaterial = new Material (this.standardHairShader);
+
 		this.hairShadowMaterial = new Material (this.hairShadowShader);
 
 		// Calculate mesh bounds
@@ -59,13 +49,20 @@ public class TressFXRender : MonoBehaviour
 		MeshBuilder meshBuilder = new MeshBuilder (MeshTopology.Triangles);
 		MeshBuilder lineMeshBuilder = new MeshBuilder (MeshTopology.Lines);
 
+		// Initialize meshes list
+		List<Mesh[]> meshList = new List<Mesh[]>();
+
+		int lastHairId = 0;
+
 		// Add all vertices to a vector for calculating the center point
 		for (int sI = 0; sI < this.master.strands.Length; sI++)
 		{
 			List<Vector3> meshVertices = new List<Vector3>();
+			List<Vector2> meshUvs = new List<Vector2>();
 			List<int> meshIndices = new List<int>();
 			List<Vector3> lineMeshVertices = new List<Vector3>();
 			List<int> lineMeshIndices = new List<int>();
+			List<Vector2> lineMeshUvs = new List<Vector2>();
 			
 			// Reset index counter?
 			if (!meshBuilder.HasSpace(this.master.strands[sI].vertices.Length * 6))
@@ -75,6 +72,13 @@ public class TressFXRender : MonoBehaviour
 			if (!lineMeshBuilder.HasSpace(this.master.strands[sI].vertices.Length))
 			{
 				lineIndexCounter = 0;
+			}
+
+			if (lastHairId != this.master.strands[sI].hairId)
+			{
+				indexCounter = 0;
+				meshList.Add (meshBuilder.GetMeshes());
+				meshBuilder = new MeshBuilder(MeshTopology.Triangles);
 			}
 
 			for (int vI = 0; vI < this.master.strands[sI].vertices.Length; vI++)
@@ -109,12 +113,26 @@ public class TressFXRender : MonoBehaviour
 				{
 					lowestZDistance = Mathf.Abs(vertexPos.z);
 				}
-				
+
 				// Add mesh data
-				meshVertices.AddRange (new Vector3[] { new Vector3(vertexCounter,0,0), new Vector3(vertexCounter + 1,0,0), new Vector3(vertexCounter + 2,0,0), new Vector3(vertexCounter + 3,0,0), new Vector3(vertexCounter + 4,0,0), new Vector3(vertexCounter + 5,0,0) });
+				Vector3[] triangleVertices = new Vector3[] { new Vector3(vertexCounter,0,0), new Vector3(vertexCounter + 1,0,0), new Vector3(vertexCounter + 2,0,0), new Vector3(vertexCounter + 3,0,0), new Vector3(vertexCounter + 4,0,0), new Vector3(vertexCounter + 5,0,0) };
+
+				for (int i = 0; i < triangleVertices.Length; i++)
+				{
+					int localVertexId = this.master.MapTriangleIndexIdToStrandVertexId((int)triangleVertices[i].x);
+
+					// ... No comment
+					if (localVertexId >= this.master.strands[sI].vertices.Length)
+						localVertexId = this.master.strands[sI].vertices.Length-1;
+
+					meshUvs.Add (new Vector2(this.master.strands[sI].vertices[localVertexId].texcoords.x, this.master.strands[sI].vertices[localVertexId].texcoords.y));
+				}
+
+				meshVertices.AddRange (triangleVertices);
 				meshIndices.AddRange (new int[] { indexCounter, indexCounter + 1, indexCounter + 2, indexCounter + 3, indexCounter + 4, indexCounter + 5 });
 
-				lineMeshVertices.Add (new Vector3(vertices, 0, 0));
+				lineMeshVertices.Add (new Vector3(vertices, 0,0));
+				lineMeshUvs.Add (new Vector2(this.master.strands[sI].vertices[vI].texcoords.x, this.master.strands[sI].vertices[vI].texcoords.y));
 
 				if (/*vI == 0 || */this.master.strands[sI].vertices.Length-1 == vI)
 				{
@@ -128,14 +146,15 @@ public class TressFXRender : MonoBehaviour
 
 				indexCounter += 6;
 				vertexCounter += 6;
+				lastHairId = this.master.strands[sI].hairId;
 
 				lineIndexCounter++;
 				vertices++;
 			}
 			
 			// Add to mesh builder
-			meshBuilder.AddVertices(meshVertices.ToArray(), meshIndices.ToArray());
-			lineMeshBuilder.AddVertices(lineMeshVertices.ToArray(), lineMeshIndices.ToArray());
+			meshBuilder.AddVertices(meshVertices.ToArray(), meshIndices.ToArray(), meshUvs.ToArray());
+			lineMeshBuilder.AddVertices(lineMeshVertices.ToArray(), lineMeshIndices.ToArray(), lineMeshUvs.ToArray());
 		}
 
 		this.meshBounds = new Bounds ((addedVertices / vertices), new Vector3 ((highestXDistance-lowestXDistance), (highestYDistance-lowestYDistance), (highestZDistance-lowestZDistance)));
@@ -145,12 +164,16 @@ public class TressFXRender : MonoBehaviour
 		c.center = (addedVertices / vertices);
 
 		// Initialize mesh rendering
-		this.meshes = meshBuilder.GetMeshes();
+		meshList.Add(meshBuilder.GetMeshes());
 		this.lineMeshes = lineMeshBuilder.GetMeshes ();
-		
-		for (int i = 0; i < this.meshes.Length; i++)
+		this.meshes = meshList;
+
+		for (int i = 0; i < this.meshes.Count; i++)
 		{
-			this.meshes[i].bounds = this.meshBounds;
+			for (int j = 0; j < this.meshes[i].Length; j++)
+			{
+				this.meshes[i][j].bounds = this.meshBounds;
+			}
 		}
 
 		for (int i = 0; i < this.lineMeshes.Length; i++)
@@ -161,31 +184,27 @@ public class TressFXRender : MonoBehaviour
 
 	public void LateUpdate()
 	{
-		this.hairMaterial.SetColor("_HairColor", this.hairColor);
-		/* this.hairMaterial.SetColor("_SpecColor", this.specColor);
-		this.hairMaterial.SetColor("_SpecularColor1", this.specularColor1);
-		this.hairMaterial.SetColor("_SpecularColor2", this.specularColor2);
-		this.hairMaterial.SetVector("_AnisoDir", this.anisoDir);
-		this.hairMaterial.SetFloat("_Shininess", this.shininess);
-		this.hairMaterial.SetFloat("_SpecShift", this.specularShift);
-		this.hairMaterial.SetFloat("_PrimaryShift", this.primaryShift);
-		this.hairMaterial.SetFloat("_SecondaryShiftf", this.secondaryShift);
-		this.hairMaterial.SetFloat("_RimStrength", this.rimStrength);
-		this.hairMaterial.SetFloat("_Gloss", this.gloss);*/
-		this.hairMaterial.SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
-		this.hairMaterial.SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
-		this.hairMaterial.SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
-		this.hairMaterial.SetVector("g_vEye", Camera.main.transform.position);
-		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
-		this.hairMaterial.SetFloat("g_FiberRadius", this.fiberRadius);
-		this.hairMaterial.SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
-		this.hairMaterial.SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
-		this.hairMaterial.SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
-		this.hairMaterial.SetVector ("modelTransform", new Vector4 (this.transform.position.x, this.transform.position.y, this.transform.position.z, 1));
-
-		for (int i = 0; i < this.meshes.Length; i++)
+		for (int i = 0; i < this.hairMaterial.Length; i++)
 		{
-            Graphics.DrawMesh(this.meshes[i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8);
+			this.hairMaterial[i].SetColor("_HairColor", this.hairColor);
+			this.hairMaterial[i].SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
+			this.hairMaterial[i].SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
+			this.hairMaterial[i].SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
+			this.hairMaterial[i].SetVector("g_vEye", Camera.main.transform.position);
+			this.hairMaterial[i].SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+			this.hairMaterial[i].SetFloat("g_FiberRadius", this.fiberRadius);
+			this.hairMaterial[i].SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
+			this.hairMaterial[i].SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
+			this.hairMaterial[i].SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
+			this.hairMaterial[i].SetVector ("modelTransform", new Vector4 (this.transform.position.x, this.transform.position.y, this.transform.position.z, 1));
+		}
+		
+		for (int i = 0; i < this.meshes.Count; i++)
+		{
+			for (int j = 0; j < this.meshes[i].Length; j++)
+			{
+				Graphics.DrawMesh(this.meshes[i][j], Vector3.zero, Quaternion.identity, this.hairMaterial[i], 8);
+			}
 		}
 
 		// Render shadows

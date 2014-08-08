@@ -82,6 +82,10 @@ public class TressFX : MonoBehaviour
 	public TressFXStrand[] strands;
 	private int[] triangleIndices;
 	private float[] thicknessCoeffs;
+	private Dictionary<int, int> globalToLocalVertexIndexMappings;
+
+	[HideInInspector]
+	public int hairCount;
 
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
@@ -89,12 +93,14 @@ public class TressFX : MonoBehaviour
 	/// </summary>
 	/// <param name="vertices">Vertices.</param>
 	/// <param name="strandIndices">Strand indices.</param>
-	public void Initialize (TressFXStrand[] strands, int numVertices)
+	public void Initialize (TressFXStrand[] strands, int numVertices, int hairCount)
 	{
 		// Initialize data
 		this.vertexCount = numVertices;
 		this.strandCount = strands.Length;
 		this.strands = strands;
+		this.hairCount = hairCount;
+		this.globalToLocalVertexIndexMappings = new Dictionary<int, int> ();
 
 		// Buffer resources
 		positionVectors = new Vector4[numVertices];
@@ -126,6 +132,7 @@ public class TressFX : MonoBehaviour
 
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
+				this.globalToLocalVertexIndexMappings.Add (index, j);
 				// Load position of the strand
 				positionVectors[index] = new Vector4(this.transform.position.x, this.transform.position.y, this.transform.position.z, 0) + strands[i].GetTressFXVector(j);
 				initialPositionVectors[index] = strands[i].GetTressFXVector(j);
@@ -365,6 +372,26 @@ public class TressFX : MonoBehaviour
 		for (int i = 0; i < positionVectors.Length; i++)
 		{
 			positionVectors[i] = this.transform.TransformPoint(positionVectors[i]);
+		}
+	}
+
+	/// <summary>
+	/// Maps the triangle index identifier to strand vertex identifier.
+	/// TODO: Implement this more... "nicely"..
+	/// </summary>
+	/// <returns>The triangle index identifier to strand vertex identifier.</returns>
+	/// <param name="triangleIndexId">Triangle index identifier.</param>
+	public int MapTriangleIndexIdToStrandVertexId(int triangleIndexId)
+	{
+		if (this.triangleIndices.Length > triangleIndexId)
+		{
+			int triangleIndex = this.triangleIndices [triangleIndexId];
+			int globalVertexId = triangleIndex / 2;
+			return globalToLocalVertexIndexMappings [globalVertexId];
+		}
+		else
+		{
+			return 0;
 		}
 	}
 }

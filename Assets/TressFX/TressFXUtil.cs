@@ -28,7 +28,7 @@ public class TressFXUtil
 
 /// <summary>
 /// Matrix3x3 implementation.
-/// Gets used for calculating 
+/// Gets used for some calculations
 /// </summary>
 public class Matrix3x3
 {

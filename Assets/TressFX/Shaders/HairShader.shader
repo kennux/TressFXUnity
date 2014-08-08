@@ -2,7 +2,6 @@
 	Properties
 	{
 		_Shininess ("Shininess", Range(0,1)) = 0.5
-		_AnisoDir ("Aniso Direction (XYZ)", Vector) = (0,1,0,0)
 		_SpecShift ("Specular Shift", Float) = 0.5
 		_PrimaryShift ("Primary Shift", Float) = 0.5
 		_SecondaryShift ("Secondary Shift", Float) = 0.5
@@ -11,13 +10,16 @@
 		_SpecularColor2 ("Specular color 2", Color) = (1,1,1,1)
 		_Roughness1 ("Roughness1", Range(0,1)) = 0.5
 		_Roughness2 ("Roughness2", Range(0,1)) = 0.5
+		_MainTex ("Base (RGB)", 2D) = "white" {}
+		_SpecularTex ("Specular texture (RGB)", 2D) = "white" {}
+		_AlphaTex ("Alpha texture (A)", 2D) = "white" {}
 	}
 	SubShader
 	{
 		Tags { "RenderType" = "Opaque" }
 		Pass
 		{
-			Tags {"LightMode" = "ForwardBase"} 
+			Tags {"LightMode" = "ForwardBase" } 
 			
 			CGPROGRAM
 			#pragma vertex vert
@@ -33,8 +35,10 @@
 			struct v2f {
 			  float4 pos : SV_POSITION;
 			  float4 normal : NORMAL;
+			  fixed2 texcoords : TEXCOORD4;
 			  float3 lightDir : TEXCOORD3;
 			  float3 viewDir : TEXCOORD2;
+			  float3 Tangent : TANGENT;
 			  LIGHTING_COORDS(0,1)
 			};
 			
@@ -44,6 +48,10 @@
 			StructuredBuffer<float3> g_HairInitialVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
 			StructuredBuffer<int> g_HairThicknessCoeffs;
+			
+			uniform sampler2D _MainTex;
+			uniform sampler2D _SpecularTex;
+			uniform sampler2D _AlphaTex;
 			
 			// Vertex shader props
 			uniform float3 g_vEye;
@@ -57,7 +65,6 @@
 			uniform fixed4 _HairColor;
 			
 			// Lighting
-			uniform float4 _AnisoDir;
         	uniform float _SpecShift;
         	uniform float _PrimaryShift;
         	uniform float _SecondaryShift;
@@ -115,6 +122,9 @@
 				o.lightDir = WorldSpaceLightDir( float4(posi,1) );
 				o.viewDir = WorldSpaceViewDir( float4(posi,1) );
 				
+				o.texcoords = input.texcoord.xy;
+				o.Tangent = t;
+				
 				appdata_base v;
 				v.vertex = float4(posi, 1);
 				
@@ -131,6 +141,7 @@
 	        	fixed3 Albedo;
 	        	fixed Alpha;
 	        	float4 Normal;
+	        	float3 Tangent;
 	        	fixed SpecShift;
 	        	fixed Specular;
 	        	fixed SpecNoise;
@@ -156,9 +167,9 @@
 
 				// First specular Highlight / Do not add specNoise here 
 				float3 H = normalize(lightDir + viewDir);
-				float3 spec1 = specPower.x * pow( KajiyaKay(s.Normal, _AnisoDir * s.SpecShift, H, _PrimaryShift), specPower.x);
+				float3 spec1 = specPower.x * pow( KajiyaKay(s.Normal, s.Tangent.xyz * s.SpecShift, H, _PrimaryShift), specPower.x);
 				// Add 2nd specular Highlight
-				float3 spec2 = specPower.y * pow( KajiyaKay(s.Normal, _AnisoDir * s.SpecShift, H, _SecondaryShift ), specPower.y) * s.SpecNoise;
+				float3 spec2 = specPower.y * pow( KajiyaKay(s.Normal, s.Tangent.xyz * s.SpecShift, H, _SecondaryShift ), specPower.y) * s.SpecNoise;
 
 				//  Fresnel
 				fixed fresnel = exp2(-OneOnLN2_x6 * dot(h, lightDir));
@@ -182,52 +193,40 @@
 				c.a = s.Alpha;
 				return c;
 			}
-
+			
 	        fixed4 frag (v2f i) : COLOR
 	        {
 	        	FSLightingOutput o = (FSLightingOutput)0;
 	        	
-				o.Albedo = _HairColor.rgb;
-				o.Alpha = _HairColor.a;
+	        	fixed3 textureColor = tex2D(_MainTex, i.texcoords).rgb;
+	        	fixed textureAlpha = tex2D(_AlphaTex, i.texcoords).a;
+	        	
+				o.Albedo = _HairColor.rgb * textureColor;
+				o.Alpha = _HairColor.a * textureAlpha;
 				o.Normal = i.normal;
 				
-				o.SpecShift = 1;
+				fixed3 spec = tex2D(_SpecularTex, i.texcoords).rgb;
+				
+				o.SpecShift = spec.r * 2 - 1;
 				
 				// Calculate primary per Pixel Roughness * Roughness1
-				o.Specular = _Roughness1;
+				o.Specular = spec.g * _Roughness1;
 				// Store Roughness for direct lighting
-				o.Specular12 = half2(o.Specular, _Roughness2);
+				o.Specular12 = half2(o.Specular, spec.g * _Roughness2);
 				// store per pixel Spec Noise
-				o.SpecNoise = 0;
+				o.SpecNoise = spec.b;
 
 				// Lux Ambient Lighting functions also need o.SpecularColor(rgb) 
 				// So we have to make it a bit more complicated here
 				// Tweak Roughness for ambient lighting
 				o.Specular *= o.Specular; 
 				o.SpecularColor = _SpecularColor1.rgb;
+				o.Tangent = i.Tangent;
 				
 				float atten = LIGHT_ATTENUATION(i);
 				
 				return LightingLuxHair(o, i.lightDir, i.viewDir, atten);
 	        }
-
-	        /*half4 frag (v2f i) : COLOR
-	        {
-	        	fixed4 c = fixed4(0,0,0,0);
-            	if (_WorldSpaceLightPos0.w == 0)
-            	{
-		        	float atten = LIGHT_ATTENUATION(i);
-					half3 h = normalize (i.lightDir + i.viewDir);
-		
-					fixed diff = max (0, dot (i.normal, i.lightDir));
-					
-					float nh = max (0, dot (i.normal, h));
-					float spec = pow (nh, _Shininess*128.0) * _Gloss;
-					
-					c.rgb = (_HairColor.rgb * _LightColor0.rgb * diff + _LightColor0.rgb * _SpecColor.rgb * spec) * (atten * 2);
-				}
-				return c;
-	        }*/
 	        
 			ENDCG
 		}

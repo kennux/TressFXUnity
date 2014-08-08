@@ -38,7 +38,7 @@ public class TressFXLoader : MonoBehaviour
 		TressFX tressFx = this.GetComponent<TressFX>();
 		if (tressFx != null)
 		{
-			tressFx.Initialize(strands.ToArray(), vertexCount);
+			tressFx.Initialize(strands.ToArray(), vertexCount, this.hairs.Length);
 		}
 
 	}
@@ -65,8 +65,7 @@ public class TressFXLoader : MonoBehaviour
 		}
 		
 		// Properties
-		int numStrands = 0; 
-		int numVertices = 0;
+		int numStrands = 0;
 
 		// Read every line of the data
 		int i = 0;
@@ -86,6 +85,7 @@ public class TressFXLoader : MonoBehaviour
 				// Parse informations about the strand
 				int strandNum = int.Parse(stringTokens[1]);
 				int numStrandVertices = int.Parse(stringTokens[3]);
+				float texcoordX = float.Parse (stringTokens[5]);
 
 				TressFXStrand strand = new TressFXStrand(numStrandVertices);
 
@@ -122,6 +122,9 @@ public class TressFXLoader : MonoBehaviour
 					                                     float.Parse(vertexData[1]),		// Y
 					                                     float.Parse(vertexData[2]));		// Z
 
+					// Load UVs
+					strand.vertices[j].texcoords.x = texcoordX;
+					strand.vertices[j].texcoords.y = (1.0f / (float)numStrandVertices) * (float)(j+1);
 
 					strand.vertices[j].invMass = invMass;
 					strand.hairId = hairId;

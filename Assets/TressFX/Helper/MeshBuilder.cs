@@ -45,25 +45,21 @@ public class MeshBuilder
 	/// </summary>
 	/// <param name="vertices">Vertices.</param>
 	/// <returns>true for added to new mesh, false for added to current mesh.</returns>
-	public bool AddVertices(Vector3[] vertices, int[] indices)
+	public bool AddVertices(Vector3[] vertices, int[] indices, Vector2[] uvs)
 	{
 		// Enough space in this mesh?
 		if (this.currentVertices.Count + vertices.Length < 65000)
 		{
 			this.currentVertices.AddRange (vertices);
 			this.currentIndices.AddRange (indices);
-
-			for (int i = 0; i < vertices.Length; i++)
-			{
-				this.currentUv.Add (Vector2.zero);
-			}
+			this.currentUv.AddRange(uvs);
 
 			return false;
 		}
 		else
 		{
 			this.GenerateCurrentMesh();
-			this.AddVertices(vertices, indices);
+			this.AddVertices(vertices, indices, uvs);
 			return true;
 		}
 	}

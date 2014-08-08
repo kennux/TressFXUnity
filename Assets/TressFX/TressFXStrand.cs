@@ -54,4 +54,9 @@ public struct TressFXVertex
 	public Vector3 pos;
 	public float invMass;
 	public Vector4 texcoords;
+
+	public Vector2 GetUvCoordinates()
+	{
+		return new Vector2(this.texcoords.x, this.texcoords.y);
+	}
 }
