@@ -26,6 +26,13 @@ struct TressFXHairConfig
 	float damping;
 };
 
+struct TressFXSphereCollider
+{
+	float3 centerPos;
+	float radius;
+	float radius2;
+};
+
 RWStructuredBuffer<float4> g_HairVertexPositions; 
 RWStructuredBuffer<float4> g_HairVertexPositionsPrev; 
 RWStructuredBuffer<float4> g_HairVertexTangents; 
@@ -38,7 +45,9 @@ RWStructuredBuffer<float>	g_HairRestLengthSRV;
 RWStructuredBuffer<int>		g_HairStrandType; 
 RWStructuredBuffer<float3>	g_HairRefVecsInLocalFrame; 
 RWStructuredBuffer<struct TressFXHairConfig> g_Config;
+RWStructuredBuffer<struct TressFXSphereCollider> g_Colliders;
 
+float g_ColliderCount;
 float4x4 g_ModelTransformForHead;
 float4x4 g_ModelPrevInvTransformForHead;
 float4 g_ModelRotateForHead; // quaternion
@@ -632,46 +641,21 @@ void CollisionAndTangents(uint GIndex : SV_GroupIndex,
     //-------------------------------------------------
     // Collision handling hard-code collision shapes
     //-------------------------------------------------
-    if ( true )
+    // if ( true )
     {
-        {
-            float3 centerSphere = float3(-0.095f, 92.000f, -9.899f);
+    	for (uint i = 0; i < g_ColliderCount; i++)
+    	{
+            float3 centerSphere = g_Colliders[i].centerPos;
             centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
-            float radius = 26.5f;
+            float radius = g_Colliders[i].radius;
 
 			CollisionCapsule cc;
 			cc.p1.xyz = centerSphere;
 			cc.p1.w = radius;
 			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-			cc.p2.w = radius*radius;
+			cc.p2.w = g_Colliders[i].radius2;
 			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
-        }
-
-        {
-            float3 centerSphere = float3(-0.405f, 93.707f, 5.111f);
-            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
-            float radius = 24.113f;
-
-			CollisionCapsule cc;
-			cc.p1.xyz = centerSphere;
-			cc.p1.w = radius;
-			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-			cc.p2.w = radius*radius;
-			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
-        }
-
-        {
-            float3 centerSphere = float3(-0.072f, 68.548f, 10.561f);
-            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
-            float radius = 25.500f;
-
-			CollisionCapsule cc;
-			cc.p1.xyz = centerSphere;
-			cc.p1.w = radius;
-			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
-			cc.p2.w =  radius*radius;
-			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
-        }
+    	}
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -679,11 +663,11 @@ void CollisionAndTangents(uint GIndex : SV_GroupIndex,
     //-------------------
     // Compute tangent
     //-------------------
-    /*if ( localVertexIndex < numVerticesInTheStrand-1  ) 
+    if ( localVertexIndex < numVerticesInTheStrand-1  ) 
     {
         float3 tangent = sharedPos[indexForSharedMem+1].xyz - sharedPos[indexForSharedMem].xyz;
         g_HairVertexTangents[globalVertexIndex].xyz = normalize(tangent);
-    }*/
+    }
 	
     //---------------------------------------
     // update global position buffers

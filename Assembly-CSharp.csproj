@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\TressFX\EditorExtension\ScriptableObjectUtility.cs" />
-     <Compile Include="Assets\TressFX\EditorExtension\TressFXEditorExtension.cs" />
      <Compile Include="Assets\TressFX\EditorExtension\TressFXHairData.cs" />
      <Compile Include="Assets\TressFX\Helper\MeshBuilder.cs" />
      <Compile Include="Assets\TressFX\TressFX.cs" />

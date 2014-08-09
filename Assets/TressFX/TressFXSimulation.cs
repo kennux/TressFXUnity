@@ -19,6 +19,8 @@ public class TressFXSimulation : MonoBehaviour
 	[HideInInspector]
 	public float computationTime;
 
+	public SphereCollider[] headColliders;
+
 	// Kernel ID's
 	private int IntegrationAndGlobalShapeConstraintsKernelId;
 	private int LocalShapeConstraintsKernelId;
@@ -33,6 +35,7 @@ public class TressFXSimulation : MonoBehaviour
 	private ComputeBuffer referenceBuffer;
 	private ComputeBuffer verticeOffsetBuffer;
 	private ComputeBuffer configBuffer;
+	private ComputeBuffer colliderBuffer;
 
 	// Config
 	private float[] globalStiffness;
@@ -61,6 +64,21 @@ public class TressFXSimulation : MonoBehaviour
 	/// The targets for checking the collisions.
 	/// </summary>
 	private List<Collider> collisionCheckTargets;
+
+	private struct ColliderObject
+	{
+		/// <summary>
+		/// The center position in local space.
+		/// </summary>
+		public Vector3 centerPosition;
+		
+		public float radius;
+
+		/// <summary>
+		/// The radius².
+		/// </summary>
+		public float radius2;
+	}
 
 	/// <summary>
 	/// This loads the kernel ids from the compute buffer and also sets it's TressFX master.
@@ -95,12 +113,29 @@ public class TressFXSimulation : MonoBehaviour
 			Debug.LogError ("TressFXSimulation doesnt have a master (TressFX)!");
 		}
 
-		// Initialize compute buffer
+		// Initialize compute shader kernels
 		this.IntegrationAndGlobalShapeConstraintsKernelId = this.HairSimulationShader.FindKernel("IntegrationAndGlobalShapeConstraints");
 		this.LocalShapeConstraintsKernelId = this.HairSimulationShader.FindKernel("LocalShapeConstraints");
 		this.CollisionAndTangentsKernelId = this.HairSimulationShader.FindKernel("CollisionAndTangents");
 		this.LengthConstraintsAndWindKernelId = this.HairSimulationShader.FindKernel("LengthConstraintsAndWind");
 		this.SkipSimulationKernelId = this.HairSimulationShader.FindKernel ("SkipSimulateHair");
+
+		// Initialize collider buffer
+		ColliderObject[] colliders = new ColliderObject[this.headColliders.Length];
+		this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 20);
+
+		for (int i = 0; i < this.headColliders.Length; i++)
+		{
+			// Scale collider
+			float scale = Mathf.Max (new float[] { this.headColliders[i].transform.localScale.x, this.headColliders[i].transform.localScale.y, this.headColliders[i].transform.localScale.z }); 
+
+			colliders[i] = new ColliderObject();
+			colliders[i].centerPosition = this.headColliders[i].transform.localPosition + this.headColliders[i].center;
+			colliders[i].radius = this.headColliders[i].radius * scale;
+			colliders[i].radius2 = colliders[i].radius*colliders[i].radius;
+		}
+
+		this.colliderBuffer.SetData (colliders);
 
 		// Set length buffer
 		this.hairLengthsBuffer = new ComputeBuffer(this.master.vertexCount,4);
@@ -260,12 +295,16 @@ public class TressFXSimulation : MonoBehaviour
 		// Set rest lengths buffer
 		this.HairSimulationShader.SetBuffer(this.LengthConstraintsAndWindKernelId, "g_HairRestLengthSRV", this.hairLengthsBuffer);
 		
-		// Set vertex position buffers to skip simulate kernel
+		// Set vertex position buffers to all kernels
 		this.SetVerticeInfoBuffers(this.SkipSimulationKernelId);
 		this.SetVerticeInfoBuffers(this.IntegrationAndGlobalShapeConstraintsKernelId);
 		this.SetVerticeInfoBuffers(this.LocalShapeConstraintsKernelId);
 		this.SetVerticeInfoBuffers(this.LengthConstraintsAndWindKernelId);
 		this.SetVerticeInfoBuffers(this.CollisionAndTangentsKernelId);
+
+		// Set collider buffer to collision kernel
+		this.HairSimulationShader.SetBuffer (this.CollisionAndTangentsKernelId, "g_Colliders", this.colliderBuffer);
+		this.HairSimulationShader.SetFloat ("g_ColliderCount", this.headColliders.Length);
 	}
 
 	/// <summary>
@@ -331,6 +370,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.referenceBuffer.Release ();
 		this.verticeOffsetBuffer.Release ();
 		this.configBuffer.Release ();
+		this.colliderBuffer.Release ();
 	}
 
 	/// <summary>
