@@ -11,7 +11,7 @@ public class TressFXRender : MonoBehaviour
 {
 	// Resources
 	private TressFX master;
-	public Material[] hairMaterial;
+	private Material[] hairMaterial;
 	private Material hairShadowMaterial;
 
 	public Shader hairShadowShader;
@@ -25,11 +25,17 @@ public class TressFXRender : MonoBehaviour
 	public bool expandPixels = true;
 	public float fiberRadius = 0.14f;
 	public bool thinTip = true;
-	public Color hairColor;
 
 	public void Initialize()
 	{
 		this.master = this.gameObject.GetComponent<TressFX> ();
+
+		// Get materials
+		this.hairMaterial = new Material[this.master.hairData.Length];
+		for (int i = 0; i < this.hairMaterial.Length; i++)
+		{
+			this.hairMaterial[i] = this.master.hairData[i].hairMaterial;
+		}
 
 		this.hairShadowMaterial = new Material (this.hairShadowShader);
 
@@ -186,7 +192,6 @@ public class TressFXRender : MonoBehaviour
 	{
 		for (int i = 0; i < this.hairMaterial.Length; i++)
 		{
-			this.hairMaterial[i].SetColor("_HairColor", this.hairColor);
 			this.hairMaterial[i].SetBuffer("g_HairVertexPositions", this.master.VertexPositionBuffer);
 			this.hairMaterial[i].SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
 			this.hairMaterial[i].SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);

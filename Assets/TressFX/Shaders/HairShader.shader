@@ -1,6 +1,7 @@
 ﻿Shader "TressFX/HairShader" {
 	Properties
 	{
+		_HairColor ("Hair Color (RGB)", Color) = (1,1,1,1)
 		_Shininess ("Shininess", Range(0,1)) = 0.5
 		_SpecShift ("Specular Shift", Float) = 0.5
 		_PrimaryShift ("Primary Shift", Float) = 0.5
@@ -12,7 +13,6 @@
 		_Roughness2 ("Roughness2", Range(0,1)) = 0.5
 		_MainTex ("Base (RGB)", 2D) = "white" {}
 		_SpecularTex ("Specular texture (RGB)", 2D) = "white" {}
-		_AlphaTex ("Alpha texture (A)", 2D) = "white" {}
 	}
 	SubShader
 	{
@@ -51,7 +51,6 @@
 			
 			uniform sampler2D _MainTex;
 			uniform sampler2D _SpecularTex;
-			uniform sampler2D _AlphaTex;
 			
 			// Vertex shader props
 			uniform float3 g_vEye;
@@ -199,10 +198,9 @@
 	        	FSLightingOutput o = (FSLightingOutput)0;
 	        	
 	        	fixed3 textureColor = tex2D(_MainTex, i.texcoords).rgb;
-	        	fixed textureAlpha = tex2D(_AlphaTex, i.texcoords).a;
 	        	
 				o.Albedo = _HairColor.rgb * textureColor;
-				o.Alpha = _HairColor.a * textureAlpha;
+				o.Alpha = _HairColor.a;
 				o.Normal = i.normal;
 				
 				fixed3 spec = tex2D(_SpecularTex, i.texcoords).rgb;

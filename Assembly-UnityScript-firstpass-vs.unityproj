@@ -47,18 +47,18 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Standard Assets\Scripts\Camera Scripts\MouseOrbit.js" />
-     <None Include="Assets\TressFX\Materials\Media\hair_pulled.txt" />
-     <None Include="Assets\TressFX\Materials\Media\old\hair_front_long.txt" />
+     <None Include="Assets\Media\hair_pulled.txt" />
+     <None Include="Assets\Media\old\hair_front_long.txt" />
      <None Include="Assets\TressFX\Shaders\Test.shader" />
-     <None Include="Assets\TressFX\Materials\Media\old\hair_tail.txt" />
+     <None Include="Assets\Media\old\hair_tail.txt" />
      <None Include="Assets\TressFX\Shaders\Compute\HairSimulation.compute" />
-     <None Include="Assets\TressFX\Materials\Media\old\hair_free.txt" />
-     <None Include="Assets\TressFX\Materials\Media\hair_tail.txt" />
-     <None Include="Assets\TressFX\Materials\Media\old\hair_pulled.txt" />
+     <None Include="Assets\Media\old\hair_free.txt" />
+     <None Include="Assets\Media\hair_tail.txt" />
+     <None Include="Assets\Media\old\hair_pulled.txt" />
      <None Include="Assets\TressFX\Shaders\HairShadowShader.shader" />
-     <None Include="Assets\TressFX\Materials\Media\test.txt" />
-     <None Include="Assets\TressFX\Materials\Media\hair_free.txt" />
-     <None Include="Assets\TressFX\Materials\Media\hair_front_long.txt" />
+     <None Include="Assets\Media\test.txt" />
+     <None Include="Assets\Media\hair_free.txt" />
+     <None Include="Assets\Media\hair_front_long.txt" />
      <None Include="Assets\TressFX\Shaders\HairShader.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

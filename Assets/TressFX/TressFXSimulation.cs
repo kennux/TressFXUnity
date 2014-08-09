@@ -35,10 +35,10 @@ public class TressFXSimulation : MonoBehaviour
 	private ComputeBuffer configBuffer;
 
 	// Config
-	public float[] globalStiffness;
-	public float[] globalStiffnessMatchingRange;
-	public float[] localStiffness;
-	public float[] damping;
+	private float[] globalStiffness;
+	private float[] globalStiffnessMatchingRange;
+	private float[] localStiffness;
+	private float[] damping;
 	
 	public float gravityMagnitude = 9.82f;
 	public int lengthConstraintIterations = 5;
@@ -68,12 +68,28 @@ public class TressFXSimulation : MonoBehaviour
 	public void Initialize(float[] hairRestLengths, Vector3[] referenceVectors, int[] verticesOffsets,
 	                       Quaternion[] localRotations, Quaternion[] globalRotations)
 	{
+		this.master = this.GetComponent<TressFX>();
+
+		// Initialize config values
+		this.globalStiffness = new float[this.master.hairData.Length];
+		this.globalStiffnessMatchingRange = new float[this.master.hairData.Length];
+		this.localStiffness = new float[this.master.hairData.Length];
+		this.damping = new float[this.master.hairData.Length];
+
+		// Load config
+		for (int i = 0; i < this.master.hairData.Length; i++)
+		{
+			this.globalStiffness[i] = this.master.hairData[i].globalStiffness;
+			this.globalStiffnessMatchingRange[i] = this.master.hairData[i].globalStiffnessMatchingRange;
+			this.localStiffness[i] = this.master.hairData[i].localStiffness;
+			this.damping[i] = this.master.hairData[i].damping;
+		}
+
 		// Initialize collision check targets
 		this.collisionCheckTargets = new List<Collider>();
 
 		this.lastModelMatrix = this.transform.localToWorldMatrix;
 
-		this.master = this.GetComponent<TressFX>();
 		if (this.master == null)
 		{
 			Debug.LogError ("TressFXSimulation doesnt have a master (TressFX)!");

@@ -6,7 +6,7 @@ public class TressFXGui : MonoBehaviour
 	public Transform modelTransform;
 
 	private TressFXSimulation simulation;
-	private TressFXRender renderer;
+	private new TressFXRender renderer;
 
 	private Vector2 lastMousePosition;
 
@@ -66,7 +66,7 @@ public class TressFXGui : MonoBehaviour
 		GUI.DragWindow (new Rect (0, 0, 300, 20));
 
 		// Color
-		Color c = this.renderer.hairColor;
+		/*Color c = this.renderer.hairColor;
 		
 		GUI.Label (new Rect (10, 20, 100, 20), "Hair Color Red:");
 		c.r = GUI.HorizontalSlider (new Rect (110, 20, 150, 20), c.r, 0, 1);
@@ -75,7 +75,7 @@ public class TressFXGui : MonoBehaviour
 		GUI.Label (new Rect (10, 60, 100, 20), "Hair Color Blue:");
 		c.b = GUI.HorizontalSlider (new Rect (110, 60, 150, 20), c.b, 0, 1);
 
-		this.renderer.hairColor = c;
+		this.renderer.hairColor = c;*/
 
 		// Parameters
 		GUI.Label (new Rect (10, 80, 100, 20), "Expand pixels: ");

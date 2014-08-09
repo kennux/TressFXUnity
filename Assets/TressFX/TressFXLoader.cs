@@ -13,9 +13,7 @@ public class TressFXLoader : MonoBehaviour
 	/// <summary>
 	/// The hair meshes.
 	/// </summary>
-	public TextAsset[] hairs;
-
-	public bool[] makeBothEndsImmovable;
+	public TressFXHairData[] hairs;
 
 	/// <summary>
 	/// This function will generate the vertice and strand index buffers used for initializing TressFX.
@@ -31,7 +29,7 @@ public class TressFXLoader : MonoBehaviour
 		for (int i = 0; i < this.hairs.Length; i++)
 		{
 			Debug.Log ("Loading hair " + i);
-			vertexCount += this.LoadHairTFX(this.hairs[i].text, strands, i);
+			vertexCount += this.LoadHairTFX(this.hairs[i].hairModel.text, strands, i);
 		}
 
 		// Tress fx loaded!
@@ -83,7 +81,7 @@ public class TressFXLoader : MonoBehaviour
 			else if (stringTokens[0] == "strand")
 			{
 				// Parse informations about the strand
-				int strandNum = int.Parse(stringTokens[1]);
+				// int strandNum = int.Parse(stringTokens[1]);
 				int numStrandVertices = int.Parse(stringTokens[3]);
 				float texcoordX = float.Parse (stringTokens[5]);
 
@@ -111,7 +109,7 @@ public class TressFXLoader : MonoBehaviour
 					// invMass = 1 means strand movable, 0 means not movable
 					float invMass = 1.0f;
 
-					if (j == 0 || j == 1 || (j == numStrandVertices-1 && this.makeBothEndsImmovable[hairId]))
+					if (j == 0 || j == 1 || (j == numStrandVertices-1 && this.hairs[hairId].makeBothEndsImmovable))
 					{
 						invMass = 0.0f;
 					}

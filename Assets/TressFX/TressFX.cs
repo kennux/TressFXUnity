@@ -87,6 +87,9 @@ public class TressFX : MonoBehaviour
 	[HideInInspector]
 	public int hairCount;
 
+	[HideInInspector]
+	public TressFXHairData[] hairData;
+
 	/// <summary>
 	/// This initializes tressfx and all of it's components.
 	/// This function gets called from the TressFX Loader.
@@ -101,6 +104,7 @@ public class TressFX : MonoBehaviour
 		this.strands = strands;
 		this.hairCount = hairCount;
 		this.globalToLocalVertexIndexMappings = new Dictionary<int, int> ();
+		this.hairData = this.GetComponent<TressFXLoader> ().hairs;
 
 		// Buffer resources
 		positionVectors = new Vector4[numVertices];
