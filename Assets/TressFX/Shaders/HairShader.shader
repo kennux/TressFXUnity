@@ -74,6 +74,9 @@
 			uniform float _Roughness1;
           	uniform float _Roughness2;
         	
+        	// --------------------------------------
+        	// TressFX Antialias shader written by AMD
+        	// --------------------------------------
 			v2f vert (appdata_base input)
 	        {
 	            v2f o;
@@ -229,151 +232,6 @@
 			ENDCG
 		}
 		
-		/*Pass
-		{
-			Tags {"LightMode" = "ForwardAdd"} 
-			Cull Off
-			
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#include "UnityCG.cginc"
-			#include "AutoLight.cginc"
-			#include "Lighting.cginc"
-			#pragma target 5.0
-			#pragma multi_compile_fwdadd
-
-			struct v2f {
-			  float4 pos : SV_POSITION;
-			  float4 normal : NORMAL;
-			  float3 lightDir : TEXCOORD5;
-			  float3 viewDir : TEXCOORD2;
-			  float3 posWorld : TEXCOORD3;
-			  float3 posLight : TEXCOORD4;
-			  LIGHTING_COORDS(0,1)
-			};
-			
-			StructuredBuffer<float3> g_HairVertexTangents;
-			StructuredBuffer<float3> g_HairVertexPositions;
-			StructuredBuffer<int> g_TriangleIndicesBuffer;
-			uniform float3 g_vEye;
-			uniform float4 g_WinSize;
-			uniform float g_FiberRadius;
-			uniform float g_bExpandPixels;
-			uniform fixed4 _HairColor;
-			uniform fixed _Shininess;
-			uniform fixed _Gloss;
-			
-			v2f vert (appdata_base input)
-	        {
-	            v2f o;
-	            
-				uint vertexId = g_TriangleIndicesBuffer[(int)input.vertex.x];
-				
-			    // Access the current line segment
-			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
-
-			    // Get updated positions and tangents from simulation result
-			    float3 t = g_HairVertexTangents[index].xyz;
-			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
-
-			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
-			    
-			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
-			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
-
-				// Calculate the negative and positive offset screenspace positions
-				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
-				float4 hairEdgePositionsNormal[2]; // 0 is negative, 1 is positive
-				hairEdgePositions[0] = float4(vert +  -1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[1] = float4(vert +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositionsNormal[0] = hairEdgePositions[0];
-				hairEdgePositionsNormal[1] = hairEdgePositions[1];
-				hairEdgePositions[0] = mul(UNITY_MATRIX_MVP, hairEdgePositions[0]);
-				hairEdgePositions[1] = mul(UNITY_MATRIX_MVP, hairEdgePositions[1]);
-				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
-				hairEdgePositions[1] = hairEdgePositions[1]/hairEdgePositions[1].w;
-				
-			    // Write output data
-			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
-			    float3 pos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
-			    
-			    float3 posi = (fDirIndex==-1.0 ? hairEdgePositionsNormal[0] : hairEdgePositionsNormal[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
-			    
-				o.pos = float4(pos, 1);
-				o.normal = normalize(float4(vert,1));
-                o.posWorld = posi;
-                o.posLight = mul(_LightMatrix0, o.posWorld);
-                
-				o.lightDir = ObjSpaceLightDir( float4(input.vertex.xyz, 1) );
-				o.viewDir = WorldSpaceViewDir( float4(input.vertex.xyz, 1) );
-				
-				appdata_base v;
-				v.vertex = float4(posi, 1);
-				
-    			TRANSFER_VERTEX_TO_FRAGMENT(o);
-    			
-	            return o;
-	        }
-
-	        half4 frag (v2f i) : COLOR
-	        {
-				float3 normalDirection = normalize(i.normal);
-	            float3 viewDirection = normalize(
-	               _WorldSpaceCameraPos - float3(i.posWorld));
-	            float3 lightDirection;
-	            float attenuation;
-	 
-	            if (0.0 == _WorldSpaceLightPos0.w) // directional light?
-	            {
-	               attenuation = 1.0; // no attenuation
-	               lightDirection = 
-	                  normalize(_WorldSpaceLightPos0.xyz);
-	            } 
-	            else // point or spot light
-	            {
-	               float3 vertexToLightSource = 
-	                  float3(_WorldSpaceLightPos0 - i.posWorld);
-	               lightDirection = normalize(vertexToLightSource);
-	 
-	               float dist = i.posLight.z; 
-	                  // use z coordinate in light space as signed distance
-	               dist = length(vertexToLightSource);
-	               attenuation = 1.0 / dist;
-	               
-	                  // texture lookup for attenuation               
-	               // alternative with linear attenuation: 
-	               //    float distance = length(vertexToLightSource);
-	               //    attenuation = 1.0 / distance;
-	            }
-	 
-	            float3 diffuseReflection = 
-	               attenuation * _LightColor0.rgb * _HairColor.rgb
-	               * max(0.0, dot(normalDirection, lightDirection));
-	 
-	            float3 specularReflection;
-	            if (dot(normalDirection, lightDirection) < 0.0) 
-	               // light source on the wrong side?
-	            {
-	               specularReflection = float3(0.0, 0.0, 0.0); 
-	                  // no specular reflection
-	            }
-	            else // light source on the right side
-	            {
-	               specularReflection = attenuation * _LightColor0.rgb
-	                  * _SpecColor.rgb * pow(max(0.0, dot(
-	                  reflect(-lightDirection, normalDirection), 
-	                  viewDirection)), _Shininess);
-	            }
-	 
-	            return float4(diffuseReflection + specularReflection, 1.0);
-	        }
-			ENDCG
-		}*/
-		
 		// Pass to render object as a shadow collector
 	    Pass
 	    {
@@ -406,6 +264,9 @@
 	            V2F_SHADOW_COLLECTOR;
 	        };
 
+        	// --------------------------------------
+        	// TressFX Antialias shader written by AMD
+        	// --------------------------------------
 	        v2f vert (appdata_base input)
 	        { 
 	        	// Access the current line segment

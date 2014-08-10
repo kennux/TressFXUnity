@@ -46,14 +46,14 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\TressFX\ATressFXRender.cs" />
+     <Compile Include="Assets\TressFX\BasicTressFXRender.cs" />
      <Compile Include="Assets\TressFX\EditorExtension\ScriptableObjectUtility.cs" />
      <Compile Include="Assets\TressFX\EditorExtension\TressFXHairData.cs" />
      <Compile Include="Assets\TressFX\Helper\MeshBuilder.cs" />
      <Compile Include="Assets\TressFX\TressFX.cs" />
      <Compile Include="Assets\TressFX\TressFXCollisionDetector.cs" />
-     <Compile Include="Assets\TressFX\TressFXGui.cs" />
      <Compile Include="Assets\TressFX\TressFXLoader.cs" />
-     <Compile Include="Assets\TressFX\TressFXRender.cs" />
      <Compile Include="Assets\TressFX\TressFXSimulation.cs" />
      <Compile Include="Assets\TressFX\TressFXStrand.cs" />
      <Compile Include="Assets\TressFX\TressFXStructs.cs" />

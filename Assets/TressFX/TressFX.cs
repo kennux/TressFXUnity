@@ -214,7 +214,7 @@ public class TressFX : MonoBehaviour
 		}
 		
 		// Initialize Rendering if existing
-		TressFXRender render = this.gameObject.GetComponent<TressFXRender>();
+		ATressFXRender render = this.gameObject.GetComponent<ATressFXRender>();
 		if (render != null)
 		{
 			render.Initialize();
