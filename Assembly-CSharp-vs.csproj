@@ -53,6 +53,7 @@
      <Compile Include="Assets\TressFX\Helper\MeshBuilder.cs" />
      <Compile Include="Assets\TressFX\TressFX.cs" />
      <Compile Include="Assets\TressFX\TressFXCollisionDetector.cs" />
+     <Compile Include="Assets\TressFX\TressFXDemo.cs" />
      <Compile Include="Assets\TressFX\TressFXLoader.cs" />
      <Compile Include="Assets\TressFX\TressFXSimulation.cs" />
      <Compile Include="Assets\TressFX\TressFXStrand.cs" />

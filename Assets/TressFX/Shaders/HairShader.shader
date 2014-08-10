@@ -76,6 +76,7 @@
         	
         	// --------------------------------------
         	// TressFX Antialias shader written by AMD
+        	// License is included in Readme.md
         	// --------------------------------------
 			v2f vert (appdata_base input)
 	        {
@@ -89,7 +90,7 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float3 vertexNormal = normalize(modelTransform.xyz - g_HairVertexPositions[index].xyz);
+			    float3 vertexNormal = normalize(g_HairInitialVertexPositions[index].xyz);
 			    vertexNormal.y = abs(vertexNormal.y);
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 

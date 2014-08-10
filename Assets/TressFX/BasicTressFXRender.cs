@@ -25,7 +25,7 @@ public class BasicTressFXRender : ATressFXRender
 		this.hairShadowMaterial = new Material (this.hairShadowShader);
 	}
 
-	public void LateUpdate()
+	protected override void Render()
 	{
 		for (int i = 0; i < this.hairMaterial.Length; i++)
 		{

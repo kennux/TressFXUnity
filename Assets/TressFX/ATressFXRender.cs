@@ -171,10 +171,6 @@ public abstract class ATressFXRender : MonoBehaviour
 		
 		this.meshBounds = new Bounds ((addedVertices / vertices), new Vector3 ((highestXDistance-lowestXDistance), (highestYDistance-lowestYDistance), (highestZDistance-lowestZDistance)));
 		
-		BoxCollider c = this.gameObject.AddComponent<BoxCollider> ();
-		c.size = new Vector3 ((highestXDistance-lowestXDistance)*2, (highestYDistance-lowestYDistance)*2, (highestZDistance-lowestZDistance)*2);
-		c.center = (addedVertices / vertices);
-		
 		// Initialize mesh rendering
 		meshList.Add(meshBuilder.GetMeshes());
 		this.lineMeshes = lineMeshBuilder.GetMeshes ();
@@ -192,5 +188,37 @@ public abstract class ATressFXRender : MonoBehaviour
 		{
 			this.lineMeshes[i].bounds = this.meshBounds;
 		}
+	}
+
+	/// <summary>
+	/// Handles the mesh bounding box updates and calls the render() function.
+	/// </summary>
+	public void LateUpdate()
+	{
+		// Calculate new bounds
+		Bounds newBounds = new Bounds (this.transform.position + this.meshBounds.center, this.meshBounds.size);
+
+		// Update bounds
+		for (int i = 0; i < this.meshes.Count; i++)
+		{
+			for (int j = 0; j < this.meshes[i].Length; j++)
+			{
+				this.meshes[i][j].bounds = newBounds;
+			}
+		}
+
+		// Update line mesh bounds
+		for (int i = 0; i < this.lineMeshes.Length; i++)
+		{
+			this.lineMeshes[i].bounds = newBounds;
+		}
+
+		// Render meshes
+		this.Render ();
+	}
+	
+	protected virtual void Render()
+	{
+
 	}
 }
