@@ -65,6 +65,8 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	private List<Collider> collisionCheckTargets;
 
+	public bool skipSimulation = false;
+
 	private struct ColliderObject
 	{
 		/// <summary>
@@ -238,12 +240,17 @@ public class TressFXSimulation : MonoBehaviour
 			this.windForce4 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
 		}
 		this.SetResources();
-		this.DispatchKernels();
-		
-		// this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
 
-		// Do collision check
-		this.CheckCollisionTargets();
+		if (!this.skipSimulation)
+		{
+			this.DispatchKernels ();
+			// Do collision check
+			this.CheckCollisionTargets ();
+		}
+		else
+		{
+			this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
+		}
 		
 		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
 	}

@@ -1,0 +1,22 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+
+# Ignore the following file extensions
+*.DS_Store
+*.exe
+*.dll
+*.so
+*.vcproject
+*.sln
+*.csproj
+*.unityproj
+*.pidb
+*.userprefs
+=======
+*.vcproject
+*.sln
+=======
+Temp
+Library
+build
