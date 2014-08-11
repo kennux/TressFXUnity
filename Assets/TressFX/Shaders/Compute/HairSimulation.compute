@@ -52,15 +52,14 @@
 #pragma kernel SkipSimulateHair
 #pragma kernel IntegrationAndGlobalShapeConstraints
 #pragma kernel LocalShapeConstraints
-#pragma kernel LengthConstraintsAndWind
-#pragma kernel CollisionAndTangents
+#pragma kernel LengthConstraintsWindCollisionAndTangents
 
 // --------> Configuration values <--------
 
 float g_TimeStep;
 float GravityMagnitude;
-int NumStrands;
-int NumLengthConstraintIterations;
+uint NumStrands;
+uint NumLengthConstraintIterations;
 float4 g_Wind;
 float4 g_Wind1;
 float4 g_Wind2;
@@ -103,14 +102,17 @@ float4x4 g_ModelTransformForHead;
 float4x4 g_ModelPrevInvTransformForHead;
 float4 g_ModelRotateForHead; // quaternion
 
+// THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup = max vertices per strand
 #define THREAD_GROUP_SIZE 64
+#define numOfStrandsPerThreadGroup 2
+#define maxPossibleVertsInStrand 32
 
 groupshared float4 sharedPos[THREAD_GROUP_SIZE];
 groupshared float  sharedLength[THREAD_GROUP_SIZE];
 
 // -------------------------> FUNCTIONS <---------------------------
 
-void UpdateFinalVertexPositions(float4 oldPosition, float4 newPosition, int globalVertexIndex, int localVertexIndex, int numVerticesInTheStrand)
+void UpdateFinalVertexPositions(float4 oldPosition, float4 newPosition, uint globalVertexIndex, uint localVertexIndex, uint numVerticesInTheStrand)
 { 
 	if ( localVertexIndex < numVerticesInTheStrand )
 	{
@@ -126,17 +128,17 @@ void UpdateFinalVertexPositions(float4 oldPosition, float4 newPosition, int glob
 //  Uses Verlet integration to calculate the new position for the current time step
 //
 //--------------------------------------------------------------------------------------
-float4 Integrate(float4 curPosition, float4 oldPosition, float4 initialPos, float4 force, int globalVertexIndex, int localVertexIndex, int numVerticesInTheStrand, float dampingCoeff = 1.0f)
+float4 Integrate(float4 curPosition, float4 oldPosition, float4 initialPos, float4 force, uint globalVertexIndex, uint localVertexIndex, uint numVerticesInTheStrand, float dampingCoeff = 1.0f)
 {  
     float4 outputPos = curPosition;
 
     force.xyz += GravityMagnitude * float3(0, -1.0f, 0);
     outputPos.xyz = curPosition.xyz + (1.0 - dampingCoeff)*(curPosition.xyz - oldPosition.xyz) + force.xyz*g_TimeStep*g_TimeStep; 
     
-    return outputPos;  
+    return outputPos;
 }
 
-bool IsMovable(float4 particle)
+inline bool IsMovable(float4 particle)
 {
     if ( particle.w > 0 )
         return true;
@@ -161,35 +163,24 @@ float2 ConstraintMultiplier(float4 particle0, float4 particle1)
     }    
 }
 
-float4 MakeQuaternion(float angle_radian, float3 axis)
+inline float4 MakeQuaternion(float angle_radian, float3 axis)
 {
     // create quaternion using angle and rotation axis
-    float4 quaternion;
     float halfAngle = 0.5f * angle_radian;
-    float sinHalf = sin(halfAngle);
-
-    quaternion.w = cos(halfAngle);
-    quaternion.xyz = sinHalf * axis.xyz;
-
-    return quaternion;
+    return float4(sin(halfAngle) * axis.xyz, cos(halfAngle));
 }
 
-float4 InverseQuaternion(float4 q)
+inline float4 InverseQuaternion(float4 q)
 {
     float lengthSqr = q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
 
     if ( lengthSqr < 0.001 )
         return float4(0, 0, 0, 1.0f);
-
-    q.x = -q.x / lengthSqr;
-    q.y = -q.y / lengthSqr;
-    q.z = -q.z / lengthSqr;
-    q.w = q.w / lengthSqr;
-
-    return q;
+		
+	return float4(-q.x / lengthSqr, -q.y / lengthSqr, -q.z / lengthSqr, -q.w / lengthSqr);
 }
 
-float3 MultQuaternionAndVector(float4 q, float3 v)
+inline float3 MultQuaternionAndVector(float4 q, float3 v)
 {
     float3 uv, uuv;
     float3 qvec = float3(q.x, q.y, q.z);
@@ -201,16 +192,17 @@ float3 MultQuaternionAndVector(float4 q, float3 v)
     return v + uv + uuv;
 }
 
-float4 MultQuaternionAndQuaternion(float4 qA, float4 qB)
+inline float4 MultQuaternionAndQuaternion(float4 qA, float4 qB)
 {
-    float4 q;
+    /*float4 q;
 
     q.w = qA.w * qB.w - qA.x * qB.x - qA.y * qB.y - qA.z * qB.z;
     q.x = qA.w * qB.x + qA.x * qB.w + qA.y * qB.z - qA.z * qB.y;
     q.y = qA.w * qB.y + qA.y * qB.w + qA.z * qB.x - qA.x * qB.z;
     q.z = qA.w * qB.z + qA.z * qB.w + qA.x * qB.y - qA.y * qB.x;
     
-    return q;
+    return q;*/
+	return float4(qA.w * qB.w - qA.x * qB.x - qA.y * qB.y - qA.z * qB.z, qA.w * qB.x + qA.x * qB.w + qA.y * qB.z - qA.z * qB.y, qA.w * qB.y + qA.y * qB.w + qA.z * qB.x - qA.x * qB.z, qA.w * qB.z + qA.z * qB.w + qA.x * qB.y - qA.y * qB.x);
 }
 
 void ApplyDistanceConstraint(inout float4 pos0, inout float4 pos1, float targetDistance, float stiffness = 1.0)
@@ -326,14 +318,12 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
                   uint3 GId : SV_GroupID,
                   uint3 DTid : SV_DispatchThreadID)
 {
-    int offset = 0;
-    int strandType = 0;
+    uint offset = 0;
+    uint strandType = 0;
 
 	uint globalStrandIndex = 0;
 	uint localVertexIndex = 0; 
 	uint indexForSharedMem = GIndex;
-	uint numOfStrandsPerThreadGroup = 2;
-	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
 
 	if ( GIndex < maxPossibleVertsInStrand )
 	{
@@ -364,7 +354,7 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     //------------------------------
     // Copy data into shared memory 
     //------------------------------
-    if (localVertexIndex < numVerticesInTheStrand )
+    if ( localVertexIndex < numVerticesInTheStrand )
     {
         currentPos = sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
         initialPos = g_InitialHairPositions[globalVertexIndex];
@@ -392,21 +382,25 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     //--------------------------------------------
     // Global shaping matching style enforcement
     //--------------------------------------------
-    float stiffnessForGlobalShapeMatching = g_Config[strandType].globalStiffness;
-    float globalShapeMatchingEffectiveRange = g_Config[strandType].globalStiffnessMatchingRange;
-    
-    if ( stiffnessForGlobalShapeMatching > 0 && globalShapeMatchingEffectiveRange )
-    {
-        if ( IsMovable(sharedPos[indexForSharedMem]) )  
-        {
-            if ( (float)localVertexIndex < globalShapeMatchingEffectiveRange * (float)numVerticesInTheStrand )
-            {
-                float factor = stiffnessForGlobalShapeMatching;
-                float3 del = factor * (initialPos - sharedPos[indexForSharedMem]).xyz;
-                sharedPos[indexForSharedMem].xyz += del;
-            }
-        }
-    }
+    if ( localVertexIndex < numVerticesInTheStrand )
+	{
+		float stiffnessForGlobalShapeMatching = g_Config[strandType].globalStiffness;
+		float globalShapeMatchingEffectiveRange = g_Config[strandType].globalStiffnessMatchingRange;
+		
+		if ( stiffnessForGlobalShapeMatching > 0 && globalShapeMatchingEffectiveRange )
+		{
+			if ( IsMovable(sharedPos[indexForSharedMem]) )  
+			{
+				if ( (float)localVertexIndex < globalShapeMatchingEffectiveRange * (float)numVerticesInTheStrand )
+				{
+					float factor = stiffnessForGlobalShapeMatching;
+					float3 del = factor * (initialPos - sharedPos[indexForSharedMem]).xyz;
+					sharedPos[indexForSharedMem].xyz += del;
+				}
+			}
+		}
+	}
+	
 
 	//---------------------------------------
     // update global position buffers
@@ -431,12 +425,11 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
     uint globalStrandIndex = THREAD_GROUP_SIZE*GId.x;
 	globalStrandIndex += GIndex;
 	
-    int strandType = 0;
-	
 	if (globalStrandIndex > NumStrands - 1)
 		return;
-
-	int offset = 0;
+	
+    uint strandType = 0;
+	uint offset = 0;
 
 	if ( globalStrandIndex > 0 )
     {
@@ -450,13 +443,15 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 	float stiffnessForLocalShapeMatching = g_Config[strandType].localStiffness;
 
 	// 1.0 for stiffness makes things unstable sometimes.
-	if ( stiffnessForLocalShapeMatching >= 0.95f )
-		stiffnessForLocalShapeMatching = 0.95f;
+	// MOVED TO CPU
+	/*if ( stiffnessForLocalShapeMatching >= 0.95f )
+		stiffnessForLocalShapeMatching = 0.95f;*/
 
 	//--------------------------------------------
 	// Local shape constraint for bending/twisting 
 	//--------------------------------------------    
-	{
+	// OLD CODE: 
+	/*{
 		float4 pos_minus_one = g_HairVertexPositions[offset];
 		float4 pos = g_HairVertexPositions[offset+1];
 		float4 pos_plus_one;
@@ -509,6 +504,56 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 			pos_minus_one = pos;
 			pos = pos_plus_one;
 		}	  
+	}*/
+	
+	{
+		float4 pos_minus_one = g_HairVertexPositions[offset];
+		float4 pos = g_HairVertexPositions[offset+1];
+		float4 pos_plus_one;
+		uint globalVertexIndex = 0;
+		float4 rotGlobal = g_GlobalRotations[offset];
+	
+		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
+		{
+			globalVertexIndex = offset + localVertexIndex;
+			pos_plus_one = g_HairVertexPositions[globalVertexIndex+1];
+
+			//--------------------------------
+			// Update position i and i_plus_1
+			//--------------------------------
+			float4 rotGlobalWorld = MultQuaternionAndQuaternion(g_ModelRotateForHead, rotGlobal); 
+
+			float3 del = stiffnessForLocalShapeMatching * 0.5f * (MultQuaternionAndVector(rotGlobalWorld, g_HairRefVecsInLocalFrame[globalVertexIndex+1]) + pos.xyz - pos_plus_one.xyz).xyz;
+
+			if ( IsMovable(pos) )
+				pos.xyz -= del.xyz;
+
+			if ( IsMovable(pos_plus_one) ) 
+				pos_plus_one.xyz += del.xyz;
+	
+			//---------------------------
+			// Update local/global frames
+			//---------------------------
+    
+			float3 x_i_plus_1_frame_i = normalize(MultQuaternionAndVector(InverseQuaternion(rotGlobalWorld), normalize(pos_plus_one.xyz - pos.xyz)));
+			float3 e = float3(1.0f, 0, 0);
+			float3 rotAxis = cross(e, x_i_plus_1_frame_i);
+    
+			if ( length(rotAxis) > 0.001 )
+			{
+				float angle_radian = acos(dot(e, x_i_plus_1_frame_i));
+				rotAxis = normalize(rotAxis);
+
+				float4 localRot = MakeQuaternion(angle_radian, rotAxis);
+				rotGlobal = MultQuaternionAndQuaternion(rotGlobal, localRot);
+			}	
+
+			g_HairVertexPositions[globalVertexIndex].xyz = pos.xyz;			
+			g_HairVertexPositions[globalVertexIndex+1].xyz = pos_plus_one.xyz;
+
+			pos_minus_one = pos;
+			pos = pos_plus_one;
+		}	  
 	}
 
 	return;
@@ -516,25 +561,24 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 
 //--------------------------------------------------------------------------------------
 // 
-//	LengthConstriantsAndWind
+//	LengthConstraintsWindCollisionAndTangents
 //
 //  Compute shader to move the vertex position based on wind and maintains the lenght constraints.
+//  Also simulates collisions and calculates the new tangent after the vertex has moved.
 //
 // One thread computes one vertex.
 //
 //--------------------------------------------------------------------------------------
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
-void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
+void LengthConstraintsWindCollisionAndTangents(uint GIndex : SV_GroupIndex,
                   uint3 GId : SV_GroupID,
                   uint3 DTid : SV_DispatchThreadID)
 {
-	int offset = 0;
+	uint offset = 0;
 
 	uint globalStrandIndex = 0;
 	uint localVertexIndex = 0; 
 	uint indexForSharedMem = GIndex;
-	uint numOfStrandsPerThreadGroup = 2;
-	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
 	uint offsetForLocalVertexIndex = 0;
 
 	// With offsetForLocalVertexIndex, we can convert localVertexIndex into indexForSharedMem by doing below.
@@ -607,7 +651,7 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 	uint a = floor(numVerticesInTheStrand/2.0f);
 	uint b = floor((numVerticesInTheStrand-1)/2.0f); 
 	
-	for ( int iterationE=0; iterationE < 2; iterationE++ )
+	for ( uint iterationE=0; iterationE < NumLengthConstraintIterations; iterationE++ )
 	{
 		uint sharedIndex = localVertexIndex*2 + offsetForLocalVertexIndex;
 
@@ -621,73 +665,12 @@ void LengthConstraintsAndWind(uint GIndex : SV_GroupIndex,
 
 		GroupMemoryBarrierWithGroupSync();
 	}
-
-	//---------------------------------------
-    // update global position buffers
-    //---------------------------------------
-	if ( localVertexIndex < numVerticesInTheStrand )
-	    g_HairVertexPositions[globalVertexIndex] = sharedPos[indexForSharedMem];
-	
-	return;
-}
-
-
-
-//--------------------------------------------------------------------------------------
-// 
-//	CollisionAndTangents
-//
-//  Compute shader to simulate collisions and calculate the new tangent after the vertex has moved.
-//
-// One thread computes one vertex.
-//
-//--------------------------------------------------------------------------------------
-[numthreads(THREAD_GROUP_SIZE, 1, 1)]
-void CollisionAndTangents(uint GIndex : SV_GroupIndex,
-                  uint3 GId : SV_GroupID,
-                  uint3 DTid : SV_DispatchThreadID)
-{
-	int offset = 0;
-
-	uint globalStrandIndex = 0;
-	uint localVertexIndex = 0; 
-	uint indexForSharedMem = GIndex;
-	uint numOfStrandsPerThreadGroup = 2;
-	uint maxPossibleVertsInStrand = (THREAD_GROUP_SIZE / numOfStrandsPerThreadGroup);
-	
-	if ( GIndex < maxPossibleVertsInStrand )
-	{
-		globalStrandIndex = 2 * GId.x;
-		localVertexIndex = GIndex;
-	}
-	else
-	{
-		globalStrandIndex = 2 * GId.x + 1;
-		localVertexIndex = GIndex - maxPossibleVertsInStrand;
-	}
-	
-    if( globalStrandIndex > 0 ) 
-    {
-        offset =  g_HairVerticesOffsetsSRV.Load(globalStrandIndex - 1);
-    }
-
-	uint globalVertexIndex = offset + localVertexIndex;
-    uint numVerticesInTheStrand = g_HairVerticesOffsetsSRV.Load(globalStrandIndex) - offset;
-
-	if ( numVerticesInTheStrand > maxPossibleVertsInStrand )
-		numVerticesInTheStrand = maxPossibleVertsInStrand;
 		
     //------------------------------
     // Copy data into shared memory
     //------------------------------
-    if (localVertexIndex < numVerticesInTheStrand )
-    {
-        sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
-    }
 
 	float4 oldPos = g_HairVertexPositionsPrev[globalVertexIndex];
-        
-    GroupMemoryBarrierWithGroupSync();
 	
     //-------------------------------------------------
     // Collision handling hard-code collision shapes
@@ -719,12 +702,12 @@ void CollisionAndTangents(uint GIndex : SV_GroupIndex,
         float3 tangent = sharedPos[indexForSharedMem+1].xyz - sharedPos[indexForSharedMem].xyz;
         g_HairVertexTangents[globalVertexIndex].xyz = normalize(tangent);
     }
-	
-    //---------------------------------------
+
+	//---------------------------------------
     // update global position buffers
     //---------------------------------------
 	if ( localVertexIndex < numVerticesInTheStrand )
 	    g_HairVertexPositions[globalVertexIndex] = sharedPos[indexForSharedMem];
-	    
+	
 	return;
 }
