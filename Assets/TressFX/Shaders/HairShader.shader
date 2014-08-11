@@ -2,7 +2,6 @@
 	Properties
 	{
 		_HairColor ("Hair Color (RGB)", Color) = (1,1,1,1)
-		_Shininess ("Shininess", Range(0,1)) = 0.5
 		_SpecShift ("Specular Shift", Float) = 0.5
 		_PrimaryShift ("Primary Shift", Float) = 0.5
 		_SecondaryShift ("Secondary Shift", Float) = 0.5
@@ -70,7 +69,6 @@
         	uniform float _RimStrength;
 			uniform fixed4 _SpecularColor1;
           	uniform fixed4 _SpecularColor2;
-			uniform fixed _Shininess;
 			uniform float _Roughness1;
           	uniform float _Roughness2;
         	

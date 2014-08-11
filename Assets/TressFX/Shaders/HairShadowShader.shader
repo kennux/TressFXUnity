@@ -33,7 +33,6 @@
 	            
 		        appdata_base v;
 		        v.vertex = float4(vertexPosition.xyz, 1);
-		        v.normal = normalize(float4(vertexPosition.xyz,1));
 	            
 	            v2f o;
 	            
