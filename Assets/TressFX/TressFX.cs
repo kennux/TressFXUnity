@@ -137,8 +137,14 @@ public class TressFX : MonoBehaviour
 			for (int j = 0; j < strands[i].vertices.Length; j++)
 			{
 				this.globalToLocalVertexIndexMappings.Add (index, j);
+
+				Vector4 pos = strands[i].GetTressFXVector(j);
+				Vector3 pos3 = new Vector3(pos.x, pos.y, pos.z);
+				pos3 = this.transform.position + pos3;
+				Vector4 position = new Vector4(pos3.x, pos3.y, pos3.z, pos.w);
+
 				// Load position of the strand
-				positionVectors[index] = (new Vector4(this.transform.position.x, this.transform.position.y, this.transform.position.z, 0) + strands[i].GetTressFXVector(j));
+				positionVectors[index] = position;
 				initialPositionVectors[index] = strands[i].GetTressFXVector(j);
 
 				// Get rest length

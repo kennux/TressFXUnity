@@ -119,6 +119,7 @@ public class TressFXLoader : MonoBehaviour
 					strand.vertices[j].pos = new Vector3(float.Parse(vertexData[0]),		// X
 					                                     float.Parse(vertexData[1]),		// Y
 					                                     float.Parse(vertexData[2]));		// Z
+					strand.vertices[j].pos.Scale (this.transform.lossyScale);
 
 					// Load UVs
 					strand.vertices[j].texcoords.x = texcoordX;

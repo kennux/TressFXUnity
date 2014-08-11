@@ -95,6 +95,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.globalStiffnessMatchingRange = new float[this.master.hairData.Length];
 		this.localStiffness = new float[this.master.hairData.Length];
 		this.damping = new float[this.master.hairData.Length];
+		this.lastModelMatrix = Matrix4x4.TRS (this.transform.position, this.transform.rotation, Vector3.one);
 
 		// Load config
 		for (int i = 0; i < this.master.hairData.Length; i++)
@@ -107,8 +108,6 @@ public class TressFXSimulation : MonoBehaviour
 
 		// Initialize collision check targets
 		this.collisionCheckTargets = new List<Collider>();
-
-		this.lastModelMatrix = this.transform.localToWorldMatrix;
 
 		if (this.master == null)
 		{
@@ -123,39 +122,41 @@ public class TressFXSimulation : MonoBehaviour
 		this.SkipSimulationKernelId = this.HairSimulationShader.FindKernel ("SkipSimulateHair");
 
 		// Initialize collider buffer
-		ColliderObject[] colliders = new ColliderObject[this.headColliders.Length];
-		this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 20);
-
-		for (int i = 0; i < this.headColliders.Length; i++)
+		if (this.headColliders.Length > 0)
 		{
-			// Scale collider
-			float scale = Mathf.Max (new float[] { this.headColliders[i].transform.localScale.x, this.headColliders[i].transform.localScale.y, this.headColliders[i].transform.localScale.z }); 
+			ColliderObject[] colliders = new ColliderObject[this.headColliders.Length];
+			this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 20);
+			for (int i = 0; i < this.headColliders.Length; i++)
+			{
+				// Scale collider
+				float scale = Mathf.Max (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
 
-			colliders[i] = new ColliderObject();
-			colliders[i].centerPosition = this.headColliders[i].transform.localPosition + this.headColliders[i].center;
-			colliders[i].radius = this.headColliders[i].radius * scale;
-			colliders[i].radius2 = colliders[i].radius*colliders[i].radius;
+				colliders[i] = new ColliderObject();
+				colliders[i].centerPosition = this.headColliders[i].transform.localPosition + this.headColliders[i].center;
+				colliders[i].radius = this.headColliders[i].radius * scale;
+				colliders[i].radius2 = colliders[i].radius*colliders[i].radius;
+			}
+
+			this.colliderBuffer.SetData (colliders);
 		}
 
-		this.colliderBuffer.SetData (colliders);
-
 		// Set length buffer
-		this.hairLengthsBuffer = new ComputeBuffer(this.master.vertexCount,4);
+		this.hairLengthsBuffer = new ComputeBuffer(hairRestLengths.Length,4);
 		this.hairLengthsBuffer.SetData(hairRestLengths);
 
 		// Set rotation buffers
-		this.globalRotationBuffer = new ComputeBuffer(this.master.vertexCount, 16);
-		this.localRotationBuffer = new ComputeBuffer(this.master.vertexCount, 16);
+		this.globalRotationBuffer = new ComputeBuffer(globalRotations.Length, 16);
+		this.localRotationBuffer = new ComputeBuffer(localRotations.Length, 16);
 
 		this.globalRotationBuffer.SetData(globalRotations);
 		this.localRotationBuffer.SetData(localRotations);
 
 		// Set reference buffers
-		this.referenceBuffer = new ComputeBuffer(this.master.vertexCount, 12);
+		this.referenceBuffer = new ComputeBuffer(referenceVectors.Length, 12);
 		this.referenceBuffer.SetData (referenceVectors);
 
 		// Set offset buffer
-		this.verticeOffsetBuffer = new ComputeBuffer(this.master.strandCount, 4);
+		this.verticeOffsetBuffer = new ComputeBuffer(verticesOffsets.Length, 4);
 		this.verticeOffsetBuffer.SetData (verticesOffsets);
 
 		// Generate config buffer
@@ -310,7 +311,10 @@ public class TressFXSimulation : MonoBehaviour
 		this.SetVerticeInfoBuffers(this.CollisionAndTangentsKernelId);
 
 		// Set collider buffer to collision kernel
-		this.HairSimulationShader.SetBuffer (this.CollisionAndTangentsKernelId, "g_Colliders", this.colliderBuffer);
+		if (this.headColliders.Length > 0)
+		{
+			this.HairSimulationShader.SetBuffer (this.CollisionAndTangentsKernelId, "g_Colliders", this.colliderBuffer);
+		}
 		this.HairSimulationShader.SetFloat ("g_ColliderCount", this.headColliders.Length);
 	}
 
@@ -357,13 +361,15 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	private void SetMatrices()
 	{
+		Matrix4x4 modelMatrix = Matrix4x4.TRS (this.transform.position, this.transform.rotation, Vector3.one);
+
 		// Set last inverse matrix
 		this.HairSimulationShader.SetFloats("g_ModelPrevInvTransformForHead", this.MatrixToFloatArray(this.lastModelMatrix.inverse));
 		
 		// Set current matrix
-		this.HairSimulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (this.transform.localToWorldMatrix));
+		this.HairSimulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (modelMatrix));
 		
-		this.lastModelMatrix = this.transform.localToWorldMatrix;
+		this.lastModelMatrix = modelMatrix;
 	}
 
 	/// <summary>
@@ -377,7 +383,9 @@ public class TressFXSimulation : MonoBehaviour
 		this.referenceBuffer.Release ();
 		this.verticeOffsetBuffer.Release ();
 		this.configBuffer.Release ();
-		this.colliderBuffer.Release ();
+
+		if (this.colliderBuffer != null)
+			this.colliderBuffer.Release ();
 	}
 
 	/// <summary>
