@@ -71,10 +71,13 @@
           	uniform fixed4 _SpecularColor2;
 			uniform float _Roughness1;
           	uniform float _Roughness2;
+          	
         	
         	// --------------------------------------
         	// TressFX Antialias shader written by AMD
         	// License is included in Readme.md
+        	// 
+        	// Modified by KennuX
         	// --------------------------------------
 			v2f vert (appdata_base input)
 	        {
@@ -88,8 +91,6 @@
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float3 vertexNormal = normalize(g_HairInitialVertexPositions[index].xyz);
-			    vertexNormal.y = abs(vertexNormal.y);
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
@@ -98,36 +99,36 @@
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
-
-				// Calculate the negative and positive offset screenspace positions
-				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
-				float4 hairEdgePositionsNormal[2]; // 0 is negative, 1 is positive
-				hairEdgePositions[0] = float4(vert +  -1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[1] = float4(vert +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositionsNormal[0] = hairEdgePositions[0];
-				hairEdgePositionsNormal[1] = hairEdgePositions[1];
-				hairEdgePositions[0] = mul(UNITY_MATRIX_MVP, hairEdgePositions[0]);
-				hairEdgePositions[1] = mul(UNITY_MATRIX_MVP, hairEdgePositions[1]);
-				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
-				hairEdgePositions[1] = hairEdgePositions[1]/hairEdgePositions[1].w;
-				
-			    // Write output data
-			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
-			    float3 pos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
 			    
-			    float3 posi = (fDirIndex==-1.0 ? hairEdgePositionsNormal[0] : hairEdgePositionsNormal[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
+			    // Declare position variables
+			    float3 position = float3(0,0,0);
+			    //float3 positionNormal = float3(0,0,0);
 			    
-				o.pos = float4(pos, 1);
-				o.normal = float4(vertexNormal, 1);
-                
-				o.lightDir = WorldSpaceLightDir( float4(posi,1) );
-				o.viewDir = WorldSpaceViewDir( float4(posi,1) );
+			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+			    
+			    // Calculate the edge position
+			    // float4 edgePosition = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
+			    //positionNormal = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
+			    
+			    // Calculate final vertex position
+			    float4 edgePosition = mul(UNITY_MATRIX_MVP, float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0));
+			    edgePosition = edgePosition / edgePosition.w;
+			    position = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
+			    
+			    // Vertex data
+				o.pos = float4(position, 1);
+				o.normal = float4(normalize(g_HairInitialVertexPositions[index].xyz), 1);
+			    o.normal.y = abs(o.normal.y);
 				
-				o.texcoords = input.texcoord.xy;
+				// Lighting data
+				o.lightDir = WorldSpaceLightDir( float4(position,1) );
+				o.viewDir = WorldSpaceViewDir( float4(position,1) );
 				o.Tangent = t;
 				
+				o.texcoords = input.texcoord.xy;
+				
 				appdata_base v;
-				v.vertex = float4(posi, 1);
+				v.vertex = float4(position, 1);
 				
     			TRANSFER_VERTEX_TO_FRAGMENT(o);
     			
@@ -153,7 +154,6 @@
 			inline float3 KajiyaKay (float3 N, float3 T, float3 H, float specNoise) 
 			{
 				float3 B = normalize(T + N * specNoise);
-				//return sqrt(1-pow(dot(B,H),2));
 				float dotBH = dot(B,H);
 				return sqrt(1-dotBH*dotBH);
 			}
@@ -265,13 +265,16 @@
 
         	// --------------------------------------
         	// TressFX Antialias shader written by AMD
+        	// 
+        	// Modified by KennuX
         	// --------------------------------------
-	        v2f vert (appdata_base input)
+	        v2f vert (appdata_base v)
 	        { 
 	        	// Access the current line segment
-				uint vertexId = g_TriangleIndicesBuffer[(int)input.vertex.x]; // vertexId is actually the indexed vertex id when indexed triangles are used
+				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
 				
-			    uint index = vertexId / 2;  
+			    // Access the current line segment
+			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
 
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
@@ -280,26 +283,21 @@
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
+			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
-
-				// Calculate the negative and positive offset screenspace positions
-				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
-				hairEdgePositions[0] = float4(vert +  -1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[1] = float4(vert +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
-				hairEdgePositions[1] = hairEdgePositions[1]/hairEdgePositions[1].w;
-				
-			    // Write output data
-			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
-			    float3 pos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
+			    
+			    // Which direction to expand?
+			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+			    
+			    // Calculate the edge position
+			    float4 edgePosition = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
+			    
+			    // Calculate final vertex position
+			    float3 position = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
 		       	
-	            
-		        appdata_base v;
-		        v.vertex = float4(pos.xyz, 1);
-		        // v.normal = normalize(float4(vert,1));
+		        v.vertex = float4(position.xyz, 1);
 	            
 	            v2f o;
 	            TRANSFER_SHADOW_COLLECTOR(o)

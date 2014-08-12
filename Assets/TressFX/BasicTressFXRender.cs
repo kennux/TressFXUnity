@@ -19,6 +19,8 @@ public class BasicTressFXRender : ATressFXRender
 	public float fiberRadius = 0.14f;
 	public bool thinTip = true;
 
+	public Transform test;
+
 	public override void Initialize()
 	{
 		base.Initialize ();
@@ -39,6 +41,16 @@ public class BasicTressFXRender : ATressFXRender
 			this.hairMaterial[i].SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
 			this.hairMaterial[i].SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
 			this.hairMaterial[i].SetVector ("modelTransform", new Vector4 (this.transform.position.x, this.transform.position.y, this.transform.position.z, 1));
+
+			// Lighting test
+			/*this.hairMaterial[i].SetVector ("lightPositions0", this.test.position);
+			// w = 1 means pointlight
+			this.hairMaterial[i].SetVector ("lightData0", new Vector4(10,1,0,1));
+			// Red light
+			this.hairMaterial[i].SetVector ("lightColor0", new Vector4(1,0,0,0));
+
+			// 1 Light
+			this.hairMaterial[i].SetFloat ("lightCount", 1);*/
 		}
 		
 		for (int i = 0; i < this.meshes.Count; i++)

@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 /// <summary>
 /// Tress FX hair data object.
@@ -48,9 +50,11 @@ public class TressFXHairData : ScriptableObject
 	/// </summary>
 	public float damping;
 
+	#if UNITY_EDITOR
 	[MenuItem("Assets/Create/TressFX Hair")]
 	public static void CreateAsset()
 	{
 		ScriptableObjectUtility.CreateAsset<TressFXHairData> ();
 	}
+	#endif
 }
