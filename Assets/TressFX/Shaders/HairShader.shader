@@ -47,6 +47,7 @@
 			StructuredBuffer<float3> g_HairInitialVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
 			StructuredBuffer<int> g_HairThicknessCoeffs;
+			StructuredBuffer<float3> g_PreprocessedVertices;
 			
 			uniform sampler2D _MainTex;
 			uniform sampler2D _SpecularTex;
@@ -83,13 +84,16 @@
 	        {
 	            v2f o;
 	            
+			    float3 position = float3(0,0,0);
+			    
+			    // Index id
 				uint vertexId = g_TriangleIndicesBuffer[(int)input.vertex.x];
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
-
+				float3 t = g_HairVertexTangents[index].xyz;
+				
 			    // Get updated positions and tangents from simulation result
-			    float3 t = g_HairVertexTangents[index].xyz;
 			    float3 vert = g_HairVertexPositions[index].xyz;
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
@@ -101,7 +105,6 @@
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
 			    
 			    // Declare position variables
-			    float3 position = float3(0,0,0);
 			    //float3 positionNormal = float3(0,0,0);
 			    
 			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
@@ -121,8 +124,8 @@
 			    o.normal.y = abs(o.normal.y);
 				
 				// Lighting data
-				o.lightDir = WorldSpaceLightDir( float4(position,1) );
-				o.viewDir = WorldSpaceViewDir( float4(position,1) );
+				o.lightDir = WorldSpaceLightDir( float4(vert,1) );
+				o.viewDir = WorldSpaceViewDir( float4(vert,1) );
 				o.Tangent = t;
 				
 				o.texcoords = input.texcoord.xy;
@@ -195,6 +198,7 @@
 				return c;
 			}
 			
+			[earlydepthstencil]
 	        fixed4 frag (v2f i) : COLOR
 	        {
 	        	FSLightingOutput o = (FSLightingOutput)0;
