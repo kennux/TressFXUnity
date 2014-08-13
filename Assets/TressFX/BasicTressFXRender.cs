@@ -34,7 +34,7 @@ public class BasicTressFXRender : ATressFXRender
 			this.hairMaterial[i].SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
 			this.hairMaterial[i].SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
 			this.hairMaterial[i].SetBuffer("g_HairThicknessCoeffs", this.master.ThicknessCoeffsBuffer);
-			this.hairMaterial[i].SetVector("g_vEye", Camera.main.transform.position);
+			// this.hairMaterial[i].SetVector("g_vEye", Camera.main.transform.position);
 			this.hairMaterial[i].SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 			this.hairMaterial[i].SetFloat("g_FiberRadius", this.fiberRadius);
 			this.hairMaterial[i].SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);

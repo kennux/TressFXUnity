@@ -130,6 +130,8 @@ public class TressFX : MonoBehaviour
 		// Initialize transforms and fill hair and strand indices, hair rest lengths and position vectors
 		int index = 0;
 
+		this.ComputeDistanceToRoot ();
+
 		for (int i = 0; i < strands.Length; i++)
 		{
 			hairIndices[i] = strands[i].hairId;
@@ -355,7 +357,7 @@ public class TressFX : MonoBehaviour
 		{
 			float strandLength = 0;
 
-			// Iterate over every strand
+			// Iterate over every strand vertex
 			for (int j = 1; j < strands[i].vertices.Length; j++)
 			{
 				// Calculate segment length

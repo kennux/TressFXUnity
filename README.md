@@ -38,6 +38,12 @@ For reference you should take a look at the HairShader.shader and the BasicTress
 
 After writing your implementation you only need to attach it to the TressFX gameobject, it will automatically find and use it.
 
+Features
+==============
+
+* Fully implemented TressFX 2.0 Simulation
+* Basic rendering implementation supporting Forward rendering and ambient an directional lighting
+
 Licenses
 ==============
 

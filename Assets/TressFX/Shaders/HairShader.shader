@@ -5,7 +5,7 @@
 		_SpecShift ("Specular Shift", Float) = 0.5
 		_PrimaryShift ("Primary Shift", Float) = 0.5
 		_SecondaryShift ("Secondary Shift", Float) = 0.5
-		_RimStrength ("Rim lighting strength", Float) = 0.5
+		_RimStrength ("Rim lighting strength", Range(0,1)) = 0.1
 		_SpecularColor1 ("Specular color 1", Color) = (1,1,1,1)
 		_SpecularColor2 ("Specular color 2", Color) = (1,1,1,1)
 		_Roughness1 ("Roughness1", Range(0,1)) = 0.5
@@ -53,7 +53,6 @@
 			uniform sampler2D _SpecularTex;
 			
 			// Vertex shader props
-			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
@@ -91,14 +90,14 @@
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
-				float3 t = g_HairVertexTangents[index].xyz;
 				
 			    // Get updated positions and tangents from simulation result
 			    float3 vert = g_HairVertexPositions[index].xyz;
+			    float3 t = g_HairVertexTangents[index].xyz;
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
+			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
 			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
@@ -140,43 +139,37 @@
 	        
 	        // Kajiya-Kay implementation from Lux shaders
 	        // https://github.com/larsbertram69/Lux/blob/master/Lux%20Shader/Human/Hair/Lux%20Hair.shader
-	        
-	        struct FSLightingOutput
-	        {
-	        	fixed3 Albedo;
-	        	fixed Alpha;
-	        	float4 Normal;
-	        	float3 Tangent;
-	        	fixed SpecShift;
-	        	fixed Specular;
-	        	fixed SpecNoise;
-	        	half2 Specular12;
-	        	fixed3 SpecularColor;
-	        };
-	        
 			inline float3 KajiyaKay (float3 N, float3 T, float3 H, float specNoise) 
 			{
-				float3 B = normalize(T + N * specNoise);
-				float dotBH = dot(B,H);
+				// float3 B = normalize(T + N * specNoise);
+				float dotBH = dot(normalize(T + N * specNoise),H);
 				return sqrt(1-dotBH*dotBH);
 			}
-
-			inline fixed4 LightingLuxHair (FSLightingOutput s, fixed3 lightDir, fixed3 viewDir, fixed atten)
-			{
-				fixed3 h = normalize(normalize(lightDir) + normalize(viewDir));
-				float dotNL = max(0,dot(s.Normal, lightDir));
+			
+	        fixed4 frag (v2f i) : COLOR
+	        {
+				// Albedo calculation
+				fixed3 Albedo = UNITY_LIGHTMODEL_AMBIENT.rgb * _HairColor.rgb * tex2D(_MainTex, i.texcoords).rgb;
+				
+				// Lighting precalculations
+				fixed3 spec = tex2D(_SpecularTex, i.texcoords).rgb;
+				half SpecShift = spec.r * 2 - 1;
+				float atten = LIGHT_ATTENUATION(i);
+				
+				// fixed3 h = normalize(normalize(lightDir) + normalize(viewDir));
+				float dotNL = max(0,dot(i.normal, i.lightDir));
 
 				//  Spec
-				float2 specPower = exp2(10 * s.Specular12 + 1) - 1.75;
+				float2 specPower = exp2(10 * float2(spec.g * _Roughness1, spec.g * _Roughness2) + 1) - 1.75;
 
 				// First specular Highlight / Do not add specNoise here 
-				float3 H = normalize(lightDir + viewDir);
-				float3 spec1 = specPower.x * pow( KajiyaKay(s.Normal, s.Tangent.xyz * s.SpecShift, H, _PrimaryShift), specPower.x);
+				float3 H = normalize(i.lightDir + i.viewDir);
+				float3 spec1 = specPower.x * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _PrimaryShift), specPower.x);
 				// Add 2nd specular Highlight
-				float3 spec2 = specPower.y * pow( KajiyaKay(s.Normal, s.Tangent.xyz * s.SpecShift, H, _SecondaryShift ), specPower.y) * s.SpecNoise;
+				float3 spec2 = specPower.y * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _SecondaryShift ), specPower.y) * spec.b;
 
 				//  Fresnel
-				fixed fresnel = exp2(-OneOnLN2_x6 * dot(h, lightDir));
+				fixed fresnel = exp2(-OneOnLN2_x6 * dot(normalize(normalize(i.lightDir) + normalize(i.viewDir)), i.lightDir));
 				spec1 *= _SpecularColor1 + ( 1.0 - _SpecularColor1 ) * fresnel;
 				spec2 *= _SpecularColor2 + ( 1.0 - _SpecularColor2 ) * fresnel;    
 				spec1 += spec2;
@@ -185,51 +178,14 @@
 				spec1 *= 0.125 * dotNL;
 
 				// Rim
-				fixed RimPower = saturate (1.0 - dot(s.Normal, viewDir));
+				fixed RimPower = saturate (1.0 - dot(i.normal, i.viewDir));
 				fixed Rim = _RimStrength * RimPower*RimPower;
 
-				fixed4 c;
 				// Diffuse Lighting: Lerp shifts the shadow boundrary for a softer look
 				float3 diffuse = saturate (lerp (0.25, 1.0, dotNL));
 				
 				// Combine
-				c.rgb = ((s.Albedo + Rim) * diffuse + spec1) * _LightColor0.rgb  * (atten * 2);
-				c.a = s.Alpha;
-				return c;
-			}
-			
-			[earlydepthstencil]
-	        fixed4 frag (v2f i) : COLOR
-	        {
-	        	FSLightingOutput o = (FSLightingOutput)0;
-	        	
-	        	fixed3 textureColor = tex2D(_MainTex, i.texcoords).rgb;
-	        	
-				o.Albedo = _HairColor.rgb * textureColor;
-				o.Alpha = _HairColor.a;
-				o.Normal = i.normal;
-				
-				fixed3 spec = tex2D(_SpecularTex, i.texcoords).rgb;
-				
-				o.SpecShift = spec.r * 2 - 1;
-				
-				// Calculate primary per Pixel Roughness * Roughness1
-				o.Specular = spec.g * _Roughness1;
-				// Store Roughness for direct lighting
-				o.Specular12 = half2(o.Specular, spec.g * _Roughness2);
-				// store per pixel Spec Noise
-				o.SpecNoise = spec.b;
-
-				// Lux Ambient Lighting functions also need o.SpecularColor(rgb) 
-				// So we have to make it a bit more complicated here
-				// Tweak Roughness for ambient lighting
-				o.Specular *= o.Specular; 
-				o.SpecularColor = _SpecularColor1.rgb;
-				o.Tangent = i.Tangent;
-				
-				float atten = LIGHT_ATTENUATION(i);
-				
-				return LightingLuxHair(o, i.lightDir, i.viewDir, atten);
+				return fixed4(((Albedo + Rim) * diffuse + spec1) * _LightColor0.rgb  * (atten * 2), 1);
 	        }
 	        
 			ENDCG
@@ -257,7 +213,6 @@
 			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
 			StructuredBuffer<float> g_HairThicknessCoeffs;
-			uniform float3 g_vEye;
 			uniform float4 g_WinSize;
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
@@ -286,7 +241,7 @@
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - g_vEye) ) );
+			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
 			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
