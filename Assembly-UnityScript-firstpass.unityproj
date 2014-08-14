@@ -60,6 +60,7 @@
      <None Include="Assets\Media\hair_free.txt" />
      <None Include="Assets\Media\hair_front_long.txt" />
      <None Include="Assets\Private\Shaders\OITHairShader.shader" />
+     <None Include="Assets\Private\Shaders\OITRenderingShader.shader" />
      <None Include="Assets\TressFX\Shaders\HairShader.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -79,14 +79,14 @@
         	// 
         	// Modified by KennuX
         	// --------------------------------------
-			v2f vert (appdata_base input)
+			v2f vert (appdata_base v)
 	        {
 	            v2f o;
 	            
 			    float3 position = float3(0,0,0);
 			    
 			    // Index id
-				uint vertexId = g_TriangleIndicesBuffer[(int)input.vertex.x];
+				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
@@ -127,9 +127,8 @@
 				o.viewDir = WorldSpaceViewDir( float4(vert,1) );
 				o.Tangent = t;
 				
-				o.texcoords = input.texcoord.xy;
+				o.texcoords = v.texcoord.xy;
 				
-				appdata_base v;
 				v.vertex = float4(position, 1);
 				
     			TRANSFER_VERTEX_TO_FRAGMENT(o);
