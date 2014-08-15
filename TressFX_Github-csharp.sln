@@ -1,6 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2008
 
+Project("{8FE227F9-A4C2-FF15-3B7C-CC3575A32365}") = "TressFX_Github", "Assembly-CSharp-firstpass-vs.csproj", "{29148575-FBF9-34E0-8CDD-B74FCCB49881}"
+EndProject
 Project("{8FE227F9-A4C2-FF15-3B7C-CC3575A32365}") = "TressFX_Github", "Assembly-CSharp-vs.csproj", "{D6E336F3-1163-BBAA-27F2-103CF2E7CC57}"
 EndProject
 Global
@@ -9,6 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{29148575-FBF9-34E0-8CDD-B74FCCB49881}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29148575-FBF9-34E0-8CDD-B74FCCB49881}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29148575-FBF9-34E0-8CDD-B74FCCB49881}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29148575-FBF9-34E0-8CDD-B74FCCB49881}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D6E336F3-1163-BBAA-27F2-103CF2E7CC57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D6E336F3-1163-BBAA-27F2-103CF2E7CC57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6E336F3-1163-BBAA-27F2-103CF2E7CC57}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -17,7 +23,7 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-																																																																																																																																									GlobalSection(MonoDevelopProperties) = preSolution
+																																																																																																																																														GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1

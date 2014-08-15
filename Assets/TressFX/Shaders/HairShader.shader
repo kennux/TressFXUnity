@@ -57,7 +57,7 @@
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
 			uniform float g_bThinTip;
-			uniform float4 modelTransform;
+			uniform float4x4 inverseModelMatrix;
 			
 			// Main props
 			uniform fixed4 _HairColor;
@@ -82,8 +82,6 @@
 			v2f vert (appdata_base v)
 	        {
 	            v2f o;
-	            
-			    float3 position = float3(0,0,0);
 			    
 			    // Index id
 				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
@@ -115,12 +113,11 @@
 			    // Calculate final vertex position
 			    float4 edgePosition = mul(UNITY_MATRIX_MVP, float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0));
 			    edgePosition = edgePosition / edgePosition.w;
-			    position = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
+			    float4 position = edgePosition + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0, 0.0);
 			    
 			    // Vertex data
-				o.pos = float4(position, 1);
-				o.normal = float4(normalize(g_HairInitialVertexPositions[index].xyz), 1);
-			    o.normal.y = abs(o.normal.y);
+				o.pos = position;
+				o.normal = normalize(mul(inverseModelMatrix, vert));
 				
 				// Lighting data
 				o.lightDir = WorldSpaceLightDir( float4(vert,1) );
@@ -129,7 +126,7 @@
 				
 				o.texcoords = v.texcoord.xy;
 				
-				v.vertex = float4(position, 1);
+				v.vertex = position;
 				
     			TRANSFER_VERTEX_TO_FRAGMENT(o);
     			

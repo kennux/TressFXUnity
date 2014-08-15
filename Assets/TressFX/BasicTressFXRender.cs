@@ -40,7 +40,7 @@ public class BasicTressFXRender : ATressFXRender
 			this.hairMaterial[i].SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
 			this.hairMaterial[i].SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
 			this.hairMaterial[i].SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
-			this.hairMaterial[i].SetVector ("modelTransform", new Vector4 (this.transform.position.x, this.transform.position.y, this.transform.position.z, 1));
+			this.hairMaterial[i].SetMatrix ("inverseModelMatrix", Matrix4x4.TRS (this.transform.position, this.transform.rotation, Vector3.one).inverse);
 
 			// Lighting test
 			/*this.hairMaterial[i].SetVector ("lightPositions0", this.test.position);
