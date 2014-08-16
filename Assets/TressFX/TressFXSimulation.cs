@@ -55,20 +55,12 @@ public class TressFXSimulation : MonoBehaviour
 	private Vector4 windForce3;
 	private Vector4 windForce4;
 
-	private ComputeBuffer hairStrandVerticeNums;
-	private ComputeBuffer collisionTargetBuffer;
-
 	private Matrix4x4 lastModelMatrix;
 
 	// Simulation info
 	private const int VERTICES_PER_GROUP = 64;
 	private const int STRANDS_PER_GROUP = 2;
 	private const int MAX_VERTICES_PER_STRAND = 32;
-
-	/// <summary>
-	/// The targets for checking the collisions.
-	/// </summary>
-	private List<Collider> collisionCheckTargets;
 
 	public bool skipSimulation = false;
 
@@ -118,9 +110,6 @@ public class TressFXSimulation : MonoBehaviour
 			this.damping[i] = this.master.hairData[i].damping;
 		}
 
-		// Initialize collision check targets
-		this.collisionCheckTargets = new List<Collider>();
-
 		if (this.master == null)
 		{
 			Debug.LogError ("TressFXSimulation doesnt have a master (TressFX)!");
@@ -140,13 +129,16 @@ public class TressFXSimulation : MonoBehaviour
 			this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 20);
 			for (int i = 0; i < this.headColliders.Length; i++)
 			{
-				// Scale collider
-				float scale = Mathf.Max (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
+				// Scale collider information
+				float scale = Mathf.Min (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
+				Vector3 colliderCenter = this.headColliders[i].transform.position + this.headColliders[i].center;
 
 				colliders[i] = new ColliderObject();
-				colliders[i].centerPosition = this.headColliders[i].transform.localPosition + this.headColliders[i].center;
+				colliders[i].centerPosition = colliderCenter;
 				colliders[i].radius = this.headColliders[i].radius * scale;
 				colliders[i].radius2 = colliders[i].radius*colliders[i].radius;
+
+				// Debug.Log("Collider " + i + ": " + colliders[i].centerPosition + "," + colliders[i].radius + "," + colliders[i].radius2);
 			}
 
 			this.colliderBuffer.SetData (colliders);
@@ -257,8 +249,6 @@ public class TressFXSimulation : MonoBehaviour
 		if (!this.skipSimulation)
 		{
 			this.DispatchKernels ();
-			// Do collision check
-			this.CheckCollisionTargets ();
 		}
 		else
 		{
@@ -266,26 +256,6 @@ public class TressFXSimulation : MonoBehaviour
 		}
 		
 		this.computationTime = ((float) (DateTime.Now.Ticks - ticks) / 10.0f) / 1000.0f;
-	}
-
-	/// <summary>
-	/// Checks the collision targets.
-	/// This will rebuild the collisionTargetBuffer and fill it with the collision check target data.
-	/// It will also dispatch the collision check kernel.
-	/// </summary>
-	private void CheckCollisionTargets()
-	{
-		TressFXColliderData[] colliders = new TressFXColliderData[this.collisionCheckTargets.Count];
-
-		int index = 0;
-
-		foreach(Collider c in this.collisionCheckTargets)
-		{
-			colliders[index].centerPoint = c.bounds.center;
-			colliders[index].colliderType = 0; // Box collider
-			colliders[index].size = c.bounds.size;
-			index++;
-		}
 	}
 
 	/// <summary>
@@ -444,17 +414,5 @@ public class TressFXSimulation : MonoBehaviour
 		this.HairSimulationShader.SetBuffer (kernelId, "g_HairVerticesOffsetsSRV", this.verticeOffsetBuffer);
 		this.HairSimulationShader.SetBuffer (kernelId, "g_HairStrandType", this.master.HairIndicesBuffer);
 		this.HairSimulationShader.SetBuffer (kernelId, "g_Config", this.configBuffer);
-	}
-	
-	public void AddCollisionTarget(Collider collider)
-	{
-		this.collisionCheckTargets.Add(collider);
-		Debug.Log ("TressFX Collision target added: " + collider);
-	}
-	
-	public void RemoveCollisionTarget(Collider collider)
-	{
-		this.collisionCheckTargets.Remove(collider);
-		Debug.Log ("TressFX Collision target removed: " + collider);
 	}
 }

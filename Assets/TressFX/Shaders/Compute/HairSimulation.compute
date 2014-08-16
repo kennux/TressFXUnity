@@ -703,7 +703,7 @@ void CollisionAndTangents(uint GIndex : SV_GroupIndex,
 			CollisionCapsule cc;
 			cc.p1.xyz = centerSphere;
 			cc.p1.w = radius;
-			cc.p2.xyz = centerSphere + float3(0.0,1.0,0.0);
+			cc.p2.xyz = centerSphere;//  + float3(0.0,1.0,0.0);
 			cc.p2.w = g_Colliders[i].radius2;
 			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
     	}

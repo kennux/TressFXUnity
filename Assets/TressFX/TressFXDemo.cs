@@ -5,6 +5,7 @@ public class TressFXDemo : MonoBehaviour
 {
 	public Transform modelTransform;
 	private Vector2 lastMousePosition;
+	public float movementSpeed = 1;
 
 	public void Update()
 	{
@@ -14,7 +15,7 @@ public class TressFXDemo : MonoBehaviour
 			if (this.lastMousePosition != Vector2.zero)
 			{
 				Vector2 difference = mousePos - this.lastMousePosition;
-				difference = difference * -0.1f;
+				difference = difference * -0.1f * this.movementSpeed;
 				
 				// Move model
 				this.modelTransform.position = new Vector3(this.modelTransform.position.x + difference.x,

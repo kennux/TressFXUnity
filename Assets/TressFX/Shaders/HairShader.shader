@@ -2,10 +2,8 @@
 	Properties
 	{
 		_HairColor ("Hair Color (RGB)", Color) = (1,1,1,1)
-		_SpecShift ("Specular Shift", Float) = 0.5
 		_PrimaryShift ("Primary Shift", Float) = 0.5
 		_SecondaryShift ("Secondary Shift", Float) = 0.5
-		_RimStrength ("Rim lighting strength", Range(0,1)) = 0.1
 		_SpecularColor1 ("Specular color 1", Color) = (1,1,1,1)
 		_SpecularColor2 ("Specular color 2", Color) = (1,1,1,1)
 		_Roughness1 ("Roughness1", Range(0,1)) = 0.5
@@ -47,7 +45,6 @@
 			StructuredBuffer<float3> g_HairInitialVertexPositions;
 			StructuredBuffer<int> g_TriangleIndicesBuffer;
 			StructuredBuffer<int> g_HairThicknessCoeffs;
-			StructuredBuffer<float3> g_PreprocessedVertices;
 			
 			uniform sampler2D _MainTex;
 			uniform sampler2D _SpecularTex;
@@ -57,6 +54,7 @@
 			uniform float g_FiberRadius;
 			uniform float g_bExpandPixels;
 			uniform float g_bThinTip;
+			uniform float usePreprocessedData; 
 			uniform float4x4 inverseModelMatrix;
 			
 			// Main props
@@ -66,7 +64,6 @@
         	uniform float _SpecShift;
         	uniform float _PrimaryShift;
         	uniform float _SecondaryShift;
-        	uniform float _RimStrength;
 			uniform fixed4 _SpecularColor1;
           	uniform fixed4 _SpecularColor2;
 			uniform float _Roughness1;
@@ -82,16 +79,18 @@
 			v2f vert (appdata_base v)
 	        {
 	            v2f o;
-			    
+	            
 			    // Index id
 				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
+			    
+			    // Get tangent
+			    float3 t = g_HairVertexTangents[index].xyz;
+				float3 vert = g_HairVertexPositions[index].xyz;
 				
 			    // Get updated positions and tangents from simulation result
-			    float3 vert = g_HairVertexPositions[index].xyz;
-			    float3 t = g_HairVertexTangents[index].xyz;
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
@@ -102,22 +101,16 @@
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
 			    
 			    // Declare position variables
-			    //float3 positionNormal = float3(0,0,0);
-			    
 			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 			    
-			    // Calculate the edge position
-			    // float4 edgePosition = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
-			    //positionNormal = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
-			    
 			    // Calculate final vertex position
-			    float4 edgePosition = mul(UNITY_MATRIX_MVP, float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0));
+			    float4 edgePosition = mul(UNITY_MATRIX_MVP,float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0));
 			    edgePosition = edgePosition / edgePosition.w;
 			    float4 position = edgePosition + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0, 0.0);
-			    
+				
 			    // Vertex data
 				o.pos = position;
-				o.normal = normalize(mul(inverseModelMatrix, vert));
+				o.normal = float4(normalize(mul(inverseModelMatrix, float4(vert,1)).xyz), 1);
 				
 				// Lighting data
 				o.lightDir = WorldSpaceLightDir( float4(vert,1) );
@@ -125,7 +118,6 @@
 				o.Tangent = t;
 				
 				o.texcoords = v.texcoord.xy;
-				
 				v.vertex = position;
 				
     			TRANSFER_VERTEX_TO_FRAGMENT(o);
@@ -152,7 +144,6 @@
 				half SpecShift = spec.r * 2 - 1;
 				float atten = LIGHT_ATTENUATION(i);
 				
-				// fixed3 h = normalize(normalize(lightDir) + normalize(viewDir));
 				float dotNL = max(0,dot(i.normal, i.lightDir));
 
 				//  Spec
@@ -172,16 +163,12 @@
 
 				// Normalize
 				spec1 *= 0.125 * dotNL;
-
-				// Rim
-				fixed RimPower = saturate (1.0 - dot(i.normal, i.viewDir));
-				fixed Rim = _RimStrength * RimPower*RimPower;
-
+				
 				// Diffuse Lighting: Lerp shifts the shadow boundrary for a softer look
 				float3 diffuse = saturate (lerp (0.25, 1.0, dotNL));
 				
 				// Combine
-				return fixed4(((Albedo + Rim) * diffuse + spec1) * _LightColor0.rgb  * (atten * 2), 1);
+				return fixed4((Albedo * diffuse + spec1) * _LightColor0.rgb  * (atten * 2), 1);
 	        }
 	        
 			ENDCG
@@ -230,15 +217,14 @@
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
-
+				
+			    float3 vert = g_HairVertexPositions[index].xyz;
 			    // Get updated positions and tangents from simulation result
 			    float3 t = g_HairVertexTangents[index].xyz;
-			    float3 vert = g_HairVertexPositions[index].xyz;
 			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
@@ -247,12 +233,7 @@
 			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 			    
 			    // Calculate the edge position
-			    float4 edgePosition = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
-			    
-			    // Calculate final vertex position
-			    float3 position = edgePosition + fDirIndex * float3(proj_right * expandPixels / g_WinSize.y, 0.0f);
-		       	
-		        v.vertex = float4(position.xyz, 1);
+			    v.vertex = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
 	            
 	            v2f o;
 	            TRANSFER_SHADOW_COLLECTOR(o)

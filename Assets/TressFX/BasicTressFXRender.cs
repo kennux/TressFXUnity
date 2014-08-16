@@ -27,6 +27,12 @@ public class BasicTressFXRender : ATressFXRender
 
 	protected override void Render()
 	{
+		// Get MVP Matrix
+		/*Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
+		Matrix4x4 V = Camera.main.worldToCameraMatrix;
+		Matrix4x4 P = GL.GetGPUProjectionMatrix (Camera.main.projectionMatrix, false);
+
+		Matrix4x4 MVP = P*V*M;*/
 
 		for (int i = 0; i < this.hairMaterial.Length; i++)
 		{
@@ -34,23 +40,12 @@ public class BasicTressFXRender : ATressFXRender
 			this.hairMaterial[i].SetBuffer("g_HairVertexTangents", this.master.TangentsBuffer);
 			this.hairMaterial[i].SetBuffer("g_TriangleIndicesBuffer", this.master.TriangleIndicesBuffer);
 			this.hairMaterial[i].SetBuffer("g_HairThicknessCoeffs", this.master.ThicknessCoeffsBuffer);
-			// this.hairMaterial[i].SetVector("g_vEye", Camera.main.transform.position);
 			this.hairMaterial[i].SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 			this.hairMaterial[i].SetFloat("g_FiberRadius", this.fiberRadius);
 			this.hairMaterial[i].SetFloat("g_bExpandPixels", this.expandPixels ? 0 : 1);
 			this.hairMaterial[i].SetFloat("g_bThinTip", this.thinTip ? 0 : 1);
 			this.hairMaterial[i].SetBuffer ("g_HairInitialVertexPositions", this.master.InitialVertexPositionBuffer);
 			this.hairMaterial[i].SetMatrix ("inverseModelMatrix", Matrix4x4.TRS (this.transform.position, this.transform.rotation, Vector3.one).inverse);
-
-			// Lighting test
-			/*this.hairMaterial[i].SetVector ("lightPositions0", this.test.position);
-			// w = 1 means pointlight
-			this.hairMaterial[i].SetVector ("lightData0", new Vector4(10,1,0,1));
-			// Red light
-			this.hairMaterial[i].SetVector ("lightColor0", new Vector4(1,0,0,0));
-
-			// 1 Light
-			this.hairMaterial[i].SetFloat ("lightCount", 1);*/
 		}
 		
 		for (int i = 0; i < this.meshes.Count; i++)
