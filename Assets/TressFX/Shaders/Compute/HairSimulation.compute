@@ -77,11 +77,10 @@ struct TressFXHairConfig
 	float damping;
 };
 
-struct TressFXSphereCollider
+struct CollisionCapsule
 {
-	float3 centerPos;
-	float radius;
-	float radius2;
+	float4 p1; // xyz = position 1 of capsule, w = radius
+	float4 p2; // xyz = position 2 of capsule, w = radius * radius
 };
 
 RWStructuredBuffer<float4> g_HairVertexPositions; 
@@ -96,7 +95,7 @@ RWStructuredBuffer<float>	g_HairRestLengthSRV;
 RWStructuredBuffer<int>		g_HairStrandType; 
 RWStructuredBuffer<float3>	g_HairRefVecsInLocalFrame; 
 RWStructuredBuffer<struct TressFXHairConfig> g_Config;
-RWStructuredBuffer<struct TressFXSphereCollider> g_Colliders;
+RWStructuredBuffer<struct CollisionCapsule> g_Colliders;
 
 float g_ColliderCount;
 float4x4 g_ModelTransformForHead;
@@ -224,13 +223,6 @@ void ApplyDistanceConstraint(inout float4 pos0, inout float4 pos1, float targetD
     pos0.xyz += multiplier[0] * delta * stiffness;
     pos1.xyz -= multiplier[1] * delta * stiffness;
 }
-
-
-struct CollisionCapsule
-{
-	float4 p1; // xyz = position 1 of capsule, w = radius
-	float4 p2; // xyz = position 2 of capsule, w = radius * radius
-};
 
 //--------------------------------------------------------------------------------------
 // 
@@ -696,15 +688,10 @@ void CollisionAndTangents(uint GIndex : SV_GroupIndex,
     {
     	for (uint i = 0; i < g_ColliderCount; i++)
     	{
-            float3 centerSphere = g_Colliders[i].centerPos;
-            centerSphere = mul(float4( centerSphere.xyz, 1), g_ModelTransformForHead).xyz;
-            float radius = g_Colliders[i].radius;
-
-			CollisionCapsule cc;
-			cc.p1.xyz = centerSphere;
-			cc.p1.w = radius;
-			cc.p2.xyz = centerSphere;//  + float3(0.0,1.0,0.0);
-			cc.p2.w = g_Colliders[i].radius2;
+            CollisionCapsule cc = g_Colliders[i];
+            cc.p1.xyz = mul(float4( cc.p1.xyz, 1), g_ModelTransformForHead).xyz;
+            cc.p2.xyz = mul(float4( cc.p2.xyz, 1), g_ModelTransformForHead).xyz;
+            
 			sharedPos[indexForSharedMem].xyz = CapsuleCollision(sharedPos[indexForSharedMem], oldPos, cc);
     	}
     }

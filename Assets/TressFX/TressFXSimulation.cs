@@ -19,7 +19,7 @@ public class TressFXSimulation : MonoBehaviour
 	[HideInInspector]
 	public float computationTime;
 
-	public SphereCollider[] headColliders;
+	public CapsuleCollider[] headColliders;
 
 	// Kernel ID's
 	private int IntegrationAndGlobalShapeConstraintsKernelId;
@@ -67,16 +67,14 @@ public class TressFXSimulation : MonoBehaviour
 	private struct ColliderObject
 	{
 		/// <summary>
-		/// The center position in local space.
+		/// Lower position of the capsule sphere. w = radius
 		/// </summary>
-		public Vector3 centerPosition;
-		
-		public float radius;
+		public Vector4 p1;
 
 		/// <summary>
-		/// The radius².
+		/// Upper position of the capsule sphere. w = radius²
 		/// </summary>
-		public float radius2;
+		public Vector4 p2;
 	}
 
 	/// <summary>
@@ -122,27 +120,6 @@ public class TressFXSimulation : MonoBehaviour
 		this.CollisionAndTangentsKernelId = this.HairSimulationShader.FindKernel("CollisionAndTangents");
 		this.SkipSimulationKernelId = this.HairSimulationShader.FindKernel ("SkipSimulateHair");
 
-		// Initialize collider buffer
-		if (this.headColliders.Length > 0)
-		{
-			ColliderObject[] colliders = new ColliderObject[this.headColliders.Length];
-			this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 20);
-			for (int i = 0; i < this.headColliders.Length; i++)
-			{
-				// Scale collider information
-				float scale = Mathf.Min (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
-				Vector3 colliderCenter = this.headColliders[i].transform.position + this.headColliders[i].center;
-
-				colliders[i] = new ColliderObject();
-				colliders[i].centerPosition = colliderCenter;
-				colliders[i].radius = this.headColliders[i].radius * scale;
-				colliders[i].radius2 = colliders[i].radius*colliders[i].radius;
-
-				// Debug.Log("Collider " + i + ": " + colliders[i].centerPosition + "," + colliders[i].radius + "," + colliders[i].radius2);
-			}
-
-			this.colliderBuffer.SetData (colliders);
-		}
 
 		// Set length buffer
 		this.hairLengthsBuffer = new ComputeBuffer(hairRestLengths.Length,4);
@@ -179,6 +156,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.configBuffer.SetData(hairConfig);
 
 		// Initialize simulation
+		this.InitializeColliders ();
 		this.SetResources ();
 		Vector3 pos = this.transform.position;
 
@@ -189,11 +167,45 @@ public class TressFXSimulation : MonoBehaviour
 		this.HairSimulationShader.Dispatch (this.SkipSimulationKernelId, this.master.vertexCount, 1, 1);
 	}
 
+	private void InitializeColliders()
+	{
+		if (this.colliderBuffer != null)
+			this.colliderBuffer.Release ();
+
+		// Initialize collider buffer
+		if (this.headColliders.Length > 0)
+		{
+			ColliderObject[] colliders = new ColliderObject[this.headColliders.Length];
+			this.colliderBuffer = new ComputeBuffer (this.headColliders.Length, 32);
+			for (int i = 0; i < this.headColliders.Length; i++)
+			{
+				// Scale collider information
+				float scale = Mathf.Max (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
+				Vector3 colliderCenter = this.headColliders[i].transform.TransformPoint(this.headColliders[i].center);
+				Vector3 p1 = colliderCenter - (this.headColliders[i].transform.up * (this.headColliders[i].height / 2));
+				Vector3 p2 = colliderCenter + (this.headColliders[i].transform.up * (this.headColliders[i].height / 2));
+				
+				p1 = this.transform.InverseTransformPoint(p1);
+				p2 = this.transform.InverseTransformPoint(p2);
+
+				colliders[i] = new ColliderObject();
+				colliders[i].p1 = new Vector4(p1.x, p1.y, p1.z, this.headColliders[i].radius * scale);
+				colliders[i].p2 = new Vector4(p2.x, p2.y, p2.z, colliders[i].p1.w * colliders[i].p1.w);
+
+				Debug.Log ("Collider " + i + ": " + colliders[i].p1 + " " + colliders[i].p2);
+			}
+			
+			this.colliderBuffer.SetData (colliders);
+		}
+	}
+
 	/// <summary>
 	/// This functions dispatches the compute shader functions to simulate the hair behaviour
 	/// </summary>
 	public void LateUpdate()
 	{
+		this.InitializeColliders ();
+
 		long ticks = DateTime.Now.Ticks;
 
 		// Simulate wind

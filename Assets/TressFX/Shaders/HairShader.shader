@@ -91,34 +91,34 @@
 				float3 vert = g_HairVertexPositions[index].xyz;
 				
 			    // Get updated positions and tangents from simulation result
-			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    fixed ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
+			    fixed3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
+			    fixed2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
-			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
+			    fixed expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
 			    
 			    // Declare position variables
 			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 			    
 			    // Calculate final vertex position
-			    float4 edgePosition = mul(UNITY_MATRIX_MVP,float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0));
+			    float4 finalVertexPosition = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
+			    float4 edgePosition = mul(UNITY_MATRIX_MVP, finalVertexPosition);
 			    edgePosition = edgePosition / edgePosition.w;
-			    float4 position = edgePosition + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0, 0.0);
 				
 			    // Vertex data
-				o.pos = position;
-				o.normal = float4(normalize(mul(inverseModelMatrix, float4(vert,1)).xyz), 1);
+				o.pos = edgePosition + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0, 0.0);
+				o.normal = float4(normalize(mul(inverseModelMatrix, vert).xyz), 1);
 				
 				// Lighting data
-				o.lightDir = WorldSpaceLightDir( float4(vert,1) );
-				o.viewDir = WorldSpaceViewDir( float4(vert,1) );
+				o.lightDir = WorldSpaceLightDir( finalVertexPosition );
+				o.viewDir = WorldSpaceViewDir( finalVertexPosition );
 				o.Tangent = t;
 				
 				o.texcoords = v.texcoord.xy;
-				v.vertex = position;
+				v.vertex = o.pos;
 				
     			TRANSFER_VERTEX_TO_FRAGMENT(o);
     			
@@ -127,33 +127,33 @@
 	        
 	        // Kajiya-Kay implementation from Lux shaders
 	        // https://github.com/larsbertram69/Lux/blob/master/Lux%20Shader/Human/Hair/Lux%20Hair.shader
-			inline float3 KajiyaKay (float3 N, float3 T, float3 H, float specNoise) 
+			inline half KajiyaKay (float3 N, float3 T, float3 H, float specNoise) 
 			{
 				// float3 B = normalize(T + N * specNoise);
-				float dotBH = dot(normalize(T + N * specNoise),H);
+				fixed dotBH = dot(normalize(T + N * specNoise),H);
 				return sqrt(1-dotBH*dotBH);
 			}
 			
 	        fixed4 frag (v2f i) : COLOR
 	        {
+	        	// return fixed4(1,0,0,1);
+	        	
 				// Albedo calculation
 				fixed3 Albedo = UNITY_LIGHTMODEL_AMBIENT.rgb * _HairColor.rgb * tex2D(_MainTex, i.texcoords).rgb;
 				
 				// Lighting precalculations
 				fixed3 spec = tex2D(_SpecularTex, i.texcoords).rgb;
-				half SpecShift = spec.r * 2 - 1;
-				float atten = LIGHT_ATTENUATION(i);
-				
-				float dotNL = max(0,dot(i.normal, i.lightDir));
+				fixed SpecShift = spec.r * 2 - 1;
+				fixed dotNL = max(0,dot(i.normal, i.lightDir));
 
 				//  Spec
-				float2 specPower = exp2(10 * float2(spec.g * _Roughness1, spec.g * _Roughness2) + 1) - 1.75;
+				half2 specPower = exp2(10 * half2(spec.g * _Roughness1, spec.g * _Roughness2) + 1) - 1.75;
 
 				// First specular Highlight / Do not add specNoise here 
-				float3 H = normalize(i.lightDir + i.viewDir);
-				float3 spec1 = specPower.x * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _PrimaryShift), specPower.x);
+				fixed3 H = normalize(i.lightDir + i.viewDir);
+				half3 spec1 = specPower.x * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _PrimaryShift), specPower.x);
 				// Add 2nd specular Highlight
-				float3 spec2 = specPower.y * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _SecondaryShift ), specPower.y) * spec.b;
+				half3 spec2 = specPower.y * pow( KajiyaKay(i.normal, i.Tangent.xyz * SpecShift, H, _SecondaryShift ), specPower.y) * spec.b;
 
 				//  Fresnel
 				fixed fresnel = exp2(-OneOnLN2_x6 * dot(normalize(normalize(i.lightDir) + normalize(i.viewDir)), i.lightDir));
@@ -165,10 +165,10 @@
 				spec1 *= 0.125 * dotNL;
 				
 				// Diffuse Lighting: Lerp shifts the shadow boundrary for a softer look
-				float3 diffuse = saturate (lerp (0.25, 1.0, dotNL));
+				fixed3 diffuse = saturate (lerp (0.25, 1.0, dotNL));
 				
 				// Combine
-				return fixed4((Albedo * diffuse + spec1) * _LightColor0.rgb  * (atten * 2), 1);
+				return fixed4((Albedo * diffuse + spec1) * _LightColor0.rgb  * (LIGHT_ATTENUATION(i) * 2), 1);
 	        }
 	        
 			ENDCG
@@ -212,30 +212,31 @@
         	// --------------------------------------
 	        v2f vert (appdata_base v)
 	        { 
+	            v2f o;
+	            
 	        	// Access the current line segment
 				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
 				
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
 				
-			    float3 vert = g_HairVertexPositions[index].xyz;
 			    // Get updated positions and tangents from simulation result
+			    float3 vert = g_HairVertexPositions[index].xyz;
 			    float3 t = g_HairVertexTangents[index].xyz;
-			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    fixed ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
+			    fixed3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
 			    
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
-			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
+			    fixed expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
 			    
 			    // Which direction to expand?
 			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 			    
 			    // Calculate the edge position
-			    v.vertex = float4(vert +  fDirIndex * right * ratio * g_FiberRadius, 1.0);
+			    v.vertex = float4(vert + fDirIndex * right * ratio * g_FiberRadius, 1.0);
 	            
-	            v2f o;
 	            TRANSFER_SHADOW_COLLECTOR(o)
 	            return o;
 	        }
