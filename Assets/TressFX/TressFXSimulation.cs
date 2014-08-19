@@ -182,8 +182,8 @@ public class TressFXSimulation : MonoBehaviour
 				// Scale collider information
 				float scale = Mathf.Max (new float[] { this.headColliders[i].transform.lossyScale.x, this.headColliders[i].transform.lossyScale.y, this.headColliders[i].transform.lossyScale.z }); 
 				Vector3 colliderCenter = this.headColliders[i].transform.TransformPoint(this.headColliders[i].center);
-				Vector3 p1 = colliderCenter - (this.headColliders[i].transform.up * (this.headColliders[i].height / 2));
-				Vector3 p2 = colliderCenter + (this.headColliders[i].transform.up * (this.headColliders[i].height / 2));
+				Vector3 p1 = colliderCenter - (this.headColliders[i].transform.up * ((this.headColliders[i].height * scale / 2) - (this.headColliders[i].radius * scale)));
+				Vector3 p2 = colliderCenter + (this.headColliders[i].transform.up * ((this.headColliders[i].height * scale / 2) - (this.headColliders[i].radius * scale)));
 				
 				p1 = this.transform.InverseTransformPoint(p1);
 				p2 = this.transform.InverseTransformPoint(p2);
