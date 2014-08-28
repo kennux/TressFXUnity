@@ -1,0 +1,132 @@
+fileFormatVersion: 2
+guid: 2cdc587fdfc917446ab9ae655d8f5620
+ModelImporter:
+  serializedVersion: 16
+  fileIDToRecycleName:
+    100000: eyes_Head_inner_Leye
+    100002: eyes_Head_Leye_outer
+    100004: hair_band_geo_HAIR_ALL_pTorus2
+    100006: hair_band_geo_HAIR_ALL_pTorus3
+    100008: Head_head
+    100010: Head_jacket
+    100012: //RootNode
+    100014: Head_teeth_bot
+    100016: Head_teeth_top
+    100018: Head_tongue
+    100020: inner_Reye_eyes_Head
+    100022: newUVs_normals_Head_head
+    100024: normals_Head_head
+    100026: pTorus1_hair_band_geo_HAIR_ALL
+    100028: Reye_eyes_Head_outer
+    400000: eyes_Head_inner_Leye
+    400002: eyes_Head_Leye_outer
+    400004: hair_band_geo_HAIR_ALL_pTorus2
+    400006: hair_band_geo_HAIR_ALL_pTorus3
+    400008: Head_head
+    400010: Head_jacket
+    400012: //RootNode
+    400014: Head_teeth_bot
+    400016: Head_teeth_top
+    400018: Head_tongue
+    400020: inner_Reye_eyes_Head
+    400022: newUVs_normals_Head_head
+    400024: normals_Head_head
+    400026: pTorus1_hair_band_geo_HAIR_ALL
+    400028: Reye_eyes_Head_outer
+    2300000: eyes_Head_inner_Leye
+    2300002: eyes_Head_Leye_outer
+    2300004: hair_band_geo_HAIR_ALL_pTorus2
+    2300006: hair_band_geo_HAIR_ALL_pTorus3
+    2300008: Head_head
+    2300010: Head_jacket
+    2300012: Head_teeth_bot
+    2300014: Head_teeth_top
+    2300016: Head_tongue
+    2300018: inner_Reye_eyes_Head
+    2300020: newUVs_normals_Head_head
+    2300022: normals_Head_head
+    2300024: pTorus1_hair_band_geo_HAIR_ALL
+    2300026: Reye_eyes_Head_outer
+    3300000: eyes_Head_inner_Leye
+    3300002: eyes_Head_Leye_outer
+    3300004: hair_band_geo_HAIR_ALL_pTorus2
+    3300006: hair_band_geo_HAIR_ALL_pTorus3
+    3300008: Head_head
+    3300010: Head_jacket
+    3300012: Head_teeth_bot
+    3300014: Head_teeth_top
+    3300016: Head_tongue
+    3300018: inner_Reye_eyes_Head
+    3300020: newUVs_normals_Head_head
+    3300022: normals_Head_head
+    3300024: pTorus1_hair_band_geo_HAIR_ALL
+    3300026: Reye_eyes_Head_outer
+    4300000: eyes_Head_inner_Leye
+    4300002: eyes_Head_Leye_outer
+    4300004: hair_band_geo_HAIR_ALL_pTorus2
+    4300006: hair_band_geo_HAIR_ALL_pTorus3
+    4300008: Head_head
+    4300010: Head_jacket
+    4300012: Head_teeth_bot
+    4300014: Head_teeth_top
+    4300016: Head_tongue
+    4300018: inner_Reye_eyes_Head
+    4300020: newUVs_normals_Head_head
+    4300022: normals_Head_head
+    4300024: pTorus1_hair_band_geo_HAIR_ALL
+    4300026: Reye_eyes_Head_outer
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  additionalBone: 0
+  userData: 
