@@ -10,7 +10,7 @@ public static class ScriptableObjectUtility
 	/// <summary>
 	//	This makes it easy to create, name and place unique new ScriptableObject asset files.
 	/// </summary>
-	public static T CreateAsset<T> () where T : ScriptableObject
+	public static T CreateAsset<T> (string assetName) where T : ScriptableObject
 	{
 		T asset = ScriptableObject.CreateInstance<T> ();
 		
@@ -24,7 +24,7 @@ public static class ScriptableObjectUtility
 			path = path.Replace (Path.GetFileName (AssetDatabase.GetAssetPath (Selection.activeObject)), "");
 		}
 		
-		string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath (path + "/New " + typeof(T).ToString() + ".asset");
+		string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath (path + "/" + assetName + ".asset");
 		
 		AssetDatabase.CreateAsset (asset, assetPathAndName);
 		

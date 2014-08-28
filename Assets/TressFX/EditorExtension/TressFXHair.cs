@@ -222,7 +222,8 @@ public class TressFXHair : ScriptableObject
 		try
 		{
 			reader = new BinaryReader (File.Open (path, FileMode.Open));
-
+			
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading information...", 0);
 			// Load information variables
 			this.m_NumTotalHairVertices = reader.ReadInt32 ();
 			this.m_NumTotalHairStrands = reader.ReadInt32 ();
@@ -232,26 +233,44 @@ public class TressFXHair : ScriptableObject
 			this.m_NumFollowHairsPerOneGuideHair = reader.ReadInt32 ();
 
 			// Load actual hair data
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading strandtypes...", 0);
 			this.m_pHairStrandType = TressFXLoader.ReadIntegerArray (reader, this.m_NumTotalHairStrands);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading reference vectors...", 0.05f);
 			this.m_pRefVectors = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading global rotations...", 0.15f);
 			this.m_pGlobalRotations = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading local rotations...", 0.25f);
 			this.m_pLocalRotations = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading verticess...", 0.35f);
 			this.m_pVertices = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading tangents...", 0.4f);
 			this.m_pTangents = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading triangle vertices...", 0.5f);
 			this.m_pTriangleVertices = TressFXLoader.ReadStrandVertexArray (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading thickness coefficients...", 0.55f);
 			this.m_pThicknessCoeffs = TressFXLoader.ReadFloatArray (reader, this.m_NumTotalHairVertices);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading follow hair root offsets...", 0.65f);
 			this.m_pFollowRootOffset = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairStrands);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading rest lengths...", 0.7f);
 			this.m_pRestLengths = TressFXLoader.ReadFloatArray (reader, this.m_NumTotalHairVertices);
-
+			
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading bounding sphere...", 0.75f);
 			// Load bounding sphere
 			this.m_bSphere = new TressFXBoundingSphere (TressFXLoader.ReadVector3 (reader), reader.ReadSingle ());
-
+			
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading triangle indices...", 0.75f);
 			// Load indices
 			int triangleIndicesCount = TressFXLoader.ReadStringInteger(reader);
-			this.m_TriangleIndices = TressFXLoader.ReadIntegerArray (reader, triangleIndicesCount);
+			this.m_TriangleIndices = TressFXLoader.ReadIntegerArrayBigEndian (reader, triangleIndicesCount);
+			
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading line indices...", 0.9f);
+			// Stupid integer strings -.-
+			reader.BaseStream.Position = reader.BaseStream.Position - 1;
 
 			int lineIndicesCount = TressFXLoader.ReadStringInteger(reader);
-			this.m_LineIndices = TressFXLoader.ReadIntegerArray (reader, lineIndicesCount);
+			this.m_LineIndices = TressFXLoader.ReadIntegerArrayBigEndian (reader, lineIndicesCount);
+
+			EditorUtility.ClearProgressBar();
 			
 			// We are ready!
 			Debug.Log ("Hair loaded. Vertices loaded: " + this.m_NumTotalHairVertices + ", Strands: " + this.m_NumTotalHairStrands + ", Triangle Indices: " + triangleIndicesCount + ", Line Indices: " + lineIndicesCount);
@@ -259,7 +278,8 @@ public class TressFXHair : ScriptableObject
 		finally
 		{
 			// Free the file
-			reader.Close ();
+			if (reader != null)
+				reader.Close ();
 		}
 	}
 
@@ -271,11 +291,13 @@ public class TressFXHair : ScriptableObject
 	[MenuItem("Assets/Create/TressFX Hair")]
 	public static void CreateAsset()
 	{
+		string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "tfxb");
+		string hairfileName = System.IO.Path.GetFileNameWithoutExtension (hairfilePath);
+
 		// Create new hair asset
-		TressFXHair newHairData = ScriptableObjectUtility.CreateAsset<TressFXHair> ();
+		TressFXHair newHairData = ScriptableObjectUtility.CreateAsset<TressFXHair> (hairfileName);
 
 		// Open hair data
-		string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "tfxb");
 		newHairData.OpenHairData (hairfilePath);
 
 		EditorUtility.SetDirty (newHairData);

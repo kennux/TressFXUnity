@@ -102,8 +102,47 @@ public class TressFXLoader
 		for (int i = 0; i < count; i++)
 		{
 			int value = reader.ReadInt32 ();
-
+			
 			returnArray [i] = value;
+		}
+		
+		return returnArray;
+	}
+	
+	/// <summary>
+	/// Reads an integer array from BinaryReader reader.
+	/// Bigendian version.
+	/// </summary>
+	/// <returns>The integer array.</returns>
+	/// <param name="reader">Reader.</param>
+	/// <param name="count">The count of elements to load.</param>
+	public static int[] ReadIntegerArrayBigEndian(BinaryReader reader, int count)
+	{
+		int[] returnArray = new int[count];
+		
+		// Load
+		for (int i = 0; i < count; i++)
+		{
+			// Sometimes AMD's "AssetConverter"'s Integers are only 2 or 3 bytes long....
+			byte[] value = reader.ReadBytes ((int)Mathf.Min (4, reader.BaseStream.Length-reader.BaseStream.Position));
+
+			// Add 0's in that case.
+			if (value.Length < 4)
+			{
+				byte[] finalValue = new byte[4];
+
+				for (int j = 0; j < value.Length; j++)
+					finalValue[j] = value[j];
+				for (int j = value.Length; j < 4; j++)
+					finalValue[j] = 0;
+
+				value = finalValue;
+			}
+
+			System.Array.Reverse(value);
+			int val = System.BitConverter.ToInt32 (value,0);
+
+			returnArray [i] = val;
 		}
 		
 		return returnArray;
