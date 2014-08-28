@@ -24,7 +24,7 @@ public class TressFXRender : MonoBehaviour
 	public void OnRenderObject()
 	{
 		this.mat.SetPass (0);
-		this.mat.SetBuffer ("_VertexPositionBuffer", this.master.m_HairVertexPositions);
+		this.mat.SetBuffer ("_VertexPositionBuffer", this.master.g_HairVertexPositions);
 		Graphics.DrawProcedural (MeshTopology.Lines, this.master.hairData.m_NumGuideHairVertices);
 	}
 }
