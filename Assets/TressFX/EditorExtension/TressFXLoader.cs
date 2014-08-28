@@ -100,7 +100,11 @@ public class TressFXLoader
 		
 		// Load
 		for (int i = 0; i < count; i++)
-			returnArray [i] = reader.ReadInt32 ();
+		{
+			int value = reader.ReadInt32 ();
+
+			returnArray [i] = value;
+		}
 		
 		return returnArray;
 	}
@@ -120,5 +124,25 @@ public class TressFXLoader
 			returnArray [i] = reader.ReadSingle ();
 		
 		return returnArray;
+	}
+
+	/// <summary>
+	/// Reads the current string from the BinaryReader and parses an integer.
+	/// Unfortunately AMD uses Strings instead of binary integers to define the index counts.
+	/// </summary>
+	/// <returns>The string integer.</returns>
+	/// <param name="reader">Reader.</param>
+	public static int ReadStringInteger(BinaryReader reader)
+	{
+		string integerString = "";
+		byte currentByte = reader.ReadByte ();
+
+		while (currentByte != 0)
+		{
+			integerString += (char) currentByte;
+			currentByte = reader.ReadByte();
+		}
+
+		return int.Parse(integerString);
 	}
 }
