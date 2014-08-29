@@ -210,6 +210,102 @@ public class TressFXHair : ScriptableObject
 	[SerializeField]
 	[HideInInspector]
 	public int[] m_LineIndices;
+	
+	/// <summary>
+	/// The damping value for hair section 0.
+	/// </summary>
+	[SerializeField]
+	public float Damping0;
+	
+	/// <summary>
+	/// The stiffness for local shape matching for hair section 0.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForLocalShapeMatching0;
+	
+	/// <summary>
+	/// The stiffness for global shape matching for hair section 0.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForGlobalShapeMatching0;
+	
+	/// <summary>
+	/// The effective matching range for global shape matching for hair section 0.
+	/// </summary>
+	[SerializeField]
+	public float GlobalShapeMatchingEffectiveRange0;
+
+	/// <summary>
+	/// The damping value for hair section 1.
+	/// </summary>
+	[SerializeField]
+	public float Damping1;
+	
+	/// <summary>
+	/// The stiffness for local shape matching for hair section 1.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForLocalShapeMatching1;
+	
+	/// <summary>
+	/// The stiffness for global shape matching for hair section 1.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForGlobalShapeMatching1;
+	
+	/// <summary>
+	/// The effective matching range for global shape matching for hair section 1.
+	/// </summary>
+	[SerializeField]
+	public float GlobalShapeMatchingEffectiveRange1;
+
+	/// <summary>
+	/// The damping value for hair section 2.
+	/// </summary>
+	[SerializeField]
+	public float Damping2;
+	
+	/// <summary>
+	/// The stiffness for local shape matching for hair section 2.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForLocalShapeMatching2;
+	
+	/// <summary>
+	/// The stiffness for global shape matching for hair section 2.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForGlobalShapeMatching2;
+	
+	/// <summary>
+	/// The effective matching range for global shape matching for hair section 2.
+	/// </summary>
+	[SerializeField]
+	public float GlobalShapeMatchingEffectiveRange2;
+
+	/// <summary>
+	/// The damping value for hair section 3.
+	/// </summary>
+	[SerializeField]
+	public float Damping3;
+	
+	/// <summary>
+	/// The stiffness for local shape matching for hair section 3.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForLocalShapeMatching3;
+	
+	/// <summary>
+	/// The stiffness for global shape matching for hair section 3.
+	/// </summary>
+	[SerializeField]
+	public float StiffnessForGlobalShapeMatching3;
+	
+	/// <summary>
+	/// The effective matching range for global shape matching for hair section 3.
+	/// </summary>
+	[SerializeField]
+	public float GlobalShapeMatchingEffectiveRange3;
 
 	/// <summary>
 	/// Opens the hair data (tfxb) at the given path.
