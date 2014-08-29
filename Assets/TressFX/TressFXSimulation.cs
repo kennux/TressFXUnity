@@ -86,6 +86,8 @@ public class TressFXSimulation : MonoBehaviour
 		this.UpdateFollowHairVerticesKernelId = this.simulationShader.FindKernel ("UpdateFollowHairVertices");
 		this.PrepareFollowHairBeforeTurningIntoGuideKernelId = this.simulationShader.FindKernel ("PrepareFollowHairBeforeTurningIntoGuide");
 
+		// Init
+		this.lastModelMatrix = this.transform.localToWorldMatrix;
 	}
 
 	public void Update()
@@ -100,6 +102,17 @@ public class TressFXSimulation : MonoBehaviour
 		this.SetBuffers (this.LengthConstriantsWindAndCollisionKernelId);
 		this.SetBuffers (this.UpdateFollowHairVerticesKernelId);
 		this.SetBuffers (this.PrepareFollowHairBeforeTurningIntoGuideKernelId);
+
+		// Dispatch shaders
+		int numOfGroupsForCS_VertexLevel = (int)(((float)(this.master.hairData.m_NumGuideHairVertices) / (float)64)*1);
+		int numOfGroupsForCS_StrandLevel = (int)(((float)(this.master.hairData.m_NumGuideHairStrands)/(float)64)*1);
+
+		// this.simulationShader.Dispatch (this.PrepareFollowHairBeforeTurningIntoGuideKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+		
+		this.simulationShader.Dispatch (this.IntegrationAndGlobalShapeConstraintsKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+		this.simulationShader.Dispatch (this.LocalShapeConstraintsKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
+		this.simulationShader.Dispatch (this.LengthConstriantsWindAndCollisionKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+		this.simulationShader.Dispatch (this.UpdateFollowHairVerticesKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 	}
 
 	/// <summary>
@@ -135,10 +148,6 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	private void SetConstants()
 	{
-		// Initialization
-		if (this.lastModelMatrix == null)
-			this.lastModelMatrix = this.transform.localToWorldMatrix;
-
 		// Set transform values
 		this.simulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (this.transform.localToWorldMatrix));
 		this.simulationShader.SetFloats ("g_ModelRotateForHead", this.QuaternionToFloatArray (this.transform.rotation));
@@ -161,25 +170,25 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetInt ("g_NumLocalShapeMatchingIterations", 4);
 
 		// Hair values
-		this.simulationShader.SetFloat ("g_Damping0", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching0", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching0", 0.1f);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange0", 0.1f);
+		this.simulationShader.SetFloat ("g_Damping0", 0.25f);
+		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching0", 1f);
+		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching0", 0.2f);
+		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange0", 0.3f);
 		
-		this.simulationShader.SetFloat ("g_Damping1", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching1", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching1", 0.1f);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange1", 0.1f);
+		this.simulationShader.SetFloat ("g_Damping1", 0.25f);
+		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching1", 1f);
+		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching1", 0.2f);
+		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange1", 0.3f);
 		
-		this.simulationShader.SetFloat ("g_Damping2", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching2", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching2", 0.1f);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange2", 0.1f);
+		this.simulationShader.SetFloat ("g_Damping2", 0.02f);
+		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching2", 0.7f);
+		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching2", 0f);
+		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange2", 0.0f);
 		
 		this.simulationShader.SetFloat ("g_Damping3", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching3", 0.1f);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching3", 0.1f);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange3", 0.1f);
+		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching3", 1f);
+		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching3", 0.2f);
+		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange3", 0.3f);
 
 		// Colliders
 		this.simulationShader.SetFloat ("g_cc0_radius", 0.1f);

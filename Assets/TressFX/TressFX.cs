@@ -66,5 +66,16 @@ public class TressFX : MonoBehaviour
 	public void OnDestroy()
 	{
 		this.g_HairVertexPositions.Release ();
+		this.g_HairVertexPositionsPrev.Release ();
+		this.g_InitialHairPositions.Release ();
+
+		this.g_HairVertexTangents.Release ();
+		this.g_GlobalRotations.Release ();
+		this.g_LocalRotations.Release ();
+		
+		this.g_HairRestLengthSRV.Release ();
+		this.g_HairStrandType.Release ();
+		this.g_HairRefVecsInLocalFrame.Release ();
+		this.g_FollowHairRootOffset.Release ();
 	}
 }
