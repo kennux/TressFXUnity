@@ -107,7 +107,6 @@ float	g_cc2_radius;
 float	g_cc0_radius2;
 float	g_cc1_radius2;
 float	g_cc2_radius2;
-float	pad;
 
 RWStructuredBuffer<float4> g_HairVertexPositions		: register(u0); 
 RWStructuredBuffer<float4> g_HairVertexPositionsPrev	: register(u1); 
@@ -749,7 +748,7 @@ void LengthConstriantsWindAndCollision(uint GIndex : SV_GroupIndex,
     //-------------------------------------------------
 	bool bColDetected = false;
 	float4 oldPos = g_HairVertexPositionsPrev[globalVertexIndex];
-
+	
     if ( g_bCollision > 0 )
     {
 		float3 newPos;
@@ -804,6 +803,9 @@ void LengthConstriantsWindAndCollision(uint GIndex : SV_GroupIndex,
 			if ( bColDetected )
 				sharedPos[indexForSharedMem].xyz = newPos;
         }
+        
+        if (bColDetected)
+        	sharedPos[indexForSharedMem].xyz = float3(0,0,0);
     }
 
     GroupMemoryBarrierWithGroupSync();

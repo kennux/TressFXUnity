@@ -164,7 +164,7 @@
 			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
-			    float3 right      = normalize( cross( t, normalize(v - g_vEye) ) );
+			    float3 right      = normalize( cross( t, normalize(v - _WorldSpaceCameraPos) ) );
 			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
 
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test

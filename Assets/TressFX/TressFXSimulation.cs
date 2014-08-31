@@ -214,17 +214,15 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange3", this.master.hairData.GlobalShapeMatchingEffectiveRange3);
 
 		// Colliders
-		this.simulationShader.SetFloat ("g_cc0_radius", 0.1f);
-		this.simulationShader.SetFloat ("g_cc1_radius", 0.1f);
-		this.simulationShader.SetFloat ("g_cc2_radius", 0.1f);
-		this.simulationShader.SetFloat ("g_cc0_radius2", 0.1f);
-		this.simulationShader.SetFloat ("g_cc1_radius2", 0.1f);
-		this.simulationShader.SetFloat ("g_cc2_radius2", 0.1f);
-		this.simulationShader.SetFloat ("pad", 0.1f);
-		
-		this.simulationShader.SetVector ("g_cc0_center", Vector3.zero);
-		this.simulationShader.SetVector ("g_cc1_center", Vector3.zero);
-		this.simulationShader.SetVector ("g_cc2_center", Vector3.zero);
+		this.simulationShader.SetVector ("g_cc0_center", new Vector4(1.078f, 58.405f, 12.884f, 1));
+		this.simulationShader.SetVector ("g_cc1_center", new Vector4(-0.146f, 58.860f, -6.188f, 1));
+		this.simulationShader.SetVector ("g_cc2_center", new Vector4(0.069f, -14.752f, 3.204f, 1));
+		this.simulationShader.SetFloat ("g_cc0_radius", 22.500f);
+		this.simulationShader.SetFloat ("g_cc1_radius", 24.500f);
+		this.simulationShader.SetFloat ("g_cc2_radius", 30.0f);
+		this.simulationShader.SetFloat ("g_cc0_radius2", 22.500f*22.500f);
+		this.simulationShader.SetFloat ("g_cc1_radius2", 24.500f*24.500f);
+		this.simulationShader.SetFloat ("g_cc2_radius2", 30.0f*30.0f);
 	}
 
 	/// <summary>
