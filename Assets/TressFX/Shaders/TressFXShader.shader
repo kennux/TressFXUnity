@@ -51,8 +51,8 @@
 			};
             
             // UAV's
-            RWTexture2D<uint> LinkedListHeadUAV : register(u1);
-			RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV : register(u2);
+            RWTexture2D<uint> LinkedListHeadUAV;
+			RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV;
             
             // All needed buffers
             StructuredBuffer<float3> g_HairVertexTangents;
@@ -125,13 +125,14 @@
 				// returns coverage based on the relative distance
 				// 0, if completely outside hair edge
 				// 1, if completely inside hair edge
-				return (relDist + 1.f) * 0.5f;
+				return 1; // (relDist + 1.f) * 0.5f;
 			}
 			
 			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth)
 			{
 			return;
 			    // Retrieve current pixel count and increase counter
+			    /*
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
 			    uint uOldStartOffset;
 			    
@@ -145,6 +146,7 @@
 				Element.depth = asuint(depth);
 			    Element.uNext = uOldStartOffset;
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
+			    */
 			}
               
             //Our vertex function simply fetches a point from the buffer corresponding to the vertex index
@@ -204,6 +206,10 @@
 			                                1.0 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
+			    
+			    // WHY THE HELL DOES THIS CALL CRASH THE GRAPHICS CARD DRIVER?
+			    // THIS MAKES NO SENSE!
+			    uint uPixelCount = LinkedListUAV.IncrementCounter();
 				
 				float coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
 

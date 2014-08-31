@@ -803,9 +803,6 @@ void LengthConstriantsWindAndCollision(uint GIndex : SV_GroupIndex,
 			if ( bColDetected )
 				sharedPos[indexForSharedMem].xyz = newPos;
         }
-        
-        if (bColDetected)
-        	sharedPos[indexForSharedMem].xyz = float3(0,0,0);
     }
 
     GroupMemoryBarrierWithGroupSync();

@@ -101,10 +101,11 @@ public class TressFXRender : MonoBehaviour
 		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
 
-		// this.LinkedList.SetData (new int[0]);
+		/*PPLL[] t = new PPLL[this.totalHairLayers * Screen.width * Screen.height];
+		this.LinkedList.GetData (t);*/
 
 		// Set random write targets
-		Graphics.ClearRandomWriteTargets ();
+		// Graphics.ClearRandomWriteTargets ();
 		Graphics.SetRandomWriteTarget (1, this.LinkedListHead);
 		Graphics.SetRandomWriteTarget (2, this.LinkedList);
 
@@ -115,7 +116,6 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairVertexTangents);
 
 		// Set rendering variables
-		this.hairMaterial.SetVector ("g_vEye", this.myCamera.transform.position);
 		this.hairMaterial.SetInt ("g_bExpandPixels", 1);
 		this.hairMaterial.SetFloat ("g_FiberRadius", 0.01f);
 		this.hairMaterial.SetFloat ("g_FiberAlpha", 1.0f);
@@ -123,8 +123,8 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 
 		this.hairMaterial.SetPass (0);
-		Graphics.DrawProcedural (MeshTopology.Triangles, this.master.hairData.m_TriangleIndices.Length);
+		Graphics.DrawProcedural (MeshTopology.Triangles, 6); // this.master.hairData.m_TriangleIndices.Length);
 
-		Graphics.ClearRandomWriteTargets ();
+		// Graphics.ClearRandomWriteTargets ();
 	}
 }
