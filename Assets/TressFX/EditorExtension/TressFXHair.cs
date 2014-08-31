@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using System.IO;
 using System;
@@ -354,22 +355,20 @@ public class TressFXHair : ScriptableObject
 			// Load bounding sphere
 			this.m_bSphere = new TressFXBoundingSphere (TressFXLoader.ReadVector3 (reader), reader.ReadSingle ());
 			
-			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading triangle indices...", 0.75f);
-			// Load indices
-			int triangleIndicesCount = TressFXLoader.ReadStringInteger(reader);
-			this.m_TriangleIndices = TressFXLoader.ReadIntegerArrayBigEndian (reader, triangleIndicesCount);
-			
-			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading line indices...", 0.9f);
-			// Stupid integer strings -.-
-			reader.BaseStream.Position = reader.BaseStream.Position - 1;
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading indices...", 0.75f);
 
-			int lineIndicesCount = TressFXLoader.ReadStringInteger(reader);
-			this.m_LineIndices = TressFXLoader.ReadIntegerArrayBigEndian (reader, lineIndicesCount);
+			// Read triangle indices
+			int triangleIndicesCount = reader.ReadInt32 ();
+			this.m_TriangleIndices = TressFXLoader.ReadIntegerArray(reader, triangleIndicesCount);
+
+			// Read line indices
+			int lineIndicesCount = reader.ReadInt32 ();
+			this.m_LineIndices = TressFXLoader.ReadIntegerArray(reader, lineIndicesCount);
 
 			EditorUtility.ClearProgressBar();
 			
 			// We are ready!
-			Debug.Log ("Hair loaded. Vertices loaded: " + this.m_NumTotalHairVertices + ", Strands: " + this.m_NumTotalHairStrands + ", Triangle Indices: " + triangleIndicesCount + ", Line Indices: " + lineIndicesCount);
+			Debug.Log ("Hair loaded. Vertices loaded: " + this.m_NumTotalHairVertices + ", Strands: " + this.m_NumTotalHairStrands + ", Triangle Indices: " + this.m_TriangleIndices.Length + ", Line Indices: " + this.m_LineIndices.Length);
 		}
 		finally
 		{

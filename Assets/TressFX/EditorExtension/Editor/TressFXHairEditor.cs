@@ -59,7 +59,13 @@ public class TressFXHairEditor : Editor
 		// Load new hair data
 		if (GUILayout.Button("Load new Hairdata"))
 		{
+			// Load new hair file
+			string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "tfxb");
+			target.OpenHairData (hairfilePath);
 
+			// Save
+			EditorUtility.SetDirty(target);
+			AssetDatabase.SaveAssets();
 		}
 	}
 }
