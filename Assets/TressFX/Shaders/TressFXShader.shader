@@ -5,13 +5,15 @@
 	}
 	SubShader
 	{
+		Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
         Pass
         {
-        	Tags { "LightMode" = "ForwardAdd" }
+			Tags {"LightMode" = "ForwardBase" } 
         	// ColorMask 0
         	ZWrite Off
         	ZTest LEqual
         	Cull Off
+        	
 			Stencil
 			{
 				Ref 1
@@ -30,6 +32,7 @@
  
             #pragma vertex vert
             #pragma fragment frag
+			#pragma multi_compile_fwdbase
             
             #include "UnityCG.cginc"
             
@@ -39,7 +42,7 @@
 				    float4 Position	: SV_POSITION;
 				    float4 Tangent	: Tangent;
 				    float4 p0p1		: TEXCOORD0;
-				    float2 screenPos : TEXCOORD1;
+				    float3 screenPos : TEXCOORD1;
 			};
 			
 			//--------------------------------------------------------------------------------------
@@ -53,8 +56,8 @@
 			};
             
             // UAV's
-            RWTexture2D<uint> LinkedListHeadUAV;
 			RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV;
+            RWTexture2D<uint> LinkedListHeadUAV;
             
             // All needed buffers
             StructuredBuffer<float3> g_HairVertexTangents;
@@ -127,14 +130,12 @@
 				// returns coverage based on the relative distance
 				// 0, if completely outside hair edge
 				// 1, if completely inside hair edge
-				return 1; // (relDist + 1.f) * 0.5f;
+				return (relDist + 1.f) * 0.5f;
 			}
 			
 			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth)
 			{
-			return;
 			    // Retrieve current pixel count and increase counter
-			    /*
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
 			    uint uOldStartOffset;
 			    
@@ -148,14 +149,13 @@
 				Element.depth = asuint(depth);
 			    Element.uNext = uOldStartOffset;
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
-			    */
 			}
               
             //Our vertex function simply fetches a point from the buffer corresponding to the vertex index
             //which we transform with the view-projection matrix before passing to the pixel program.
-            PS_INPUT_HAIR_AA vert (uint id : SV_VertexID)
+            PS_INPUT_HAIR_AA vert (appdata_base input)
             {
-            	uint vertexId = g_TriangleIndicesBuffer[id];
+            	uint vertexId = g_TriangleIndicesBuffer[(int)input.vertex.x];
 			    
 			    // Access the current line segment
 			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
@@ -169,7 +169,7 @@
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(v - _WorldSpaceCameraPos) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_VP, float4(right, 0) ).xy );
+			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
 
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
@@ -178,8 +178,8 @@
 				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[0] = mul(UNITY_MATRIX_VP, hairEdgePositions[0]);
-				hairEdgePositions[1] = mul(UNITY_MATRIX_VP, hairEdgePositions[1]);
+				hairEdgePositions[0] = mul(UNITY_MATRIX_MVP, hairEdgePositions[0]);
+				hairEdgePositions[1] = mul(UNITY_MATRIX_MVP, hairEdgePositions[1]);
 			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 				
 				// P0P1 screen positions
@@ -196,7 +196,7 @@
 			    Output.Position = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
-			    Output.screenPos = screenPos.xy;
+			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.Position.z));
 			    
 			    return Output;
             }
@@ -205,34 +205,31 @@
             [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
 			{
-				float2 screenPos = In.screenPos * g_WinSize.xy;
-				screenPos = g_WinSize.xy - screenPos;
+				float2 screenPos = In.screenPos.xy * g_WinSize.xy;
+				float2 origScreenPos = screenPos;
+				screenPos.y = g_WinSize.y - screenPos.y;
 				
 			     // Render AA Line, calculate pixel coverage
 			    float4 proj_pos = float4(   2*screenPos.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
 			                                1.0 - 2*screenPos.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
-			                                
-				return float4(proj_pos.y, 0, 0, 1);
 				
 				float coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
 				
-				return float4(coverage, 0, 0, 1);
 				// coverage *= g_FiberAlpha;
 
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(In.Position.xy, In.Tangent.xyz, coverage, In.Position.z);
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z);
 			    }
 			    
 			    // output a mask RT for final pass    
-			    return float4(coverage, 0, 0, 1);
+			    return float4(In.screenPos.z, In.screenPos.z, In.screenPos.z, 1);
 			}
             
             ENDCG
         }
-	} 
-	FallBack "Diffuse"
+	}
 }
