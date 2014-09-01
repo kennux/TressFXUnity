@@ -11,6 +11,7 @@
         	// ColorMask 0
         	ZWrite Off
         	ZTest LEqual
+        	Cull Off
 			Stencil
 			{
 				Ref 1
@@ -38,6 +39,7 @@
 				    float4 Position	: SV_POSITION;
 				    float4 Tangent	: Tangent;
 				    float4 p0p1		: TEXCOORD0;
+				    float2 screenPos : TEXCOORD1;
 			};
 			
 			//--------------------------------------------------------------------------------------
@@ -178,15 +180,23 @@
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[0] = mul(UNITY_MATRIX_VP, hairEdgePositions[0]);
 				hairEdgePositions[1] = mul(UNITY_MATRIX_VP, hairEdgePositions[1]);
+			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+				
+				// P0P1 screen positions
+				float4 p0screen = ComputeScreenPos(hairEdgePositions[0]);
+				float4 p1screen = ComputeScreenPos(hairEdgePositions[1]);
+				float4 screenPos = ComputeScreenPos((fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 1.0f));
+				screenPos.xy /= screenPos.w;
+				
 				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
 				hairEdgePositions[1] = hairEdgePositions[1]/hairEdgePositions[1].w;
 
 			    // Write output data
 			    PS_INPUT_HAIR_AA Output = (PS_INPUT_HAIR_AA)0;
-			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 			    Output.Position = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
+			    Output.screenPos = screenPos.xy;
 			    
 			    return Output;
             }
@@ -194,25 +204,21 @@
 			// A-Buffer pass
             [earlydepthstencil]
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
-			{	
-				In.Position.y -= 36;
-				//In.Position = ComputeScreenPos(In.Position);
-				// In.Position.x -= 10;
-				//In.Position.y -= 6;
-				// return In.Position;
+			{
+				float2 screenPos = In.screenPos * g_WinSize.xy;
+				screenPos = g_WinSize.xy - screenPos;
 				
 			     // Render AA Line, calculate pixel coverage
-			    float4 proj_pos = float4(   2*In.Position.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
-			                                1.0 - 2*In.Position.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
+			    float4 proj_pos = float4(   2*screenPos.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
+			                                1.0 - 2*screenPos.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
 			                                1, 
 			                                1);
-			    
-			    // WHY THE HELL DOES THIS CALL CRASH THE GRAPHICS CARD DRIVER?
-			    // THIS MAKES NO SENSE!
-			    uint uPixelCount = LinkedListUAV.IncrementCounter();
+			                                
+				return float4(proj_pos.y, 0, 0, 1);
 				
 				float coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
-
+				
+				return float4(coverage, 0, 0, 1);
 				// coverage *= g_FiberAlpha;
 
 			    // only store fragments with non-zero alpha value

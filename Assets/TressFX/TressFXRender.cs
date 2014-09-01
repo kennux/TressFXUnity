@@ -123,7 +123,7 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 
 		this.hairMaterial.SetPass (0);
-		Graphics.DrawProcedural (MeshTopology.Triangles, 6); // this.master.hairData.m_TriangleIndices.Length);
+		Graphics.DrawProcedural (MeshTopology.Triangles, this.master.hairData.m_TriangleIndices.Length);
 
 		// Graphics.ClearRandomWriteTargets ();
 	}
