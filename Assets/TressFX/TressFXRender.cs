@@ -7,6 +7,7 @@ public struct PPLL
 	public uint tangentAndCoverage;
 	public float depth;
 	public uint uNext;
+	public uint ammountLight;
 }
 
 public class TressFXRender : MonoBehaviour
@@ -23,9 +24,29 @@ public class TressFXRender : MonoBehaviour
 	public int totalHairLayers = 32;
 
 	/// <summary>
+	/// The fragment sorting shader.
+	/// </summary>
+	public ComputeShader fragmentSortingShader;
+	
+	/// <summary>
+	/// The fullscreen quad material.
+	/// </summary>
+	public Material fullscreenQuadMaterial;
+
+	/// <summary>
+	/// The shadow shader.
+	/// </summary>
+	public Shader shadowShader;
+
+	/// <summary>
 	/// The hair material.
 	/// </summary>
 	private Material hairMaterial;
+
+	/// <summary>
+	/// The shadow material.
+	/// </summary>
+	private Material shadowMaterial;
 
 	/// <summary>
 	/// The TressFX master class.
@@ -53,14 +74,27 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	private Mesh[] triangleMeshes;
 
+	private Mesh[] lineMeshes;
+
 	/// <summary>
 	/// The rendering bounds.
 	/// </summary>
 	private Bounds renderingBounds;
 
-	public MeshFilter test;
+	/// <summary>
+	/// The final render texture.
+	/// </summary>
+	private RenderTexture finalRenderTexture;
 
-	public Material testMat;
+	/// <summary>
+	/// The sort fragments kernel identifier.
+	/// </summary>
+	private int SortFragmentsKernelId;
+
+	/// <summary>
+	/// If this is set to true an additional rendering pass for shadows is rendered.
+	/// </summary>
+	public bool castShadows = true;
 
 	/// <summary>
 	/// Start this instance.
@@ -84,7 +118,7 @@ public class TressFXRender : MonoBehaviour
 		this.LinkedListHead.hideFlags = HideFlags.HideAndDontSave;
 		this.LinkedListHead.Create ();
 
-		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 12, ComputeBufferType.Counter);
+		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 16, ComputeBufferType.Counter);
 
 		// Generate triangle meshes
 		this.triangleMeshes = this.GenerateTriangleMeshes ();
@@ -92,7 +126,19 @@ public class TressFXRender : MonoBehaviour
 		// Create render bounds
 		this.renderingBounds = new Bounds (this.master.hairData.m_bSphere.center, new Vector3(this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius));
 
-	
+		// Initialize fragment sorter
+		this.finalRenderTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+		this.finalRenderTexture.filterMode = FilterMode.Point;
+		this.finalRenderTexture.enableRandomWrite = true;
+		this.finalRenderTexture.hideFlags = HideFlags.HideAndDontSave;
+		this.finalRenderTexture.Create ();
+
+		this.SortFragmentsKernelId = this.fragmentSortingShader.FindKernel ("SortFragments");
+
+		// Initialize shadow material
+		this.shadowMaterial = new Material (this.shadowShader);
+
+		this.lineMeshes = this.GenerateLineMeshes ();
 	}
 
 	/// <summary>
@@ -126,7 +172,7 @@ public class TressFXRender : MonoBehaviour
 			{
 				// Prepare data
 				vertices[j] = new Vector3(i+j,0,0);
-				normals[j] = Vector3.one;
+				normals[j] = Vector3.up;
 				indices[j] = indexCounter+j;
 				uvs[j] = Vector2.one;
 			}
@@ -137,6 +183,51 @@ public class TressFXRender : MonoBehaviour
 			indexCounter += 6;
 		}
 
+		return meshBuilder.GetMeshes ();
+	}
+
+	/// <summary>
+	/// Generates the line meshes.
+	/// Meshes are built of indices. Every vertices x-position will contain a vertex list index.
+	/// </summary>
+	/// <returns>The line meshes.</returns>
+	protected Mesh[] GenerateLineMeshes()
+	{
+		// Counter
+		int indexCounter = 0;
+		MeshBuilder meshBuilder = new MeshBuilder (MeshTopology.Lines);
+		
+		// Write all indices to the meshes
+		for (int i = 0; i < this.master.hairData.m_pVertices.Length; i+=2)
+		{
+			// Check for space
+			if (!meshBuilder.HasSpace(2))
+			{
+				// Reset index counter
+				indexCounter = 0;
+			}
+			
+			Vector3[] vertices = new Vector3[2];
+			Vector3[] normals = new Vector3[2];
+			int[] indices = new int[2];
+			Vector2[] uvs = new Vector2[2];
+			
+			// Add vertices
+			for (int j = 0; j < 2; j++)
+			{
+				// Prepare data
+				vertices[j] = new Vector3(this.master.hairData.m_LineIndices[i+j],0,0);
+				normals[j] = Vector3.up;
+				indices[j] = indexCounter+j;
+				uvs[j] = Vector2.one;
+			}
+			
+			// Add mesh data to builder
+			meshBuilder.AddVertices(vertices, indices, uvs, normals);
+			
+			indexCounter += 2;
+		}
+		
 		return meshBuilder.GetMeshes ();
 	}
 
@@ -187,8 +278,40 @@ public class TressFXRender : MonoBehaviour
 		for (int i = 0; i < this.triangleMeshes.Length; i++)
 		{
 			this.triangleMeshes[i].bounds = renderingBounds;
-			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, this.transform.rotation, this.hairMaterial, 8, Camera.main);
+			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, Camera.main);
 		}
+
+		// Render shadows
+		if (this.castShadows)
+		{
+			this.shadowMaterial.SetBuffer("g_HairVertexPositions", this.master.g_HairVertexPositions);
+
+			for (int i = 0; i < this.lineMeshes.Length; i++)
+			{
+				this.lineMeshes[i].bounds = renderingBounds;
+				Graphics.DrawMesh (this.lineMeshes [i], Vector3.zero, Quaternion.identity, this.shadowMaterial, 8);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Sorts the fragments.
+	/// </summary>
+	protected void SortFragments()
+	{
+		/*ComputeBuffer debug = new ComputeBuffer (1, 4);
+		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "debug", debug);*/
+
+		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
+		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
+		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
+		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
+
+		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 16.0f), Mathf.CeilToInt ((float)Screen.height / 16.0f), 1);
+
+		/*uint[] test = new uint[1];
+		debug.GetData (test);
+		Debug.Log (test [0]);*/
 	}
 
 	public void OnRenderObject()
@@ -197,17 +320,20 @@ public class TressFXRender : MonoBehaviour
 			return;
 
 		/*PPLL[] test = new PPLL[this.totalHairLayers * Screen.width * Screen.height];
-		this.LinkedList.GetData (test);*/
+		this.LinkedList.GetData (test);
+		Debug.Log (test [0].uNext);*/
 
 		Graphics.ClearRandomWriteTargets ();
+
+		this.SortFragments ();
 
 		// Apply fullscreen quad
 		GL.PushMatrix();
 		{
 			GL.LoadOrtho();
 			
-			this.testMat.SetPass(0);
-			this.testMat.SetTexture("_TestTex", this.LinkedListHead);
+			this.fullscreenQuadMaterial.SetPass(0);
+			this.fullscreenQuadMaterial.SetTexture("_TestTex", this.finalRenderTexture);
 			
 			GL.Begin(GL.TRIANGLES);
 			{

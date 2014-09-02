@@ -1,0 +1,114 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel SortFragments
+
+// Linked list structure
+struct PPLL_STRUCT
+{
+    uint	TangentAndCoverage;	
+    uint	depth;
+    uint    uNext;
+    uint    ammountLight;
+};
+
+// Linked List resources
+RWTexture2D<uint> LinkedListHead;
+RWStructuredBuffer<struct PPLL_STRUCT> LinkedList;
+RWStructuredBuffer<uint> debug;
+
+// Screen information
+float4 screenSize;
+
+// Final result
+RWTexture2D<float4> Result;
+
+#define THREAD_GROUP_SIZE 16
+#define NULLPOINTER 0xffffffff
+#define MAX_FRAGMENTS 256
+#define NEAREST_FRAGMENTS 4
+// #define COLORDEBUG
+
+
+// HELPER FUNCTIONS
+uint PackFloat4IntoUint(float4 vValue)
+{
+    return ( (uint(vValue.x*255)& 0xFFUL) << 24 ) | ( (uint(vValue.y*255)& 0xFFUL) << 16 ) | ( (uint(vValue.z*255)& 0xFFUL) << 8) | (uint(vValue.w * 255)& 0xFFUL);
+}
+
+float4 UnpackUintIntoFloat4(uint uValue)
+{
+    return float4( ( (uValue & 0xFF000000)>>24 ) / 255.0, ( (uValue & 0x00FF0000)>>16 ) / 255.0, ( (uValue & 0x0000FF00)>>8 ) / 255.0, ( (uValue & 0x000000FF) ) / 255.0);
+}
+
+uint PackTangentAndCoverage(float3 tangent, float coverage)
+{
+    return PackFloat4IntoUint( float4(tangent.xyz*0.5 + 0.5, coverage) );
+}
+
+float3 GetTangent(uint packedTangent)
+{
+    return 2.0 * UnpackUintIntoFloat4(packedTangent).xyz - 1.0;
+}
+
+float GetCoverage(uint packedCoverage)
+{
+    return UnpackUintIntoFloat4(packedCoverage).w;
+}
+
+[numthreads(THREAD_GROUP_SIZE,THREAD_GROUP_SIZE,1)]
+void SortFragments (uint3 id : SV_DispatchThreadID)
+{
+	// Bounds check
+	if (id.x > screenSize.x || id.y > screenSize.y)
+		return;
+	
+	// Get first index
+	uint firstIndex = LinkedListHead[id.xy];
+		
+	// NULLPOINTER check
+	if (firstIndex == NULLPOINTER)
+	{
+		return;
+	}
+	
+	// Get all fragments
+	PPLL_STRUCT fragments[MAX_FRAGMENTS];
+	fragments[0] = LinkedList[firstIndex];
+	
+	uint numFragments = 0;
+	
+	float4 tangent = float4(GetTangent(fragments[0].TangentAndCoverage), 1);
+	float lightingTest = 1;
+	
+	for (uint i = 1; i < MAX_FRAGMENTS; i++)
+	{
+		uint nextIndex = fragments[i-1].uNext;
+		
+		// End of the list?
+		if (nextIndex == NULLPOINTER)
+			break;
+			
+		lightingTest *= GetCoverage(fragments[i].TangentAndCoverage);
+		
+		numFragments++;
+	}
+		
+	
+	#ifdef COLORDEBUG
+	// Write debug color
+	float4 col = float4(0,0,0,1);
+	if (numFragments < 32)
+		col = float4(1,0,0,1);
+	else if (numFragments < 64)
+		col = float4(0,1,0,1);
+	else if (numFragments < 128)
+		col = float4(0,0,1,1);
+	else if (numFragments > 128)
+		col = float4(1,1,0,1);
+	else
+		col = float4(1,1,1,1);
+		
+	Result[id.xy] = col;
+	#else
+	Result[id.xy] = float4(lightingTest,0,0,1);
+	#endif
+}

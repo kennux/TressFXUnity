@@ -8,8 +8,20 @@
         {
         	Tags { "Queue" = "Transparent" }
         	// Z-Buffer and Stencil
-        	ZWrite off
+			ZWrite off
         	ZTest LEqual
+			Stencil
+			{
+				Ref 1
+				CompFront LEqual
+				PassFront Zero
+				FailFront keep
+				ZFailFront keep
+				CompBack LEqual
+				PassBack Zero
+				FailBack keep
+				ZFailBack keep
+			}
 			
 			Blend SrcAlpha OneMinusSrcAlpha     // Alpha blending
 			

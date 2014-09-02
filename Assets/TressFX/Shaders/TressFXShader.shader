@@ -35,14 +35,16 @@
 			#pragma multi_compile_fwdbase
             
             #include "UnityCG.cginc"
+            #include "AutoLight.cginc"
             
             // Shader structs
             struct PS_INPUT_HAIR_AA
             {
 				    float4 Position	: SV_POSITION;
 				    float4 Tangent	: Tangent;
-				    float4 p0p1		: TEXCOORD0;
-				    float3 screenPos : TEXCOORD1;
+				    float4 p0p1		: TEXCOORD2;
+				    float3 screenPos : TEXCOORD3;
+					LIGHTING_COORDS(0,1)
 			};
 			
 			//--------------------------------------------------------------------------------------
@@ -53,6 +55,7 @@
 			    uint	TangentAndCoverage;	
 			    uint	depth;
 			    uint    uNext;
+			    uint	ammountLight;
 			};
             
             // UAV's
@@ -133,7 +136,7 @@
 				return (relDist + 1.f) * 0.5f;
 			}
 			
-			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth)
+			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight)
 			{
 			    // Retrieve current pixel count and increase counter
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
@@ -148,6 +151,7 @@
 				Element.TangentAndCoverage = PackTangentAndCoverage(tangent, coverage);
 				Element.depth = asuint(depth);
 			    Element.uNext = uOldStartOffset;
+			    Element.ammountLight = asuint(ammountLight);
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
 			}
               
@@ -198,6 +202,8 @@
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
 			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.Position.z));
 			    
+    			TRANSFER_VERTEX_TO_FRAGMENT(Output);
+			    
 			    return Output;
             }
 			
@@ -222,7 +228,7 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z);
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z, LIGHT_ATTENUATION(i));
 			    }
 			    
 			    // output a mask RT for final pass    
@@ -231,5 +237,79 @@
             
             ENDCG
         }
+		
+		// Pass to render object as a shadow collector
+	    Pass
+	    {
+	        Name "ShadowCollector"
+	        Tags { "LightMode" = "ShadowCollector" }
+	 
+	        Fog {Mode Off}
+			ZWrite On ZTest LEqual
+			
+	        CGPROGRAM
+	        #pragma vertex vert
+	        #pragma fragment frag
+	        #pragma multi_compile_shadowcollector
+			#pragma target 5.0
+
+	        #define SHADOW_COLLECTOR_PASS
+	        #include "UnityCG.cginc"
+			
+			StructuredBuffer<float3> g_HairVertexTangents;
+			StructuredBuffer<float3> g_HairVertexPositions;
+			StructuredBuffer<int> g_TriangleIndicesBuffer;
+			StructuredBuffer<float> g_HairThicknessCoeffs;
+			uniform float4 g_WinSize;
+			uniform float g_FiberRadius;
+			uniform float g_bExpandPixels;
+			uniform float g_bThinTip;
+
+	        struct v2f {
+	            V2F_SHADOW_COLLECTOR;
+	        };
+
+        	// --------------------------------------
+        	// TressFX Antialias shader written by AMD
+        	// 
+        	// Modified by KennuX
+        	// --------------------------------------
+	        v2f vert (appdata_base v)
+	        { 
+	            v2f o;
+	            
+	        	// Access the current line segment
+				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
+				
+			    // Access the current line segment
+			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
+				
+			    // Get updated positions and tangents from simulation result
+			    float3 vert = g_HairVertexPositions[index].xyz;
+			    float3 t = g_HairVertexTangents[index].xyz;
+			    fixed ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+
+			    // Calculate right and projected right vectors
+			    fixed3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
+			    
+			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
+			    fixed expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
+			    
+			    // Which direction to expand?
+			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+			    
+			    // Calculate the edge position
+			    v.vertex = float4(vert + fDirIndex * right * ratio * g_FiberRadius, 1.0);
+	            
+	            TRANSFER_SHADOW_COLLECTOR(o)
+	            return o;
+	        }
+
+	        half4 frag (v2f i) : COLOR
+	        {
+	            SHADOW_COLLECTOR_FRAGMENT(i)
+	        }
+	        ENDCG
+	    }
 	}
 }

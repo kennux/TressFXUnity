@@ -89,7 +89,7 @@ public class MeshBuilder
 		mesh.vertices = this.currentVertices.ToArray ();
 		mesh.uv = this.currentUv.ToArray ();
 		mesh.SetIndices (this.currentIndices.ToArray (), this.topology, 0);
-		mesh.normals = this.currentNormals.ToArray ();
+		// mesh.normals = this.currentNormals.ToArray ();
 
 		// Add mesh to the list
 		this.meshes.Add (mesh);
