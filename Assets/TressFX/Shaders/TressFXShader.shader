@@ -5,7 +5,7 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+100" }
         Pass
         {
 			Tags {"LightMode" = "ForwardBase" } 
@@ -40,7 +40,7 @@
             // Shader structs
             struct PS_INPUT_HAIR_AA
             {
-				    float4 Position	: SV_POSITION;
+				    float4 pos	: SV_POSITION;
 				    float4 Tangent	: Tangent;
 				    float4 p0p1		: TEXCOORD2;
 				    float3 screenPos : TEXCOORD3;
@@ -197,10 +197,10 @@
 
 			    // Write output data
 			    PS_INPUT_HAIR_AA Output = (PS_INPUT_HAIR_AA)0;
-			    Output.Position = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
+			    Output.pos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
-			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.Position.z));
+			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.pos.z));
 			    
     			TRANSFER_VERTEX_TO_FRAGMENT(Output);
 			    
@@ -228,7 +228,7 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z, LIGHT_ATTENUATION(i));
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z, LIGHT_ATTENUATION(In));
 			    }
 			    
 			    // output a mask RT for final pass    

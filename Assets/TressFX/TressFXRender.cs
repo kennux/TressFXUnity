@@ -139,6 +139,22 @@ public class TressFXRender : MonoBehaviour
 		this.shadowMaterial = new Material (this.shadowShader);
 
 		this.lineMeshes = this.GenerateLineMeshes ();
+
+		// TEST
+		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
+		Matrix4x4 V = Camera.main.worldToCameraMatrix;
+		Matrix4x4 P = Camera.main.projectionMatrix;
+		if (d3d) {
+			// Invert Y for rendering to a render texture
+			for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
+			// Scale and bias from OpenGL -> D3D depth range
+			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
+		}
+		Matrix4x4 MVP = P*V*M;
+		Matrix4x4 InvMVP =  MVP.inverse;
+
+		Debug.Log (InvMVP.MultiplyPoint(new Vector3(616.4f, 452.4f, 118.8f)));
 	}
 
 	/// <summary>
@@ -247,12 +263,7 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void Update()
 	{
-
-		// Clear linked list
-		Graphics.SetRenderTarget (this.LinkedListHead);
-		GL.Clear (false, true, Color.white);
-		Graphics.SetRenderTarget (null);
-		
+		Debug.Log (Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100)));
 		// Set random write targets
 		Graphics.ClearRandomWriteTargets ();
 		Graphics.SetRandomWriteTarget (1, this.LinkedList);
@@ -299,19 +310,12 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	protected void SortFragments()
 	{
-		/*ComputeBuffer debug = new ComputeBuffer (1, 4);
-		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "debug", debug);*/
-
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
 
-		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 16.0f), Mathf.CeilToInt ((float)Screen.height / 16.0f), 1);
-
-		/*uint[] test = new uint[1];
-		debug.GetData (test);
-		Debug.Log (test [0]);*/
+		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 8.0f), Mathf.CeilToInt ((float)Screen.height / 8.0f), 1);
 	}
 
 	public void OnRenderObject()
@@ -320,8 +324,31 @@ public class TressFXRender : MonoBehaviour
 			return;
 
 		/*PPLL[] test = new PPLL[this.totalHairLayers * Screen.width * Screen.height];
-		this.LinkedList.GetData (test);
-		Debug.Log (test [0].uNext);*/
+		this.LinkedList.GetData(test);
+		
+		uint maxNumFragments = 0;
+		uint curNumFragments = 0;
+		uint curNext = 0;
+		uint maxFragments = 2048;
+		
+		for (int i = 0; i < test.Length; i++)
+		{
+			curNext = test[i].uNext;
+			curNumFragments = 0;
+			
+			while (curNext != 0xFFFFFFFF && curNumFragments < maxFragments)
+			{
+				curNext = test[curNext].uNext;
+				curNumFragments++;
+			}
+			
+			if (maxNumFragments < curNumFragments)
+			{
+				maxNumFragments = curNumFragments;
+			}
+		}
+		
+		Debug.Log(maxNumFragments);*/
 
 		Graphics.ClearRandomWriteTargets ();
 
@@ -354,5 +381,14 @@ public class TressFXRender : MonoBehaviour
 			GL.End();
 		}
 		GL.PopMatrix();
+
+		
+		// Clear linked list
+		Graphics.SetRenderTarget (this.LinkedListHead);
+		GL.Clear (false, true, Color.white);
+		Graphics.SetRenderTarget (null);
+		Graphics.SetRenderTarget (this.finalRenderTexture);
+		GL.Clear (false, true, Color.white);
+		Graphics.SetRenderTarget (null);
 	}
 }
