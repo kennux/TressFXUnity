@@ -8,6 +8,7 @@ struct PPLL_STRUCT
     uint	depth;
     uint    uNext;
     uint    ammountLight;
+    float3  worldPos;
 };
 
 struct KBUFFER_STRUCT
@@ -16,11 +17,13 @@ struct KBUFFER_STRUCT
 	float3 tangent;
 	float coverage;
 	float ammountLight;
+    float3  worldPos;
 };
 
 // Linked List resources
 RWTexture2D<uint> LinkedListHead;
 RWStructuredBuffer<struct PPLL_STRUCT> LinkedList;
+RWStructuredBuffer<float3> debug;
 
 // Screen information
 float4 screenSize;
@@ -199,13 +202,14 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 			for (int j = 0; j < KBUFFER_SIZE; j++)
 			{
 				// Check if this fragment should be in the kbuffer
-				if (kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
+				if (kBuffer[j].depth == 1000000.0f || kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
 				{
 					// Should be in the kbuffer!
-					kBuffer[j].depth = LinkedList[pointer].depth;
+					kBuffer[j].depth = i; // LinkedList[pointer].depth;
 					kBuffer[j].tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].ammountLight = asfloat(LinkedList[pointer].ammountLight);
+					kBuffer[j].worldPos = LinkedList[pointer].worldPos;
 					
 					break;
 				}
@@ -214,6 +218,8 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 			nNumFragments++;
 		}
 	}
+	
+	LinkedListHead[id.xy] = NULLPOINTER;
 	
 	#ifdef COLORDEBUG
     float3 fcolor = float3(0,1,0);
@@ -225,14 +231,17 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	#else
 	
 	// Calculate world pos for first kbuffer fragment
-	float3 screenPos = float3(id.x, id.y, asfloat(kBuffer[0].depth));
+	/*float3 screenPos = float3(id.x, id.y, asfloat(kBuffer[0].depth));
 	
 	screenPos.x = 2.0f*screenPos.x * (1.0f/screenSize.x) - 1.0f;
 	screenPos.y =  1.0f - 2.0f * screenPos.y * (1.0f / screenSize.y);
 	
-	float4 worldPos = mul(InvVPMatrix, float4(screenPos, 1));
+	float4 worldPos = mul(InvVPMatrix, float4(screenPos, 1));*/
+	// worldPos.xyz *= worldPos.www;
 	
-	Result[id.xy] = float4(ComputeHairShading(worldPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
+	debug[0] = float3(id.xy, kBuffer[0].depth);
+	float3 wPos = kBuffer[0].worldPos;
+	Result[id.xy] = float4(wPos, 1); // float4(ComputeHairShading(worldPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
 	
 	#endif
 }

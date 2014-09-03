@@ -56,8 +56,8 @@
 			    uint	TangentAndCoverage;	
 			    uint	depth;
 			    uint    uNext;
-			    uint	ammountLight;
-			    float2	screenPos;
+			    uint    ammountLight;
+			    float3  worldPos;
 			};
             
             // UAV's
@@ -83,6 +83,8 @@
 			uniform float4 g_MatKValue;
 			uniform float g_fHairEx2;
 			uniform float g_fHairKs2;
+			uniform float4x4 VPMatrix;
+			uniform float4x4 InvVPMatrix;
 			
 			// HELPER FUNCTIONS
 			uint PackFloat4IntoUint(float4 vValue)
@@ -138,7 +140,7 @@
 				return (relDist + 1.f) * 0.5f;
 			}
 			
-			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight)
+			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight, float3 worldPos)
 			{
 			    // Retrieve current pixel count and increase counter
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
@@ -154,7 +156,7 @@
 				Element.depth = asuint(depth);
 			    Element.uNext = uOldStartOffset;
 			    Element.ammountLight = asuint(ammountLight);
-			    Element.screenPos = float2(address.x, address.y);
+			    Element.worldPos = worldPos;
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
 			}
               
@@ -176,7 +178,7 @@
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(v - _WorldSpaceCameraPos) ) );
-			    float2 proj_right = normalize( mul( UNITY_MATRIX_MVP, float4(right, 0) ).xy );
+			    float2 proj_right = normalize( mul( VPMatrix, float4(right, 0) ).xy );
 
 			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
 			    float expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
@@ -185,14 +187,12 @@
 				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
-				hairEdgePositions[0] = mul(UNITY_MATRIX_MVP, hairEdgePositions[0]);
-				hairEdgePositions[1] = mul(UNITY_MATRIX_MVP, hairEdgePositions[1]);
+				hairEdgePositions[0] = mul(VPMatrix, hairEdgePositions[0]);
+				hairEdgePositions[1] = mul(VPMatrix, hairEdgePositions[1]);
 			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 				
-				float4 worldPos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
+				float4 worldPos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(right.xyz, 0.0f);
 				// P0P1 screen positions
-				float4 p0screen = ComputeScreenPos(hairEdgePositions[0]);
-				float4 p1screen = ComputeScreenPos(hairEdgePositions[1]);
 				float4 screenPos = ComputeScreenPos((fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 1.0f));
 				screenPos.xy /= screenPos.w;
 				
@@ -233,11 +233,15 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.pos.z, LIGHT_ATTENUATION(In));
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.pos.z, LIGHT_ATTENUATION(In), In.worldPos);
 			    }
 			    
 			    // output a mask RT for final pass    
 			    return float4(normalize(In.worldPos.xyz), 1);
+			    
+			    /*float3 wPos = mul(InvVPMatrix, proj_pos).xyz;
+			    
+			    return float4(normalize(wPos), 1);*/
 			}
             
             ENDCG

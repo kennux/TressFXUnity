@@ -8,7 +8,7 @@ public struct PPLL
 	public float depth;
 	public uint uNext;
 	public uint ammountLight;
-	public Vector2 screenPos;
+	public Vector3 worldPos;
 }
 
 public struct PointL
@@ -125,7 +125,7 @@ public class TressFXRender : MonoBehaviour
 		this.LinkedListHead.hideFlags = HideFlags.HideAndDontSave;
 		this.LinkedListHead.Create ();
 
-		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 16, ComputeBufferType.Counter);
+		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 32, ComputeBufferType.Counter);
 
 		// Generate triangle meshes
 		this.triangleMeshes = this.GenerateTriangleMeshes ();
@@ -306,6 +306,21 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetBuffer ("g_HairVertexPositions", this.master.g_HairVertexPositions);
 		this.hairMaterial.SetBuffer ("g_TriangleIndicesBuffer", this.g_TriangleIndicesBuffer);
 		this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairVertexTangents);
+
+		
+		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
+		Matrix4x4 V = Camera.main.worldToCameraMatrix;
+		Matrix4x4 P = Camera.main.projectionMatrix;
+		if (d3d) {
+			// Invert Y for rendering to a render texture
+			/*for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }*/
+			// Scale and bias from OpenGL -> D3D depth range
+			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
+		}
+		
+		this.hairMaterial.SetMatrix ("VPMatrix", (P * V));
+		this.hairMaterial.SetMatrix ("InvVPMatrix", (P * V).inverse);
 		
 		// Set rendering variables
 		this.hairMaterial.SetInt ("g_bExpandPixels", 1);
@@ -342,17 +357,19 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	protected void SortFragments()
 	{
+		ComputeBuffer debug = new ComputeBuffer (1, 12);
 		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
 		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
 		Matrix4x4 V = Camera.main.worldToCameraMatrix;
 		Matrix4x4 P = Camera.main.projectionMatrix;
 		if (d3d) {
 			// Invert Y for rendering to a render texture
-			for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
+			// for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
 			// Scale and bias from OpenGL -> D3D depth range
 			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
 		}
-		
+
+		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "debug", debug);
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
 		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
 		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray((P * V).inverse));
@@ -361,6 +378,12 @@ public class TressFXRender : MonoBehaviour
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
 
 		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 8.0f), Mathf.CeilToInt ((float)Screen.height / 8.0f), 1);
+
+		Vector3[] test = new Vector3[1];
+		debug.GetData (test);
+		debug.Release ();
+
+		Debug.Log (test[0]);
 	}
 
 	public void OnRenderObject()
@@ -370,7 +393,7 @@ public class TressFXRender : MonoBehaviour
 
 		/*PPLL[] test = new PPLL[this.totalHairLayers * Screen.width * Screen.height];
 		this.LinkedList.GetData(test);
-		
+
 		uint maxNumFragments = 0;
 		uint curNumFragments = 0;
 		uint curNext = 0;
