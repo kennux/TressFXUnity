@@ -44,6 +44,7 @@
 				    float4 Tangent	: Tangent;
 				    float4 p0p1		: TEXCOORD2;
 				    float3 screenPos : TEXCOORD3;
+				    float3 worldPos : TEXCOORD4;
 					LIGHTING_COORDS(0,1)
 			};
 			
@@ -56,6 +57,7 @@
 			    uint	depth;
 			    uint    uNext;
 			    uint	ammountLight;
+			    float2	screenPos;
 			};
             
             // UAV's
@@ -152,6 +154,7 @@
 				Element.depth = asuint(depth);
 			    Element.uNext = uOldStartOffset;
 			    Element.ammountLight = asuint(ammountLight);
+			    Element.screenPos = float2(address.x, address.y);
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
 			}
               
@@ -186,6 +189,7 @@
 				hairEdgePositions[1] = mul(UNITY_MATRIX_MVP, hairEdgePositions[1]);
 			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 				
+				float4 worldPos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 				// P0P1 screen positions
 				float4 p0screen = ComputeScreenPos(hairEdgePositions[0]);
 				float4 p1screen = ComputeScreenPos(hairEdgePositions[1]);
@@ -201,6 +205,7 @@
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
 			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.pos.z));
+			    Output.worldPos = worldPos.xyz;
 			    
     			TRANSFER_VERTEX_TO_FRAGMENT(Output);
 			    
@@ -228,11 +233,11 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.screenPos.z, LIGHT_ATTENUATION(In));
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.pos.z, LIGHT_ATTENUATION(In));
 			    }
 			    
 			    // output a mask RT for final pass    
-			    return float4(In.screenPos.z, In.screenPos.z, In.screenPos.z, 1);
+			    return float4(normalize(In.worldPos.xyz), 1);
 			}
             
             ENDCG

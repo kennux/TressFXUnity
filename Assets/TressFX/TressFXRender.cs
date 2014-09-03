@@ -8,6 +8,13 @@ public struct PPLL
 	public float depth;
 	public uint uNext;
 	public uint ammountLight;
+	public Vector2 screenPos;
+}
+
+public struct PointL
+{
+	public Vector3 position;
+	public float radius;
 }
 
 public class TressFXRender : MonoBehaviour
@@ -152,9 +159,34 @@ public class TressFXRender : MonoBehaviour
 			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
 		}
 		Matrix4x4 MVP = P*V*M;
-		Matrix4x4 InvMVP =  MVP.inverse;
 
-		Debug.Log (InvMVP.MultiplyPoint(new Vector3(616.4f, 452.4f, 118.8f)));
+		Vector3 point = Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100));
+		Vector4 point2 = new Vector4
+		(
+			2f*point.x * (1.0f/(float)Screen.width) - 1.0f,
+		    1.0f - 2f*point.y * (1.0f / (float)Screen.height),
+			((Camera.main.transform.position.z - point.z) - Camera.main.nearClipPlane) / Camera.main.farClipPlane,
+			1
+		);
+		
+		Debug.Log ("point: " + point);
+		Debug.Log ("point2: " + point2);
+		Debug.Log ("pointz: " + point.z);
+
+		Matrix4x4 VP = P * V;
+		Vector3 test = VP.MultiplyPoint(new Vector3 (50, 100, 0));
+		// test.z = point2.z;
+		Debug.Log ("test: " + test.z);
+
+		Vector3 testPoint = new Vector3
+		(
+				2f*409 * (1.0f/(float)Screen.width) - 1.0f,
+				1.0f - 2f*140 * (1.0f / (float)Screen.height),
+				0.9990311f
+		);
+
+		Debug.Log ("1:" + VP.inverse.MultiplyPoint(testPoint));
+		Debug.Log ("2:" + Camera.main.ScreenToWorldPoint (point));
 	}
 
 	/// <summary>
@@ -263,7 +295,7 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void Update()
 	{
-		Debug.Log (Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100)));
+		// Debug.Log (Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100)));
 		// Set random write targets
 		Graphics.ClearRandomWriteTargets ();
 		Graphics.SetRandomWriteTarget (1, this.LinkedList);
@@ -310,7 +342,20 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	protected void SortFragments()
 	{
+		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
+		Matrix4x4 V = Camera.main.worldToCameraMatrix;
+		Matrix4x4 P = Camera.main.projectionMatrix;
+		if (d3d) {
+			// Invert Y for rendering to a render texture
+			for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
+			// Scale and bias from OpenGL -> D3D depth range
+			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
+		}
+		
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
+		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
+		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray((P * V).inverse));
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
@@ -390,5 +435,21 @@ public class TressFXRender : MonoBehaviour
 		Graphics.SetRenderTarget (this.finalRenderTexture);
 		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
+	}
+	
+	/// <summary>
+	/// Convertes a Matrix4x4 to a float array.
+	/// </summary>
+	/// <returns>The to float array.</returns>
+	/// <param name="matrix">Matrix.</param>
+	private float[] MatrixToFloatArray(Matrix4x4 matrix)
+	{
+		return new float[] 
+		{
+			matrix.m00, matrix.m01, matrix.m02, matrix.m03,
+			matrix.m10, matrix.m11, matrix.m12, matrix.m13,
+			matrix.m20, matrix.m21, matrix.m22, matrix.m23,
+			matrix.m30, matrix.m31, matrix.m32, matrix.m33
+		};
 	}
 }

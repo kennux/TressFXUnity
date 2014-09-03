@@ -24,6 +24,8 @@ RWStructuredBuffer<struct PPLL_STRUCT> LinkedList;
 
 // Screen information
 float4 screenSize;
+float4x4 InvVPMatrix;
+float4 g_vEye;
 
 // Final result
 RWTexture2D<float4> Result;
@@ -32,7 +34,106 @@ RWTexture2D<float4> Result;
 #define NULLPOINTER 0xffffffff
 #define MAX_FRAGMENTS 256
 #define KBUFFER_SIZE 8
-#define COLORDEBUG
+#define PI 3.1415926
+// #define COLORDEBUG
+
+
+//--------------------------------------------------------------------------------------
+// ComputeHairShading
+//
+// Hair shading using dual highlight approach and Kajiya lighting model
+// dual highlight: marschner 03 
+// kajiya model: kajiya 84
+//--------------------------------------------------------------------------------------
+float3 ComputeHairShading(float3 iPos, float3 iTangent, float amountLight)
+{
+    float3 baseColor = float3(0.647, 0.419, 0.274); // g_MatBaseColor.xyz;
+    float rand_value = 1;
+    
+    /*if(abs(iTex.x) + abs(iTex.y) >1e-5) // if texcoord is available, use texture map
+        rand_value = g_txNoise.SampleLevel(g_samLinearWrap, iTex.xy, 0).x;*/
+    
+    // define baseColor and Ka Kd Ks coefficient for hair
+ 	float Kd = 0.4f; // g_MatKValue.y;
+    float Ka = 0; // g_MatKValue.x;
+	float Ks1 = 0.399; // g_MatKValue.z;
+	float Ex1 = 80; // g_MatKValue.w;
+	float Ks2 = 0.5; // g_fHairKs2;
+	float Ex2 = 8; // g_fHairEx2;
+
+    float3 lightPos = float3(100, 200, -100); // g_PointLightPos.xyz;
+    float3 vLightDir = normalize(lightPos - iPos.xyz);
+    float3 vEyeDir = normalize(g_vEye.xyz - iPos.xyz);
+    float3 tangent = normalize(iTangent);
+
+    // in Kajiya's model: diffuse component: sin(t, l)
+    float cosTL = (dot(tangent, vLightDir));
+    float sinTL = sqrt(1 - cosTL*cosTL);
+    float diffuse = sinTL; // here sinTL is apparently larger than 0
+
+    float alpha = (rand_value * 10) * PI/180; // tiled angle (5-10 dgree)
+
+    // in Kajiya's model: specular component: cos(t, rl) * cos(t, e) + sin(t, rl)sin(t, e)
+    float cosTRL = -cosTL;
+    float sinTRL = sinTL;
+    float cosTE = (dot(tangent, vEyeDir));
+    float sinTE = sqrt(1- cosTE*cosTE);
+
+    // primary highlight: reflected direction shift towards root (2 * Alpha)
+    float cosTRL_root = cosTRL * cos(2 * alpha) - sinTRL * sin(2 * alpha);
+    float sinTRL_root = sqrt(1 - cosTRL_root * cosTRL_root);
+    float specular_root = max(0, cosTRL_root * cosTE + sinTRL_root * sinTE);
+
+    // secondary highlight: reflected direction shifted toward tip (3*Alpha)
+    float cosTRL_tip = cosTRL*cos(-3*alpha) - sinTRL*sin(-3*alpha);
+    float sinTRL_tip = sqrt(1 - cosTRL_tip * cosTRL_tip);
+    float specular_tip = max(0, cosTRL_tip * cosTE + sinTRL_tip * sinTE);
+
+    float3 vColor = Ka * /*g_AmbientLightColor.xyz **/ baseColor + // ambient
+                    amountLight * float3(1,1,1) /*g_PointLightColor.xyz*/ * (
+                    Kd * diffuse * baseColor + // diffuse
+                    Ks1 * pow(specular_root, Ex1)  + // primary hightlight r
+                    Ks2 * pow(specular_tip, Ex2) * baseColor); // secondary highlight rtr 
+
+   return vColor;
+}
+
+//--------------------------------------------------------------------------------------
+// SimpleHairShading
+//
+// Low quality, but faster hair shading
+//--------------------------------------------------------------------------------------
+float3 SimpleHairShading(float3 iPos, float3 iTangent, float amountLight)
+{
+    
+    float3 baseColor = float3(0.647, 0.419, 0.274); // g_MatBaseColor.xyz;
+ 	float Kd = 0.4f; // g_MatKValue.y;
+   
+#ifdef SUPERSIMPLESHADING
+	float3 vColor = amountLight * Kd * baseColor;
+#else
+    // define baseColor and Ka Kd Ks coefficient for hair
+    float Ka = 0; // g_MatKValue.x;
+	float Ks1 = 0.399; // g_MatKValue.z;
+	float Ex1 = 80; // g_MatKValue.w;
+	float Ks2 = 0.5; // g_fHairKs2;
+	float Ex2 = 8; // g_fHairEx2;
+
+    float3 lightPos = float3(100, 200, -100); // g_PointLightPos.xyz;
+    float3 vLightDir = normalize(lightPos - iPos.xyz);
+    float3 tangent = normalize(iTangent);
+
+    // in Kajiya's model: diffuse component: sin(t, l)
+    float cosTL = (dot(tangent, vLightDir));
+    float sinTL = sqrt(1 - cosTL*cosTL);
+    float diffuse = sinTL; // here sinTL is apparently larger than 0
+
+    float3 vColor = Ka * /*g_AmbientLightColor.xyz **/ baseColor +							// ambient
+                    amountLight * float3(1,1,1) /*g_PointLightColor.xyz*/ * (Kd * diffuse * baseColor);	// diffuse
+#endif
+
+    return vColor;
+}
 
 // HELPER FUNCTIONS
 uint PackFloat4IntoUint(float4 vValue)
@@ -104,7 +205,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 					kBuffer[j].depth = LinkedList[pointer].depth;
 					kBuffer[j].tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
-					kBuffer[j].ammountLight = LinkedList[pointer].ammountLight;
+					kBuffer[j].ammountLight = asfloat(LinkedList[pointer].ammountLight);
 					
 					break;
 				}
@@ -123,7 +224,15 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	Result[id.xy] = float4(fcolor, 1);
 	#else
 	
+	// Calculate world pos for first kbuffer fragment
+	float3 screenPos = float3(id.x, id.y, asfloat(kBuffer[0].depth));
 	
+	screenPos.x = 2.0f*screenPos.x * (1.0f/screenSize.x) - 1.0f;
+	screenPos.y =  1.0f - 2.0f * screenPos.y * (1.0f / screenSize.y);
+	
+	float4 worldPos = mul(InvVPMatrix, float4(screenPos, 1));
+	
+	Result[id.xy] = float4(ComputeHairShading(worldPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
 	
 	#endif
 }
