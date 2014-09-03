@@ -50,6 +50,7 @@
 			    float3 Normal       : NORMAL;		// this normal comes in per-vertex
 			    float2 Texcoord	    : TEXCOORD;	// vertex texture coords 
 			};
+			
 
             VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
@@ -64,7 +65,6 @@
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
             	float4 c = tex2D(_TestTex, In.vTex);
-            	c.a = 1;
             	return c;
             }
             

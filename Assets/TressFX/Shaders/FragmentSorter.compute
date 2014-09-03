@@ -175,10 +175,10 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	uint pointer = LinkedListHead[id.xy];
 		
 	// NULLPOINTER check
-	if (pointer == NULLPOINTER)
+	/*if (pointer == NULLPOINTER)
 	{
 		return;
-	}
+	}*/
 	
 	int nNumFragments = 0;
 	KBUFFER_STRUCT kBuffer[KBUFFER_SIZE];
@@ -191,31 +191,37 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		kBuffer[i].depth = 1000000.0f;
 	}
 	
+	uint lastPointer = 1;
+	uint kBufferFragments = 0;
+	
 	// Get all fragments
 	for (i = 0; i < MAX_FRAGMENTS; i++)
 	{
 		if (pointer != NULLPOINTER)
 		{
-			pointer = LinkedList[pointer].uNext;
+			lastPointer = pointer;
 			
 			// K-Buffer
 			for (int j = 0; j < KBUFFER_SIZE; j++)
 			{
 				// Check if this fragment should be in the kbuffer
-				if (kBuffer[j].depth == 1000000.0f || kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
+				if (kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
 				{
 					// Should be in the kbuffer!
-					kBuffer[j].depth = i; // LinkedList[pointer].depth;
+					kBuffer[j].depth = asfloat(LinkedList[pointer].depth);
 					kBuffer[j].tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].ammountLight = asfloat(LinkedList[pointer].ammountLight);
 					kBuffer[j].worldPos = LinkedList[pointer].worldPos;
+					
+					kBufferFragments++;
 					
 					break;
 				}
 			}
 			
 			nNumFragments++;
+			pointer = LinkedList[pointer].uNext;
 		}
 	}
 	
@@ -239,9 +245,10 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	float4 worldPos = mul(InvVPMatrix, float4(screenPos, 1));*/
 	// worldPos.xyz *= worldPos.www;
 	
-	debug[0] = float3(id.xy, kBuffer[0].depth);
+		
 	float3 wPos = kBuffer[0].worldPos;
-	Result[id.xy] = float4(wPos, 1); // float4(ComputeHairShading(worldPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
+	// debug[0] = float3(worldPos.xyz); // float3(kBufferFragments, kBuffer[0].depth, 1);
+	Result[id.xy] = float4(ComputeHairShading(wPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
 	
 	#endif
 }
