@@ -63,6 +63,7 @@
             // UAV's
 			RWStructuredBuffer<struct PPLL_STRUCT>	LinkedListUAV;
             RWTexture2D<uint> LinkedListHeadUAV;
+			RWTexture2D<fixed4> maskTexture;
             
             // All needed buffers
             StructuredBuffer<float3> g_HairVertexTangents;
@@ -145,6 +146,8 @@
 			    // Retrieve current pixel count and increase counter
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
 			    uint uOldStartOffset;
+			    
+			    maskTexture[address] = fixed4(1,0,0,0);
 			    
 			    // uint address_i = ListIndex(address);
 			    // Exchange indices in LinkedListHead texture corresponding to pixel location 
@@ -237,7 +240,7 @@
 			    }
 			    
 			    // output a mask RT for final pass    
-			    return float4(normalize(In.worldPos.xyz), 1);
+			    return float4(coverage, 0, 0, 1);
 			}
             
             ENDCG
