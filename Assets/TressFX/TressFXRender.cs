@@ -64,16 +64,11 @@ public class TressFXRender : MonoBehaviour
 	/// The triangle indices buffer.
 	/// </summary>
 	private ComputeBuffer g_TriangleIndicesBuffer;
-	
+
 	/// <summary>
 	/// The linked list head texture.
 	/// </summary>
 	private RenderTexture LinkedListHead;
-
-	/// <summary>
-	/// The mask texture used for fragment sorting
-	/// </summary>
-	private RenderTexture MaskTexture;
 
 	/// <summary>
 	/// The linked list compute buffer.
@@ -122,7 +117,7 @@ public class TressFXRender : MonoBehaviour
 		// Set triangle indices buffer
 		this.g_TriangleIndicesBuffer = new ComputeBuffer (this.master.hairData.m_TriangleIndices.Length, 4);
 		this.g_TriangleIndicesBuffer.SetData (this.master.hairData.m_TriangleIndices);
-		
+
 		// Initialize linked list
 		this.LinkedListHead = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
 		this.LinkedListHead.filterMode = FilterMode.Point;
@@ -140,17 +135,10 @@ public class TressFXRender : MonoBehaviour
 
 		// Initialize fragment sorter
 		this.finalRenderTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-		this.finalRenderTexture.filterMode = FilterMode.Point;
+		this.finalRenderTexture.filterMode = FilterMode.Trilinear;
 		this.finalRenderTexture.enableRandomWrite = true;
 		this.finalRenderTexture.hideFlags = HideFlags.HideAndDontSave;
 		this.finalRenderTexture.Create ();
-
-		// Initialize mask texture
-		this.MaskTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-		this.MaskTexture.filterMode = FilterMode.Point;
-		this.MaskTexture.enableRandomWrite = true;
-		this.MaskTexture.hideFlags = HideFlags.HideAndDontSave;
-		this.MaskTexture.Create ();
 
 		this.SortFragmentsKernelId = this.fragmentSortingShader.FindKernel ("SortFragments");
 
@@ -312,7 +300,6 @@ public class TressFXRender : MonoBehaviour
 		Graphics.ClearRandomWriteTargets ();
 		Graphics.SetRandomWriteTarget (1, this.LinkedList);
 		Graphics.SetRandomWriteTarget (2, this.LinkedListHead);
-		Graphics.SetRandomWriteTarget (3, this.MaskTexture);
 
 		// Set shader buffers
 		this.hairMaterial.SetBuffer ("g_HairVertexTangents", this.master.g_HairVertexTangents);
@@ -386,18 +373,17 @@ public class TressFXRender : MonoBehaviour
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
 		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
 		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray((P * V).inverse));
-		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "MaskTexture", this.MaskTexture);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
 
-		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 16.0f), Mathf.CeilToInt ((float)Screen.height / 16.0f), 1);
+		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 8.0f), Mathf.CeilToInt ((float)Screen.height / 8.0f), 1);
 
 		Vector3[] test = new Vector3[1];
 		debug.GetData (test);
 		debug.Release ();
 
-		Debug.Log (test[0]);
+		Debug.Log ("test: " + test[0].x + " " + test[0].y + " " + test[0].z);
 	}
 
 	public void OnRenderObject()
@@ -434,27 +420,15 @@ public class TressFXRender : MonoBehaviour
 
 		Graphics.ClearRandomWriteTargets ();
 
-		/*RenderTexture.active = this.LinkedListHead;
-		Texture2D test = new Texture2D (Screen.width, Screen.height);
-		test.ReadPixels (new Rect (0, 0, test.width, test.height), 0, 0, false);
-		System.IO.File.WriteAllBytes("D:\\test.jpg", test.EncodeToJPG ());
-		RenderTexture.active = null;*/
-		
-		/*Graphics.SetRenderTarget (this.LinkedListHead);
-		GL.Clear (false, true, Color.white);
-		Graphics.SetRenderTarget (null);*/
 		this.SortFragments ();
 
 		// Apply fullscreen quad
 		GL.PushMatrix();
 		{
 			GL.LoadOrtho();
-
+			
 			this.fullscreenQuadMaterial.SetPass(0);
-			this.fullscreenQuadMaterial.SetTexture("_TestTex", this.LinkedListHead);
-			this.fullscreenQuadMaterial.SetTexture("LinkedListHead", this.LinkedListHead);
-			this.fullscreenQuadMaterial.SetBuffer("LinkedList", this.LinkedList);
-			this.fullscreenQuadMaterial.SetVector("ScreenSize", new Vector4(Screen.width, Screen.height, 0, 0));
+			this.fullscreenQuadMaterial.SetTexture("_TestTex", this.finalRenderTexture);
 			
 			GL.Begin(GL.TRIANGLES);
 			{
@@ -475,12 +449,10 @@ public class TressFXRender : MonoBehaviour
 			GL.End();
 		}
 		GL.PopMatrix();
+
 		
 		// Clear linked list
 		Graphics.SetRenderTarget (this.LinkedListHead);
-		GL.Clear (false, true, Color.white);
-		Graphics.SetRenderTarget (null);
-		Graphics.SetRenderTarget (this.MaskTexture);
 		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
 		Graphics.SetRenderTarget (this.finalRenderTexture);

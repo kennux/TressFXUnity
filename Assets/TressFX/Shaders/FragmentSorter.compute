@@ -23,11 +23,6 @@ struct KBUFFER_STRUCT
 // Linked List resources
 RWTexture2D<uint> LinkedListHead;
 RWStructuredBuffer<struct PPLL_STRUCT> LinkedList;
-
-// Mask
-RWTexture2D<fixed4> maskTexture;
-
-// Debug
 RWStructuredBuffer<float3> debug;
 
 // Screen information
@@ -38,7 +33,7 @@ float4 g_vEye;
 // Final result
 RWTexture2D<float4> Result;
 
-#define THREAD_GROUP_SIZE 16
+#define THREAD_GROUP_SIZE 8
 #define NULLPOINTER 0xffffffff
 #define MAX_FRAGMENTS 256
 #define KBUFFER_SIZE 8
@@ -69,7 +64,7 @@ float3 ComputeHairShading(float3 iPos, float3 iTangent, float amountLight)
 	float Ks2 = 0.5; // g_fHairKs2;
 	float Ex2 = 8; // g_fHairEx2;
 
-    float3 lightPos = float3(0, 400, -300); // g_PointLightPos.xyz;
+    float3 lightPos = float3(100, 200, -100); // g_PointLightPos.xyz;
     float3 vLightDir = normalize(lightPos - iPos.xyz);
     float3 vEyeDir = normalize(g_vEye.xyz - iPos.xyz);
     float3 tangent = normalize(iTangent);
@@ -180,11 +175,10 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	uint pointer = LinkedListHead[id.xy];
 		
 	// NULLPOINTER check
-	if (pointer == NULLPOINTER)
+	/*if (pointer == NULLPOINTER)
 	{
-		Result[id.xy] = float4(0.647, 0.419, 0.274, 1);
 		return;
-	}
+	}*/
 	
 	int nNumFragments = 0;
 	KBUFFER_STRUCT kBuffer[KBUFFER_SIZE];
@@ -197,31 +191,37 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		kBuffer[i].depth = 1000000.0f;
 	}
 	
+	uint lastPointer = 1;
+	uint kBufferFragments = 0;
+	
 	// Get all fragments
 	for (i = 0; i < MAX_FRAGMENTS; i++)
 	{
 		if (pointer != NULLPOINTER)
 		{
-			pointer = LinkedList[pointer].uNext;
+			lastPointer = pointer;
 			
 			// K-Buffer
 			for (int j = 0; j < KBUFFER_SIZE; j++)
 			{
 				// Check if this fragment should be in the kbuffer
-				if (kBuffer[j].depth == 1000000.0f || kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
+				if (kBuffer[j].depth > asfloat(LinkedList[pointer].depth))
 				{
 					// Should be in the kbuffer!
-					kBuffer[j].depth = i; // LinkedList[pointer].depth;
+					kBuffer[j].depth = asfloat(LinkedList[pointer].depth);
 					kBuffer[j].tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
 					kBuffer[j].ammountLight = asfloat(LinkedList[pointer].ammountLight);
 					kBuffer[j].worldPos = LinkedList[pointer].worldPos;
+					
+					kBufferFragments++;
 					
 					break;
 				}
 			}
 			
 			nNumFragments++;
+			pointer = LinkedList[pointer].uNext;
 		}
 	}
 	
@@ -245,27 +245,10 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	float4 worldPos = mul(InvVPMatrix, float4(screenPos, 1));*/
 	// worldPos.xyz *= worldPos.www;
 	
-	debug[0] = float3(id.xy, kBuffer[0].depth);
-	float3 wPos = kBuffer[0].worldPos;
-<<<<<<< HEAD
-	// debug[0] = float3(worldPos.xyz); // float3(kBufferFragments, kBuffer[0].depth, 1);
-	uint kFragments = min(kBufferFragments, KBUFFER_SIZE);
-	
-	float4 fcolor = float4(0.647, 0.419, 0.274,1);
-	
-	for (int k = 0; k < kFragments; k++)
-	{
-		float4 fragmentColor = float4(ComputeHairShading(wPos.xyz, kBuffer[k].tangent, kBuffer[k].ammountLight), 1/*kBuffer[k].coverage*/);
 		
-        fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
-    }
-    
-    Result[id.xy] = fcolor;
-    
-	// Result[id.xy] = float4(ComputeHairShading(wPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
-=======
-	Result[id.xy] = float4(wPos, 1); // float4(ComputeHairShading(worldPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
->>>>>>> parent of e26fc89... Update. Fragment lighting test works :3
+	float3 wPos = kBuffer[0].worldPos;
+	// debug[0] = float3(worldPos.xyz); // float3(kBufferFragments, kBuffer[0].depth, 1);
+	Result[id.xy] = float4(ComputeHairShading(wPos.xyz, kBuffer[0].tangent, kBuffer[0].ammountLight), 1);
 	
 	#endif
 }
