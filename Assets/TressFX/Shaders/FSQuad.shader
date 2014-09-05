@@ -54,6 +54,7 @@
 			    float3 Normal       : NORMAL;		// this normal comes in per-vertex
 			    float2 Texcoord	    : TEXCOORD;	// vertex texture coords 
 			};
+<<<<<<< HEAD
 			
 			float4 UnpackUintIntoFloat4(uint uValue)
 			{
@@ -64,6 +65,8 @@
 			{
 			    return ( (uint(vValue.x*255)& 0xFFUL) << 24 ) | ( (uint(vValue.y*255)& 0xFFUL) << 16 ) | ( (uint(vValue.z*255)& 0xFFUL) << 8) | (uint(vValue.w * 255)& 0xFFUL);
 			}
+=======
+>>>>>>> parent of e26fc89... Update. Fragment lighting test works :3
 
             VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
@@ -77,7 +80,13 @@
             
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
+<<<<<<< HEAD
 		       	return tex2D(_TestTex, In.vTex);
+=======
+            	float4 c = tex2D(_TestTex, In.vTex);
+            	c.a = 1;
+            	return c;
+>>>>>>> parent of e26fc89... Update. Fragment lighting test works :3
             }
             
             ENDCG

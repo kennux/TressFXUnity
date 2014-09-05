@@ -236,11 +236,19 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.pos.z, 0.5f, In.worldPos);
+			        StoreFragments_Hair(screenPos, In.Tangent.xyz, coverage, In.pos.z, LIGHT_ATTENUATION(In), In.worldPos);
 			    }
 			    
 			    // output a mask RT for final pass    
+<<<<<<< HEAD
 			    return float4(coverage, 0, 0, 1);
+=======
+			    return float4(normalize(In.worldPos.xyz), 1);
+			    
+			    /*float3 wPos = mul(InvVPMatrix, proj_pos).xyz;
+			    
+			    return float4(normalize(wPos), 1);*/
+>>>>>>> parent of e26fc89... Update. Fragment lighting test works :3
 			}
             
             ENDCG

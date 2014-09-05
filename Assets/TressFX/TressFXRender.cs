@@ -140,7 +140,7 @@ public class TressFXRender : MonoBehaviour
 
 		// Initialize fragment sorter
 		this.finalRenderTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-		this.finalRenderTexture.filterMode = FilterMode.Trilinear;
+		this.finalRenderTexture.filterMode = FilterMode.Point;
 		this.finalRenderTexture.enableRandomWrite = true;
 		this.finalRenderTexture.hideFlags = HideFlags.HideAndDontSave;
 		this.finalRenderTexture.Create ();
@@ -397,7 +397,7 @@ public class TressFXRender : MonoBehaviour
 		debug.GetData (test);
 		debug.Release ();
 
-		Debug.Log ("test: " + test[0].x + " " + test[0].y + " " + test[0].z);
+		Debug.Log (test[0]);
 	}
 
 	public void OnRenderObject()
