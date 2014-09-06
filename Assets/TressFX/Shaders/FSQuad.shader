@@ -1,6 +1,5 @@
 ﻿Shader "Custom/FSQuad" {
 	Properties {
-		_MainTex ("Base (RGB)", 2D) = "white" {}
 	}
 	SubShader
 	{
@@ -36,7 +35,7 @@
             #pragma vertex vert
             #pragma fragment frag
 			
-			uniform sampler2D _TestTex;
+			uniform sampler2D _Texture;
 			
             struct VS_OUTPUT_SCREENQUAD
 			{
@@ -51,20 +50,20 @@
 			    float2 Texcoord	    : TEXCOORD;	// vertex texture coords 
 			};
 			
-
             VS_OUTPUT_SCREENQUAD vert (VS_INPUT_SCREENQUAD input)
             {
 			    VS_OUTPUT_SCREENQUAD output = (VS_OUTPUT_SCREENQUAD)0;
 
 			    output.vPosition = float4(input.Position.xyz, 1.0);
 			    output.vTex = input.Texcoord.xy;
+			    output.vTex.y = 1 - input.Texcoord.y;
 
 			    return output;
             }
             
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
-            	float4 c = tex2D(_TestTex, In.vTex);
+            	float4 c = tex2D(_Texture, In.vTex);
             	return c;
             }
             

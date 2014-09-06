@@ -23,6 +23,9 @@ public class TressFX : MonoBehaviour
 	public ComputeBuffer g_HairRefVecsInLocalFrame;
 	public ComputeBuffer g_FollowHairRootOffset;
 
+	[HideInInspector]
+	public TressFXSimulation simulation;
+
 	/// <summary>
 	/// Start this instance.
 	/// Initializes all buffers and other resources needed by tressfx simulation and rendering.
@@ -44,6 +47,9 @@ public class TressFX : MonoBehaviour
 		this.g_HairStrandType = this.InitializeBuffer (this.hairData.m_pHairStrandType, 4);
 		this.g_HairRefVecsInLocalFrame = this.InitializeBuffer (this.hairData.m_pRefVectors, 16);
 		this.g_FollowHairRootOffset = this.InitializeBuffer (this.hairData.m_pFollowRootOffset, 16);
+
+		// Get other parts
+		this.simulation = this.GetComponent<TressFXSimulation> ();
 	}
 
 	/// <summary>

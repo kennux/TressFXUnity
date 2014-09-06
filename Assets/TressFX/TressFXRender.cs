@@ -8,13 +8,6 @@ public struct PPLL
 	public float depth;
 	public uint uNext;
 	public uint ammountLight;
-	public Vector3 worldPos;
-}
-
-public struct PointL
-{
-	public Vector3 position;
-	public float radius;
 }
 
 public class TressFXRender : MonoBehaviour
@@ -81,6 +74,9 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	private Mesh[] triangleMeshes;
 
+	/// <summary>
+	/// The line meshes.
+	/// </summary>
 	private Mesh[] lineMeshes;
 
 	/// <summary>
@@ -102,6 +98,20 @@ public class TressFXRender : MonoBehaviour
 	/// If this is set to true an additional rendering pass for shadows is rendered.
 	/// </summary>
 	public bool castShadows = true;
+	
+	/// <summary>
+	/// The color of the hair.
+	/// </summary>
+	public Color hairColor = new Color(0.647f, 0.419f, 0.274f, 1);
+
+	/// <summary>
+	/// Gets the VP matrix.
+	/// </summary>
+	/// <value>The VP matrix.</value>
+	protected Matrix4x4 VPMatrix
+	{
+		get { return this.GetVPMatrix (); }
+	}
 
 	/// <summary>
 	/// Start this instance.
@@ -125,7 +135,7 @@ public class TressFXRender : MonoBehaviour
 		this.LinkedListHead.hideFlags = HideFlags.HideAndDontSave;
 		this.LinkedListHead.Create ();
 
-		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 32, ComputeBufferType.Counter);
+		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 16, ComputeBufferType.Counter);
 
 		// Generate triangle meshes
 		this.triangleMeshes = this.GenerateTriangleMeshes ();
@@ -135,7 +145,7 @@ public class TressFXRender : MonoBehaviour
 
 		// Initialize fragment sorter
 		this.finalRenderTexture = new RenderTexture (Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-		this.finalRenderTexture.filterMode = FilterMode.Trilinear;
+		this.finalRenderTexture.filterMode = FilterMode.Point;
 		this.finalRenderTexture.enableRandomWrite = true;
 		this.finalRenderTexture.hideFlags = HideFlags.HideAndDontSave;
 		this.finalRenderTexture.Create ();
@@ -146,47 +156,6 @@ public class TressFXRender : MonoBehaviour
 		this.shadowMaterial = new Material (this.shadowShader);
 
 		this.lineMeshes = this.GenerateLineMeshes ();
-
-		// TEST
-		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
-		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
-		Matrix4x4 V = Camera.main.worldToCameraMatrix;
-		Matrix4x4 P = Camera.main.projectionMatrix;
-		if (d3d) {
-			// Invert Y for rendering to a render texture
-			for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
-			// Scale and bias from OpenGL -> D3D depth range
-			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
-		}
-		Matrix4x4 MVP = P*V*M;
-
-		Vector3 point = Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100));
-		Vector4 point2 = new Vector4
-		(
-			2f*point.x * (1.0f/(float)Screen.width) - 1.0f,
-		    1.0f - 2f*point.y * (1.0f / (float)Screen.height),
-			((Camera.main.transform.position.z - point.z) - Camera.main.nearClipPlane) / Camera.main.farClipPlane,
-			1
-		);
-		
-		Debug.Log ("point: " + point);
-		Debug.Log ("point2: " + point2);
-		Debug.Log ("pointz: " + point.z);
-
-		Matrix4x4 VP = P * V;
-		Vector3 test = VP.MultiplyPoint(new Vector3 (50, 100, 0));
-		// test.z = point2.z;
-		Debug.Log ("test: " + test.z);
-
-		Vector3 testPoint = new Vector3
-		(
-				2f*409 * (1.0f/(float)Screen.width) - 1.0f,
-				1.0f - 2f*140 * (1.0f / (float)Screen.height),
-				0.9990311f
-		);
-
-		Debug.Log ("1:" + VP.inverse.MultiplyPoint(testPoint));
-		Debug.Log ("2:" + Camera.main.ScreenToWorldPoint (point));
 	}
 
 	/// <summary>
@@ -291,6 +260,25 @@ public class TressFXRender : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Gets the VP matrix.
+	/// </summary>
+	/// <returns>The VP matrix.</returns>
+	private Matrix4x4 GetVPMatrix()
+	{
+		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+		Matrix4x4 V = Camera.main.worldToCameraMatrix;
+		Matrix4x4 P = Camera.main.projectionMatrix;
+		if (d3d) {
+			// Invert Y for rendering to a render texture
+			/*for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }*/
+			// Scale and bias from OpenGL -> D3D depth range
+			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
+		}
+
+		return (P * V);
+	}
+
+	/// <summary>
 	/// Raises the render object event.
 	/// </summary>
 	public void Update()
@@ -306,26 +294,16 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetBuffer ("g_HairVertexPositions", this.master.g_HairVertexPositions);
 		this.hairMaterial.SetBuffer ("g_TriangleIndicesBuffer", this.g_TriangleIndicesBuffer);
 		this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairVertexTangents);
-
 		
-		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
-		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
-		Matrix4x4 V = Camera.main.worldToCameraMatrix;
-		Matrix4x4 P = Camera.main.projectionMatrix;
-		if (d3d) {
-			// Invert Y for rendering to a render texture
-			/*for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }*/
-			// Scale and bias from OpenGL -> D3D depth range
-			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
-		}
-		
-		this.hairMaterial.SetMatrix ("VPMatrix", (P * V));
-		this.hairMaterial.SetMatrix ("InvVPMatrix", (P * V).inverse);
+		this.hairMaterial.SetMatrix ("VPMatrix", this.VPMatrix);
+		this.hairMaterial.SetMatrix ("MMatrix", this.transform.localToWorldMatrix);
+		this.hairMaterial.SetMatrix ("InvVPMatrix", this.VPMatrix.inverse);
 		
 		// Set rendering variables
 		this.hairMaterial.SetInt ("g_bExpandPixels", 1);
-		this.hairMaterial.SetFloat ("g_FiberRadius", 0.01f);
+		this.hairMaterial.SetFloat ("g_FiberRadius", 0.14f);
 		this.hairMaterial.SetFloat ("g_FiberAlpha", 1.0f);
+		this.hairMaterial.SetFloat ("g_bThinTip", 1.0f);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", 0.1f);
 		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 		
@@ -336,7 +314,7 @@ public class TressFXRender : MonoBehaviour
 		for (int i = 0; i < this.triangleMeshes.Length; i++)
 		{
 			this.triangleMeshes[i].bounds = renderingBounds;
-			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, Camera.main);
+			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, this.camera);
 		}
 
 		// Render shadows
@@ -357,68 +335,25 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	protected void SortFragments()
 	{
-		ComputeBuffer debug = new ComputeBuffer (1, 12);
-		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
-		Matrix4x4 M = Matrix4x4.TRS (Vector3.zero, Quaternion.identity, Vector3.one);
-		Matrix4x4 V = Camera.main.worldToCameraMatrix;
-		Matrix4x4 P = Camera.main.projectionMatrix;
-		if (d3d) {
-			// Invert Y for rendering to a render texture
-			// for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }
-			// Scale and bias from OpenGL -> D3D depth range
-			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
-		}
-
-		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "debug", debug);
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
+		this.fragmentSortingShader.SetVector ("g_MatBaseColor", new Vector4 (this.hairColor.r, this.hairColor.g, this.hairColor.b, this.hairColor.a));
 		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
-		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray((P * V).inverse));
+		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray(this.VPMatrix.inverse));
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
 
 		this.fragmentSortingShader.Dispatch (this.SortFragmentsKernelId, Mathf.CeilToInt ((float)Screen.width / 8.0f), Mathf.CeilToInt ((float)Screen.height / 8.0f), 1);
-
-		Vector3[] test = new Vector3[1];
-		debug.GetData (test);
-		debug.Release ();
-
-		Debug.Log ("test: " + test[0].x + " " + test[0].y + " " + test[0].z);
 	}
 
+	/// <summary>
+	/// Raises the render object event.
+	/// Applies the fullscreen quad after dispatching the fragment sorting compute shader.
+	/// </summary>
 	public void OnRenderObject()
 	{
-		if (Camera.current != Camera.main)
-			return;
-
-		/*PPLL[] test = new PPLL[this.totalHairLayers * Screen.width * Screen.height];
-		this.LinkedList.GetData(test);
-
-		uint maxNumFragments = 0;
-		uint curNumFragments = 0;
-		uint curNext = 0;
-		uint maxFragments = 2048;
-		
-		for (int i = 0; i < test.Length; i++)
-		{
-			curNext = test[i].uNext;
-			curNumFragments = 0;
-			
-			while (curNext != 0xFFFFFFFF && curNumFragments < maxFragments)
-			{
-				curNext = test[curNext].uNext;
-				curNumFragments++;
-			}
-			
-			if (maxNumFragments < curNumFragments)
-			{
-				maxNumFragments = curNumFragments;
-			}
-		}
-		
-		Debug.Log(maxNumFragments);*/
-
-		Graphics.ClearRandomWriteTargets ();
+		/*if (Camera.current != Camera.main)
+			return;*/
 
 		this.SortFragments ();
 
@@ -428,8 +363,8 @@ public class TressFXRender : MonoBehaviour
 			GL.LoadOrtho();
 			
 			this.fullscreenQuadMaterial.SetPass(0);
-			this.fullscreenQuadMaterial.SetTexture("_TestTex", this.finalRenderTexture);
-			
+			this.fullscreenQuadMaterial.SetTexture("_Texture", this.finalRenderTexture);
+
 			GL.Begin(GL.TRIANGLES);
 			{
 				GL.TexCoord2(0.0f, 1.0f);
@@ -449,14 +384,13 @@ public class TressFXRender : MonoBehaviour
 			GL.End();
 		}
 		GL.PopMatrix();
-
 		
 		// Clear linked list
 		Graphics.SetRenderTarget (this.LinkedListHead);
 		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
 		Graphics.SetRenderTarget (this.finalRenderTexture);
-		GL.Clear (false, true, Color.white);
+		GL.Clear (false, true, this.hairColor);
 		Graphics.SetRenderTarget (null);
 	}
 	

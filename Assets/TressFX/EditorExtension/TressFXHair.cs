@@ -1,7 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
+
 using System.IO;
 using System;
 
@@ -314,6 +318,7 @@ public class TressFXHair : ScriptableObject
 	/// <param name="path">Path.</param>
 	public void OpenHairData(string path)
 	{
+		#if UNITY_EDITOR
 		// Open file
 		BinaryReader reader = null;
 		try
@@ -376,6 +381,8 @@ public class TressFXHair : ScriptableObject
 			if (reader != null)
 				reader.Close ();
 		}
+
+		#endif
 	}
 
 	#if UNITY_EDITOR

@@ -84,6 +84,21 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	private int numOfStrandsPerThreadGroup;
 
+	/// <summary>
+	/// The wind direction.
+	/// </summary>
+	public Vector4 windDirection;
+
+	/// <summary>
+	/// The wind magnitude.
+	/// </summary>
+	public float windMagnitude;
+	
+	private Vector4 windForce1;
+	private Vector4 windForce2;
+	private Vector4 windForce3;
+	private Vector4 windForce4;
+
 	public void Start()
 	{
 		// No shader? :-(
@@ -113,7 +128,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.PrepareFollowHairBeforeTurningIntoGuideKernelId = this.simulationShader.FindKernel ("PrepareFollowHairBeforeTurningIntoGuide");
 	}
 
-	public void Update()
+	public void LateUpdate()
 	{
 		// Set constant data
 		this.SetConstants ();
@@ -162,6 +177,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetBuffer (kernelId, "g_LocalRotations", this.master.g_LocalRotations);
 		this.simulationShader.SetBuffer (kernelId, "g_HairRestLengthSRV", this.master.g_HairRestLengthSRV);
 		this.simulationShader.SetBuffer (kernelId, "g_HairStrandType", this.master.g_HairStrandType);
+		this.simulationShader.SetBuffer (kernelId, "g_HairVertexTangents", this.master.g_HairVertexTangents);
 		this.simulationShader.SetBuffer (kernelId, "g_HairRefVecsInLocalFrame", this.master.g_HairRefVecsInLocalFrame);
 		this.simulationShader.SetBuffer (kernelId, "g_FollowHairRootOffset", this.master.g_FollowHairRootOffset);
 	}
