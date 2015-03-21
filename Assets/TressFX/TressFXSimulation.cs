@@ -130,6 +130,8 @@ public class TressFXSimulation : MonoBehaviour
 
 	public void LateUpdate()
 	{
+		this.SimulateWind ();
+
 		// Set constant data
 		this.SetConstants ();
 
@@ -151,6 +153,58 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.Dispatch (this.LocalShapeConstraintsKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
 		this.simulationShader.Dispatch (this.LengthConstriantsWindAndCollisionKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 		this.simulationShader.Dispatch (this.UpdateFollowHairVerticesKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+	}
+
+	private void SimulateWind()
+	{
+		// Simulate wind
+		float wM = windMagnitude * (Mathf.Pow( Mathf.Sin(Time.frameCount*0.05f), 2.0f ) + 0.5f);
+		
+		Vector3 windDirN = this.windDirection.normalized;
+		
+		Vector3 XAxis = new Vector3(1,0,0);
+		Vector3 xCrossW = Vector3.Cross (XAxis, windDirN);
+		
+		Quaternion rotFromXAxisToWindDir = Quaternion.identity;
+		
+		float angle = Mathf.Asin(xCrossW.magnitude);
+		
+		if ( angle > 0.001 )
+		{
+			rotFromXAxisToWindDir = Quaternion.AngleAxis(angle, xCrossW.normalized);
+		}
+		
+		float angleToWideWindCone = 40.0f;
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 1.0f, 0);
+			
+			// Radians?
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis; 
+			this.windForce1 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, -1.0f, 0);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce2 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 0, 1.0f);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce3 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
+		
+		{
+			Vector3 rotAxis = new Vector3(0, 0, -1.0f);
+			Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
+			Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis;
+			this.windForce4 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
+		}
 	}
 
 	/// <summary>
@@ -191,11 +245,11 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (this.transform.localToWorldMatrix));
 		this.simulationShader.SetFloats ("g_ModelRotateForHead", this.QuaternionToFloatArray (this.transform.rotation));
 
-		// Set wind (TODO)
-		this.simulationShader.SetVector ("g_Wind", Vector4.zero);
-		this.simulationShader.SetVector ("g_Wind1", Vector4.zero);
-		this.simulationShader.SetVector ("g_Wind2", Vector4.zero);
-		this.simulationShader.SetVector ("g_Wind3", Vector4.zero);
+		// Set wind
+		this.simulationShader.SetVector ("g_Wind", this.windForce1);
+		this.simulationShader.SetVector ("g_Wind1", this.windForce2);
+		this.simulationShader.SetVector ("g_Wind2", this.windForce3);
+		this.simulationShader.SetVector ("g_Wind3", this.windForce4);
 
 		// Simulation values
 		this.simulationShader.SetInt ("g_NumLengthConstraintIterations", this.lengthConstraintIterations);
@@ -230,7 +284,6 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange3", this.master.hairData.GlobalShapeMatchingEffectiveRange3);
 
 		// Colliders
-
 		this.simulationShader.SetVector ("g_cc0_center", new Vector3(-0.095f, 92.000f, -9.899f));
 		this.simulationShader.SetVector ("g_cc1_center", new Vector3(-0.405f, 93.707f, 5.111f));
 		this.simulationShader.SetVector ("g_cc2_center", new Vector3(-0.072f, 68.548f, 10.561f));

@@ -320,7 +320,8 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetFloat ("g_FiberAlpha", this.fiberAlpha);
 		this.hairMaterial.SetFloat ("g_bThinTip", this.thinTip ? 1 : 0);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", this.alphaThreshold);
-		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+		this.hairMaterial.SetVector ("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
+		this.hairMaterial.SetFloat ("g_directionalLightIntensity", this.directionalLight.light.intensity);
 		
 		// Update rendering bounds
 		Bounds renderingBounds = new Bounds (this.transform.position + this.renderingBounds.center, this.renderingBounds.size);

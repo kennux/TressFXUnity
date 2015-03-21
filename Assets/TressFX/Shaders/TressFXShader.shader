@@ -5,7 +5,7 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Opaque" "Queue" = "Transparent+100" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+100" }
         Pass
         {
 			Tags {"LightMode" = "ForwardBase" } 
@@ -83,6 +83,7 @@
 			uniform float g_fHairKs2;
 			uniform float4x4 VPMatrix;
 			uniform float4x4 MMatrix;
+			uniform float g_directionalLightIntensity;
 			
 			// HELPER FUNCTIONS
 			uint PackFloat4IntoUint(float4 vValue)

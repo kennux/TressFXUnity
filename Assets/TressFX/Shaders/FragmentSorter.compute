@@ -197,6 +197,11 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	
 	KBUFFER_STRUCT kBuffer[KBUFFER_SIZE];
 	float4 fcolor = float4(0,0,0,1);
+	float depth;
+	float3 tangent;
+	float coverage;
+	float ammountLight;
+	float2 worldPos;
 	
 	// Counters
 	uint i = 0;
@@ -252,11 +257,11 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 			}
 		}
 		
-		float depth = LinkedList[pointer].depth;
-		float3 tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
-		float coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
-		float ammountLight = LinkedList[pointer].ammountLight;
-		float2 worldPos = LinkedList[pointer].worldPos;
+		depth = LinkedList[pointer].depth;
+		tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
+		coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
+		ammountLight = LinkedList[pointer].ammountLight;
+		worldPos = LinkedList[pointer].worldPos;
 		
 		// Exchange
 		if (maxDepth > LinkedList[pointer].depth)
