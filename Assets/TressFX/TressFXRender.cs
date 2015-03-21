@@ -104,7 +104,18 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public Color hairColor = new Color(0.647f, 0.419f, 0.274f, 1);
 
-	public Transform debug;
+	// Rendering/material variables
+	public float fiberAlpha = 1.0f;
+	public float fiberRadius = 0.14f;
+	public bool expandPixels = true;
+	public bool thinTip = true;
+	public float alphaThreshold = 0.1f;
+	public float g_MatKd = 0.4f;
+	public float g_MatKa = 0;
+	public float g_MatKs1 = 0.14f;
+	public float g_MatEx1 = 80;
+	public float g_MatKs2 = 0.5f;
+	public float g_MatEx2 = 8;
 
 	/// <summary>
 	/// Gets the VP matrix.
@@ -302,11 +313,11 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetMatrix ("InvVPMatrix", this.VPMatrix.inverse);
 		
 		// Set rendering variables
-		this.hairMaterial.SetInt ("g_bExpandPixels", 1);
-		this.hairMaterial.SetFloat ("g_FiberRadius", 0.14f);
-		this.hairMaterial.SetFloat ("g_FiberAlpha", 1.0f);
-		this.hairMaterial.SetFloat ("g_bThinTip", 1.0f);
-		this.hairMaterial.SetFloat ("g_alphaThreshold", 0.1f);
+		this.hairMaterial.SetInt ("g_bExpandPixels", this.expandPixels ? 1 : 0);
+		this.hairMaterial.SetFloat ("g_FiberRadius", this.fiberRadius);
+		this.hairMaterial.SetFloat ("g_FiberAlpha", this.fiberAlpha);
+		this.hairMaterial.SetFloat ("g_bThinTip", this.thinTip ? 1 : 0);
+		this.hairMaterial.SetFloat ("g_alphaThreshold", this.alphaThreshold);
 		this.hairMaterial.SetVector("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 		
 		// Update rendering bounds
@@ -341,6 +352,13 @@ public class TressFXRender : MonoBehaviour
 		this.fragmentSortingShader.SetVector ("g_MatBaseColor", new Vector4 (this.hairColor.r, this.hairColor.g, this.hairColor.b, this.hairColor.a));
 		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
 		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray(this.VPMatrix.inverse));
+		this.fragmentSortingShader.SetFloat ("g_MatKd", this.g_MatKd);
+		this.fragmentSortingShader.SetFloat ("g_MatKa", this.g_MatKa);
+		this.fragmentSortingShader.SetFloat ("g_MatKs1", this.g_MatKs1);
+		this.fragmentSortingShader.SetFloat ("g_MatEx1", this.g_MatEx1);
+		this.fragmentSortingShader.SetFloat ("g_MatKs2", this.g_MatKs2);
+		this.fragmentSortingShader.SetFloat ("g_MatEx2", this.g_MatEx2);
+
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "Result", this.finalRenderTexture);
@@ -392,7 +410,7 @@ public class TressFXRender : MonoBehaviour
 		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
 		Graphics.SetRenderTarget (this.finalRenderTexture);
-		GL.Clear (false, true, this.hairColor);
+		GL.Clear (false, true, Color.white);
 		Graphics.SetRenderTarget (null);
 	}
 	

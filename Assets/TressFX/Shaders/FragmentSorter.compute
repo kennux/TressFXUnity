@@ -28,15 +28,23 @@ RWStructuredBuffer<struct PPLL_STRUCT> LinkedList;
 float4 screenSize;
 float4x4 InvVPMatrix;
 float4 g_vEye;
+
+// Material information
 float4 g_MatBaseColor;
+float g_MatKd;
+float g_MatKa;
+float g_MatKs1;
+float g_MatEx1;
+float g_MatKs2;
+float g_MatEx2;
 
 // Final result
 RWTexture2D<float4> Result;
 
 #define THREAD_GROUP_SIZE 8
 #define NULLPOINTER 0xffffffff
-#define MAX_FRAGMENTS 256
-#define KBUFFER_SIZE 1
+#define MAX_FRAGMENTS 756
+#define KBUFFER_SIZE 4
 #define PI 3.1415926
 #define SUPERSIMPLESHADING
 // #define COLORDEBUG
@@ -58,12 +66,12 @@ float3 ComputeHairShading(float3 iPos, float3 iTangent, float amountLight)
         rand_value = g_txNoise.SampleLevel(g_samLinearWrap, iTex.xy, 0).x;*/
     
     // define baseColor and Ka Kd Ks coefficient for hair
- 	float Kd = 0.4f; // g_MatKValue.y;
-    float Ka = 0; // g_MatKValue.x;
-	float Ks1 = 0.399; // g_MatKValue.z;
-	float Ex1 = 80; // g_MatKValue.w;
-	float Ks2 = 0.5; // g_fHairKs2;
-	float Ex2 = 8; // g_fHairEx2;
+ 	float Kd = g_MatKd;
+    float Ka = g_MatKa;
+	float Ks1 = g_MatKs1;
+	float Ex1 = g_MatEx1;
+	float Ks2 = g_MatKs2;
+	float Ex2 = g_MatEx2;
 
     float3 lightPos = float3(50, 150, 0); // g_PointLightPos.xyz;
     float3 vLightDir = normalize(lightPos - iPos.xyz);
@@ -110,7 +118,7 @@ float3 ComputeHairShading(float3 iPos, float3 iTangent, float amountLight)
 float3 SimpleHairShading(float3 iPos, float3 iTangent, float amountLight)
 {
     
-    float3 baseColor = float3(0.647, 0.419, 0.274); // g_MatBaseColor.xyz;
+    float3 baseColor = g_MatBaseColor.xyz;
  	float Kd = 0.4f; // g_MatKValue.y;
    
 #ifdef SUPERSIMPLESHADING
@@ -118,7 +126,7 @@ float3 SimpleHairShading(float3 iPos, float3 iTangent, float amountLight)
 #else
     // define baseColor and Ka Kd Ks coefficient for hair
     float Ka = 0; // g_MatKValue.x;
-	float Ks1 = 0.399; // g_MatKValue.z;
+	float Ks1 = 0.14; // g_MatKValue.z;
 	float Ex1 = 80; // g_MatKValue.w;
 	float Ks2 = 0.5; // g_fHairKs2;
 	float Ex2 = 8; // g_fHairEx2;
@@ -178,7 +186,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	// NULLPOINTER check
 	if (pointer == NULLPOINTER)
 	{
-		Result[id.xy] = float4(0,0,0,0);
+		Result[id.xy] = float4(0,0,0,1);
 		return;
 	}
 	
@@ -223,76 +231,72 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		}
 	}
 	
-	// If there are no more fragments, dont check for others..
-	if (pointer != NULLPOINTER)
+	// Get the rest of the fragments on this pixel
+	for (i = 0; i < MAX_FRAGMENTS; i++)
 	{
-		// Get the rest of the fragments on this pixel
-		for (i = 0; i < MAX_FRAGMENTS; i++)
+		if (pointer == NULLPOINTER)
 		{
-			if (pointer != NULLPOINTER)
+			break;
+		}
+		
+		float maxDepth = 0;
+		uint maxDepthIndex = 0;
+		
+		// Find the furthest kbuffer fragment
+		for (j = 0; j < KBUFFER_SIZE; j++)
+		{
+			if (maxDepth < kBuffer[j].depth)
 			{
-				float maxDepth = 0;
-				uint maxDepthIndex = 0;
-				
-				// Find the furthest kbuffer fragment
-				for (j = 0; j < KBUFFER_SIZE; j++)
-				{
-					if (maxDepth < kBuffer[j].depth)
-					{
-						maxDepth = kBuffer[j].depth;
-						maxDepthIndex = j;
-					}
-				}
-				
-				float depth = LinkedList[pointer].depth;
-				float3 tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
-				float coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
-				float ammountLight = LinkedList[pointer].ammountLight;
-				float2 worldPos = LinkedList[pointer].worldPos;
-				
-				// Exchange
-				if (maxDepth > LinkedList[pointer].depth)
-				{
-					// Backup current values before overwriting
-					float kDepth = depth;
-					float3 kTangent = tangent;
-					float kCoverage = coverage;
-					float kAmmountLight = ammountLight;
-					float2 kWorldPos = worldPos;
-					
-					// Exchange kBuffer -> Current
-					depth = kBuffer[maxDepthIndex].depth;
-					tangent = kBuffer[maxDepthIndex].tangent;
-					coverage = kBuffer[maxDepthIndex].coverage;
-					ammountLight = kBuffer[maxDepthIndex].ammountLight;
-					worldPos = kBuffer[maxDepthIndex].worldPos;
-					
-					// Exchange current backup -> kBuffer
-					kBuffer[maxDepthIndex].depth = kDepth;
-					kBuffer[maxDepthIndex].tangent = kTangent;
-					kBuffer[maxDepthIndex].coverage = kCoverage;
-					kBuffer[maxDepthIndex].ammountLight = kAmmountLight;
-					kBuffer[maxDepthIndex].worldPos = kWorldPos;
-				}
-				
-				// Do out of order blending and simple shading for fragments which dont make it into the KBuffer
-				float3 worldPosition = float3(worldPos.xy, depth);
-				
-				float4 fragmentColor = float4(SimpleHairShading(worldPosition.xyz, tangent, ammountLight), 1);
-				fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
-				
-				#ifdef COLORDEBUG
-					nNumFragments++;
-				#endif
-				
-				pointer = LinkedList[pointer].uNext;
-			}
-			else
-			{
-				break;
+				maxDepth = kBuffer[j].depth;
+				maxDepthIndex = j;
 			}
 		}
+		
+		float depth = LinkedList[pointer].depth;
+		float3 tangent = GetTangent(LinkedList[pointer].TangentAndCoverage);
+		float coverage = GetCoverage(LinkedList[pointer].TangentAndCoverage);
+		float ammountLight = LinkedList[pointer].ammountLight;
+		float2 worldPos = LinkedList[pointer].worldPos;
+		
+		// Exchange
+		if (maxDepth > LinkedList[pointer].depth)
+		{
+			// Backup current values before overwriting
+			float kDepth = depth;
+			float3 kTangent = tangent;
+			float kCoverage = coverage;
+			float kAmmountLight = ammountLight;
+			float2 kWorldPos = worldPos;
+			
+			// Exchange kBuffer -> Current
+			depth = kBuffer[maxDepthIndex].depth;
+			tangent = kBuffer[maxDepthIndex].tangent;
+			coverage = kBuffer[maxDepthIndex].coverage;
+			ammountLight = kBuffer[maxDepthIndex].ammountLight;
+			worldPos = kBuffer[maxDepthIndex].worldPos;
+			
+			// Exchange current backup -> kBuffer
+			kBuffer[maxDepthIndex].depth = kDepth;
+			kBuffer[maxDepthIndex].tangent = kTangent;
+			kBuffer[maxDepthIndex].coverage = kCoverage;
+			kBuffer[maxDepthIndex].ammountLight = kAmmountLight;
+			kBuffer[maxDepthIndex].worldPos = kWorldPos;
+		}
+		
+		// Do out of order blending and simple shading for fragments which dont make it into the KBuffer
+		float3 worldPosition = float3(worldPos.xy, depth);
+		
+		float4 fragmentColor = float4(SimpleHairShading(worldPosition.xyz, tangent, ammountLight), coverage);
+        fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
+		fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
+		
+		#ifdef COLORDEBUG
+			nNumFragments++;
+		#endif
+		
+		pointer = LinkedList[pointer].uNext;
 	}
+	
 	
 	#ifdef COLORDEBUG
     float3 debugColor = float3(0,1,0);
@@ -326,11 +330,11 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		
 		// Compute hair shading for current fragment and set coverage as alpha
 		fragmentColor.xyz = ComputeHairShading(worldPos.xyz, kBuffer[maxDepthIndex].tangent, kBuffer[maxDepthIndex].ammountLight);
-		fragmentColor.w = 1.0f; // kBuffer[maxDepthIndex].coverage;
+		fragmentColor.w = kBuffer[maxDepthIndex].coverage;
 		
 		// Blend fragments together
-        fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + (fragmentColor.xyz * fragmentColor.w);
-		// fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
+		fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
+		fcolor.w = mad(-fcolor.w, fragmentColor.w, fcolor.w);
 		
 		// Take this fragment out of the search
 		kBuffer[maxDepthIndex].depth = 0;

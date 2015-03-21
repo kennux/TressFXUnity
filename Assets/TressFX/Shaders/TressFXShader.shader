@@ -5,7 +5,7 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+100" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Transparent+100" }
         Pass
         {
 			Tags {"LightMode" = "ForwardBase" } 
@@ -186,7 +186,7 @@
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
 			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
-				float4 worldpsacePos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
+				float4 worldspacePosition = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 				hairEdgePositions[0] = mul(VPMatrix, hairEdgePositions[0]);
 				hairEdgePositions[1] = mul(VPMatrix, hairEdgePositions[1]);
 				
@@ -204,7 +204,7 @@
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
 			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.pos.z));
-			    Output.worldPos = worldpsacePos.xyz;
+			    Output.worldPos = worldspacePosition.xyz;
 			    
     			TRANSFER_VERTEX_TO_FRAGMENT(Output);
 			    
@@ -227,8 +227,8 @@
 				
 				float coverage = ComputeCoverage(In.p0p1.xy, In.p0p1.zw, proj_pos.xy);
 				
-				// coverage *= g_FiberAlpha;
-
+				coverage *= g_FiberAlpha;
+				
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {

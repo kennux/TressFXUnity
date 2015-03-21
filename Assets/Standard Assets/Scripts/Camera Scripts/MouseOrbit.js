@@ -28,6 +28,18 @@ function LateUpdate () {
 	{
 		doOrbiting();
     }
+    
+    if (Input.GetAxis("Mouse ScrollWheel") < 0)
+    {
+    	this.distance += 500.0f * Time.deltaTime;
+		doOrbiting();
+    }
+    
+    if (Input.GetAxis("Mouse ScrollWheel") > 0)
+    {
+    	this.distance -= 500.0f * Time.deltaTime;
+		doOrbiting();
+    }
 }
 
 function doOrbiting()
