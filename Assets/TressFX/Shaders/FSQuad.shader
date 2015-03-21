@@ -22,8 +22,6 @@
 				ZFailBack keep
 			}
 			
-			Blend SrcAlpha OneMinusSrcAlpha     // Alpha blending
-			
             CGPROGRAM
             #pragma debug
             #pragma target 5.0
@@ -64,6 +62,7 @@
             float4 frag( VS_OUTPUT_SCREENQUAD In) : SV_Target
             {
             	float4 c = tex2D(_Texture, In.vTex);
+            	c.a = 1;
             	return c;
             }
             

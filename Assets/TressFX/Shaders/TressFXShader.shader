@@ -9,10 +9,10 @@
         Pass
         {
 			Tags {"LightMode" = "ForwardBase" } 
-        	ColorMask 0
+			ColorMask 0
         	ZWrite Off
         	ZTest LEqual
-        	Cull Off
+        	Cull Back
         	
 			Stencil
 			{
@@ -44,6 +44,7 @@
 				    float4 Tangent	: TEXCOORD4;
 				    float4 p0p1		: TEXCOORD2;
 				    float3 screenPos : TEXCOORD3;
+				    float3 worldPos : TEXCOORD5;
 					LIGHTING_COORDS(0,1)
 			};
 			
@@ -55,7 +56,8 @@
 			    uint	TangentAndCoverage;	
 			    float	depth;
 			    uint    uNext;
-			    float    ammountLight;
+			    float   ammountLight;
+			    float2	worldPos;
 			};
             
             // UAV's
@@ -136,7 +138,7 @@
 				return (relDist + 1.f) * 0.5f;
 			}
 			
-			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight)
+			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight, float2 worldPos)
 			{
 			    // Retrieve current pixel count and increase counter
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
@@ -152,6 +154,7 @@
 				Element.depth = depth;
 			    Element.uNext = uOldStartOffset;
 			    Element.ammountLight = ammountLight;
+			    Element.worldPos = worldPos;
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
 			}
               
@@ -182,12 +185,14 @@
 				float4 hairEdgePositions[2]; // 0 is negative, 1 is positive
 				hairEdgePositions[0] = float4(v +  -1.0 * right * ratio * g_FiberRadius, 1.0);
 				hairEdgePositions[1] = float4(v +   1.0 * right * ratio * g_FiberRadius, 1.0);
+			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+				float4 worldpsacePos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
 				hairEdgePositions[0] = mul(VPMatrix, hairEdgePositions[0]);
 				hairEdgePositions[1] = mul(VPMatrix, hairEdgePositions[1]);
-			    float fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
 				
 				// screen position
-				float4 screenPos = ComputeScreenPos((fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 1.0f));
+				float4 vertexPosition = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
+				float4 screenPos = ComputeScreenPos(vertexPosition);
 				screenPos.xy /= screenPos.w;
 				
 				hairEdgePositions[0] = hairEdgePositions[0]/hairEdgePositions[0].w;
@@ -195,10 +200,11 @@
 
 			    // Write output data
 			    PS_INPUT_HAIR_AA Output = (PS_INPUT_HAIR_AA)0;
-			    Output.pos = (fDirIndex==-1.0 ? hairEdgePositions[0] : hairEdgePositions[1]) + fDirIndex * float4(proj_right * expandPixels / g_WinSize.y, 0.0f, 0.0f);
+			    Output.pos = vertexPosition;
 			    Output.Tangent  = float4(t, ratio);
 			    Output.p0p1     = float4( hairEdgePositions[0].xy, hairEdgePositions[1].xy );
 			    Output.screenPos = float3(screenPos.xy, LinearEyeDepth(Output.pos.z));
+			    Output.worldPos = worldpsacePos.xyz;
 			    
     			TRANSFER_VERTEX_TO_FRAGMENT(Output);
 			    
@@ -210,7 +216,7 @@
             float4 frag( PS_INPUT_HAIR_AA In) : SV_Target
 			{
 				float2 screenPos = In.screenPos.xy * _ScreenParams.xy;
-				float2 origScreenPos = screenPos;
+				uint2 origScreenPos = screenPos;
 				screenPos.y = g_WinSize.y - screenPos.y;
 				
 			     // Render AA Line, calculate pixel coverage
@@ -226,13 +232,13 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			    	float atten = 0.65f; // 1.5f * SHADOW_ATTENUATION(In);
+			    	float atten = SHADOW_ATTENUATION(In);
 			    	// atten *= dot(In.Tangent.xyz, 
-			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, atten);
+			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.screenPos.z, atten, In.worldPos.xy);
 			    }
 			    
 			    // output a mask RT for final pass    
-			    return float4(LinearEyeDepth(In.pos.z) / 200, LinearEyeDepth(In.pos.z) / 200, LinearEyeDepth(In.pos.z) / 200, 1);
+			    return float4(normalize(In.worldPos.xyz), 1);
 			}
             
             ENDCG

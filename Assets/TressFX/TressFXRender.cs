@@ -104,6 +104,8 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public Color hairColor = new Color(0.647f, 0.419f, 0.274f, 1);
 
+	public Transform debug;
+
 	/// <summary>
 	/// Gets the VP matrix.
 	/// </summary>
@@ -119,6 +121,7 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void Start()
 	{
+		Camera.main.hdr = false;
 		this.hairMaterial = new Material (this.hairShader);
 
 		// Get TressFX master
@@ -265,12 +268,11 @@ public class TressFXRender : MonoBehaviour
 	/// <returns>The VP matrix.</returns>
 	private Matrix4x4 GetVPMatrix()
 	{
-		bool d3d = SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
+		bool d3d = true; // SystemInfo.graphicsDeviceVersion.IndexOf("Direct3D") > -1;
 		Matrix4x4 V = Camera.main.worldToCameraMatrix;
 		Matrix4x4 P = Camera.main.projectionMatrix;
-		if (d3d) {
-			// Invert Y for rendering to a render texture
-			/*for ( int i = 0; i < 4; i++) { P[1,i] = -P[1,i]; }*/
+		if (d3d)
+		{
 			// Scale and bias from OpenGL -> D3D depth range
 			for ( int i = 0; i < 4; i++) { P[2,i] = P[2,i]*0.5f + P[3,i]*0.5f;}
 		}
@@ -314,7 +316,7 @@ public class TressFXRender : MonoBehaviour
 		for (int i = 0; i < this.triangleMeshes.Length; i++)
 		{
 			this.triangleMeshes[i].bounds = renderingBounds;
-			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, this.camera);
+			Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, this.GetComponent<Camera>());
 		}
 
 		// Render shadows
