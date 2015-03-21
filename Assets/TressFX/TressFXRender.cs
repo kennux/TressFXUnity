@@ -117,6 +117,8 @@ public class TressFXRender : MonoBehaviour
 	public float g_MatKs2 = 0.5f;
 	public float g_MatEx2 = 8;
 
+	public Transform directionalLight;
+
 	/// <summary>
 	/// Gets the VP matrix.
 	/// </summary>
@@ -358,6 +360,7 @@ public class TressFXRender : MonoBehaviour
 		this.fragmentSortingShader.SetFloat ("g_MatEx1", this.g_MatEx1);
 		this.fragmentSortingShader.SetFloat ("g_MatKs2", this.g_MatKs2);
 		this.fragmentSortingShader.SetFloat ("g_MatEx2", this.g_MatEx2);
+		this.fragmentSortingShader.SetVector ("g_lightDir", new Vector4 (this.directionalLight.forward.x, this.directionalLight.forward.y, this.directionalLight.forward.z, 1));
 
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
