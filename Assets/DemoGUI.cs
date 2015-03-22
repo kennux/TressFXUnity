@@ -5,6 +5,7 @@ public class DemoGUI : MonoBehaviour
 {
 	public TressFXRender renderInstance;
 	public TressFXSimulation simulationInstance;
+	public Light directionalLight;
 
 	public void OnGUI()
 	{
@@ -33,6 +34,11 @@ public class DemoGUI : MonoBehaviour
 		if (GUI.Button(new Rect (10, 210, 200, 20), this.renderInstance.castShadows ? "On" : "Off"))
 		{
 			this.renderInstance.castShadows = !this.renderInstance.castShadows;
+
+			if (!this.renderInstance.castShadows)
+				this.directionalLight.shadows = LightShadows.None;
+			else
+				this.directionalLight.shadows = LightShadows.Soft;
 		}
 		
 		GUI.Label (new Rect (10, 230, 200, 20), "Alpha threshold (" + this.renderInstance.alphaThreshold + "): ");
@@ -115,5 +121,11 @@ public class DemoGUI : MonoBehaviour
 		
 		GUI.Label (new Rect (Screen.width - 210.0f, 270, 200, 20), "Wind Magnitude (" + this.simulationInstance.windMagnitude + "): ");
 		this.simulationInstance.windMagnitude = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 290, 200, 10), this.simulationInstance.windMagnitude , -50.0f, 50.0f);
+		
+		GUI.Label (new Rect (Screen.width - 210.0f, 310, 200, 20), "Collisions: ");
+		if (GUI.Button(new Rect (Screen.width - 210.0f, 330, 200, 20), this.simulationInstance.collision ? "On" : "Off"))
+		{
+			this.simulationInstance.collision = !this.simulationInstance.collision;
+		}
 	}
 }
