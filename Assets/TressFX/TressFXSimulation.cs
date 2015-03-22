@@ -128,7 +128,7 @@ public class TressFXSimulation : MonoBehaviour
 		this.PrepareFollowHairBeforeTurningIntoGuideKernelId = this.simulationShader.FindKernel ("PrepareFollowHairBeforeTurningIntoGuide");
 	}
 
-	public void LateUpdate()
+	public void Update()
 	{
 		this.SimulateWind ();
 
@@ -147,10 +147,9 @@ public class TressFXSimulation : MonoBehaviour
 		int numOfGroupsForCS_VertexLevel = (int)(((float)(this.master.hairData.m_NumGuideHairVertices) / (float)64)*1);
 		int numOfGroupsForCS_StrandLevel = (int)(((float)(this.master.hairData.m_NumGuideHairStrands)/(float)64)*1);
 
-		// this.simulationShader.Dispatch (this.PrepareFollowHairBeforeTurningIntoGuideKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
-		
+		this.simulationShader.Dispatch (this.PrepareFollowHairBeforeTurningIntoGuideKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 		this.simulationShader.Dispatch (this.IntegrationAndGlobalShapeConstraintsKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
-		this.simulationShader.Dispatch (this.LocalShapeConstraintsKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
+		this.simulationShader.Dispatch (this.LocalShapeConstraintsWithIterationKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
 		this.simulationShader.Dispatch (this.LengthConstriantsWindAndCollisionKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 		this.simulationShader.Dispatch (this.UpdateFollowHairVerticesKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 	}

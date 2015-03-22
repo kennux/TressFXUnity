@@ -66,8 +66,8 @@ float4 g_Wind1;
 float4 g_Wind2;
 float4 g_Wind3;
 
-int g_NumLengthConstraintIterations;
-int g_bCollision;
+uint g_NumLengthConstraintIterations;
+uint g_bCollision;
 
 float g_GravityMagnitude;
 float g_TimeStep;

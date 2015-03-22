@@ -103,5 +103,17 @@ public class DemoGUI : MonoBehaviour
 		
 		GUI.Label (new Rect (Screen.width - 210.0f, 110, 200, 20), "Length Iterations (" + this.simulationInstance.lengthConstraintIterations + "): ");
 		this.simulationInstance.lengthConstraintIterations = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 130, 200, 10), this.simulationInstance.lengthConstraintIterations, 0, 10.0f);
+		
+		GUI.Label (new Rect (Screen.width - 210.0f, 150, 200, 20), "Wind Direction X (" + this.simulationInstance.windDirection.x + "): ");
+		this.simulationInstance.windDirection.x = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 170, 200, 10), this.simulationInstance.windDirection.x, 0, 1.0f);
+
+		GUI.Label (new Rect (Screen.width - 210.0f, 190, 200, 20), "Wind Direction Y (" + this.simulationInstance.windDirection.y + "): ");
+		this.simulationInstance.windDirection.y = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 210, 200, 10), this.simulationInstance.windDirection.y, 0, 1.0f);
+		
+		GUI.Label (new Rect (Screen.width - 210.0f, 230, 200, 20), "Wind Direction Z (" + this.simulationInstance.windDirection.z + "): ");
+		this.simulationInstance.windDirection.z = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 250, 200, 10), this.simulationInstance.windDirection.z, 0, 1.0f);
+		
+		GUI.Label (new Rect (Screen.width - 210.0f, 270, 200, 20), "Wind Magnitude (" + this.simulationInstance.windMagnitude + "): ");
+		this.simulationInstance.windMagnitude = (int)GUI.HorizontalSlider (new Rect (Screen.width - 210.0f, 290, 200, 10), this.simulationInstance.windMagnitude , -50.0f, 50.0f);
 	}
 }
