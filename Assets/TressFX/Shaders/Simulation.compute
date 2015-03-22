@@ -66,8 +66,8 @@ float4 g_Wind1;
 float4 g_Wind2;
 float4 g_Wind3;
 
-uint g_NumLengthConstraintIterations;
-uint g_bCollision;
+int g_NumLengthConstraintIterations;
+int g_bCollision;
 
 float g_GravityMagnitude;
 float g_TimeStep;
@@ -93,10 +93,12 @@ float g_StiffnessForGlobalShapeMatching3;
 float g_GlobalShapeMatchingEffectiveRange3;
 
 uint g_NumOfStrandsPerThreadGroup;
-uint g_NumFollowHairsPerOneGuideHair;
+//uint g_NumFollowHairsPerOneGuideHair;
+int g_NumFollowHairsPerOneGuideHair;
 
 int	g_bWarp;
-int g_NumLocalShapeMatchingIterations;
+//int g_NumLocalShapeMatchingIterations;
+uint g_NumLocalShapeMatchingIterations;
 	
 float3	g_cc0_center;
 float	g_cc0_radius;
@@ -299,7 +301,8 @@ struct CollisionCapsule
 //  Moves the position based on collision with capsule
 //
 //--------------------------------------------------------------------------------------
-bool CapsuleCollision(float4 curPosition, float3 oldPosition, inout float3 newPosition, CollisionCapsule cc, bool bOnlyFirstSphere = false, float friction = 0.4f)
+//bool CapsuleCollision(float4 curPosition, float3 oldPosition, inout float3 newPosition, CollisionCapsule cc, bool bOnlyFirstSphere = false, float friction = 0.4f)
+bool CapsuleCollision(float4 curPosition, float4 oldPosition, inout float3 newPosition, CollisionCapsule cc, bool bOnlyFirstSphere = false, float friction = 0.4f)
 {
 	const float radius = cc.p1.w;
 	const float radius2 = cc.p2.w;
@@ -512,9 +515,10 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 		uint globalVertexIndex = 0;
 		float4 rotGlobal = g_GlobalRotations[globalRootVertexIndex];
 	
-		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
+//		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
+		for ( uint localVertexIndex1 = 1; localVertexIndex1 < numVerticesInTheStrand-1; localVertexIndex1++ )
 		{
-			globalVertexIndex = globalRootVertexIndex + localVertexIndex;
+			globalVertexIndex = globalRootVertexIndex + localVertexIndex1;
 			pos_plus_one = g_HairVertexPositions[globalVertexIndex+1];
 
 			//--------------------------------
@@ -599,10 +603,10 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 	//------------------------------
 	uint globalVertexIndex = 0;
 	float4 sharedStrandPos[MAX_VERTS_PER_STRAND];
-	for ( uint localVertexIndex = 0; localVertexIndex < numVerticesInTheStrand; localVertexIndex++ )
+	for ( uint localVertexIndex2 = 0; localVertexIndex2 < numVerticesInTheStrand; localVertexIndex2++ )
 	{
-		globalVertexIndex = globalRootVertexIndex + localVertexIndex;
-		sharedStrandPos[localVertexIndex] = g_HairVertexPositions[globalVertexIndex];
+		globalVertexIndex = globalRootVertexIndex + localVertexIndex2;
+		sharedStrandPos[localVertexIndex2] = g_HairVertexPositions[globalVertexIndex];
 	}
 
 	//--------------------------------------------
@@ -613,10 +617,10 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 		float4 pos = sharedStrandPos[1];
 		float4 rotGlobal = g_GlobalRotations[globalRootVertexIndex];
 	
-		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
+		for ( uint localVertexIndex3 = 1; localVertexIndex3 < numVerticesInTheStrand-1; localVertexIndex3++ )
 		{
-			globalVertexIndex = globalRootVertexIndex + localVertexIndex;
-			float4 pos_plus_one = sharedStrandPos[localVertexIndex+1];
+			globalVertexIndex = globalRootVertexIndex + localVertexIndex3;
+			float4 pos_plus_one = sharedStrandPos[localVertexIndex3+1];
 
 			//--------------------------------
 			// Update position i and i_plus_1
@@ -653,17 +657,17 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 				rotGlobal = MultQuaternionAndQuaternion(rotGlobal, localRot);
 			}	
 
-			sharedStrandPos[localVertexIndex].xyz = pos.xyz;			
-			sharedStrandPos[localVertexIndex+1].xyz = pos_plus_one.xyz;
+			sharedStrandPos[localVertexIndex3].xyz = pos.xyz;			
+			sharedStrandPos[localVertexIndex3+1].xyz = pos_plus_one.xyz;
 
 			pos = pos_plus_one;
 		}	  
 	}
 
-	for ( uint localVertexIndex = 0; localVertexIndex < numVerticesInTheStrand; localVertexIndex++ )
+	for ( uint localVertexIndex4 = 0; localVertexIndex4 < numVerticesInTheStrand; localVertexIndex4++ )
 	{
-		globalVertexIndex = globalRootVertexIndex + localVertexIndex;
-		g_HairVertexPositions[globalVertexIndex] = sharedStrandPos[localVertexIndex];
+		globalVertexIndex = globalRootVertexIndex + localVertexIndex4;
+		g_HairVertexPositions[globalVertexIndex] = sharedStrandPos[localVertexIndex4];
 	}
 
 	return;

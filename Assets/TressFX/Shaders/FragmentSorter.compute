@@ -37,7 +37,7 @@ float g_MatKs1;
 float g_MatEx1;
 float g_MatKs2;
 float g_MatEx2;
-float4 g_lightDir;
+float3 g_lightDir;
 
 // Final result
 RWTexture2D<float4> Result;
@@ -210,7 +210,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	// Initialize kbuffer
 	for (i = 0; i < KBUFFER_SIZE; i++)
 	{
-		kBuffer[i].depth = 100000;
+		kBuffer[i].depth = 1000000;
 		kBuffer[i].coverage = 0;
 		kBuffer[i].tangent = float3(0,0,0);
 		kBuffer[i].ammountLight = 0;
