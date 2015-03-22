@@ -7,7 +7,7 @@ struct PPLL_STRUCT
     uint	TangentAndCoverage;	
     float	depth;
     uint    uNext;
-    float   ammountLight;
+    half   ammountLight;
     float2	worldPos;
 };
 
@@ -45,7 +45,7 @@ RWTexture2D<float4> Result;
 #define THREAD_GROUP_SIZE 8
 #define NULLPOINTER 0xffffffff
 #define MAX_FRAGMENTS 756
-#define KBUFFER_SIZE 4
+#define KBUFFER_SIZE 8
 #define PI 3.1415926
 #define SUPERSIMPLESHADING
 // #define COLORDEBUG
@@ -210,7 +210,11 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	// Initialize kbuffer
 	for (i = 0; i < KBUFFER_SIZE; i++)
 	{
-		kBuffer[i].depth = 1000000;
+		kBuffer[i].depth = 100000;
+		kBuffer[i].coverage = 0;
+		kBuffer[i].tangent = float3(0,0,0);
+		kBuffer[i].ammountLight = 0;
+		kBuffer[i].worldPos = float2(0,0);
 	}
 	
 	// Will hold the actual count of elements in the kbuffer
@@ -280,7 +284,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 			ammountLight = kBuffer[maxDepthIndex].ammountLight;
 			worldPos = kBuffer[maxDepthIndex].worldPos;
 			
-			// Exchange current backup -> kBuffer
+			// Exchange backup -> kBuffer
 			kBuffer[maxDepthIndex].depth = kDepth;
 			kBuffer[maxDepthIndex].tangent = kTangent;
 			kBuffer[maxDepthIndex].coverage = kCoverage;
@@ -305,11 +309,12 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	
 	#ifdef COLORDEBUG
     float3 debugColor = float3(0,1,0);
+    if (nNumFragments<8) debugColor.xyz = float3(1,1,1);
     if (nNumFragments>32) debugColor.xyz = float3(1,1,0);
     if (nNumFragments>64) debugColor.xyz = float3(1,0.5,0);
     if (nNumFragments>128) debugColor.xyz = float3(1,0,0);
     
-	Result[id.xy] = float4(debugColor, 1);
+	Result[id.xy] = float4(debugColor, 0);
 	#else
 	
 	float4 fragmentColor = float4(0,0,0,1);

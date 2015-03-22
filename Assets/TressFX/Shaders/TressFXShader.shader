@@ -56,7 +56,7 @@
 			    uint	TangentAndCoverage;	
 			    float	depth;
 			    uint    uNext;
-			    float   ammountLight;
+			    half   ammountLight;
 			    float2	worldPos;
 			};
             
@@ -221,8 +221,8 @@
 				screenPos.y = g_WinSize.y - screenPos.y;
 				
 			     // Render AA Line, calculate pixel coverage
-			    float4 proj_pos = float4(   2*screenPos.x*g_WinSize.z - 1.0,  // g_WinSize.z = 1.0/g_WinSize.x
-			                                1.0 - 2*screenPos.y*g_WinSize.w,    // g_WinSize.w = 1.0/g_WinSize.y 
+			    float4 proj_pos = float4( (In.screenPos.x * 2) - 1,
+			                               (In.screenPos.y * 2) - 1,
 			                                1, 
 			                                1);
 				
@@ -233,13 +233,12 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			    	float atten = SHADOW_ATTENUATION(In);
-			    	// atten *= dot(In.Tangent.xyz, 
-			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.screenPos.z, atten, In.worldPos.xy);
+			    	float atten = SHADOW_ATTENUATION(In) * g_directionalLightIntensity;
+			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, atten, In.worldPos.xy);
 			    }
 			    
-			    // output a mask RT for final pass    
-			    return float4(normalize(In.worldPos.xyz), 1);
+			    // output a mask RT for final pass  
+			    return float4(coverage, coverage, coverage, 1);
 			}
             
             ENDCG
@@ -318,5 +317,73 @@
 	        }
 	        ENDCG
 	    }
+	    
+	    
+		
+		// Pass to render object as a shadow caster
+		/*Pass
+		{
+			Name "ShadowCaster"
+			Tags { "LightMode" = "ShadowCaster" }
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#pragma target 5.0
+			#pragma multi_compile_shadowcaster
+	            
+			#include "UnityCG.cginc"
+			
+			StructuredBuffer<float3> g_HairVertexTangents;
+			StructuredBuffer<float3> g_HairVertexPositions;
+			StructuredBuffer<int> g_TriangleIndicesBuffer;
+			StructuredBuffer<float> g_HairThicknessCoeffs;
+			uniform float4 g_WinSize;
+			uniform float g_FiberRadius;
+			uniform float g_bExpandPixels;
+			uniform float g_bThinTip;
+			
+			struct v2f
+			{ 
+				V2F_SHADOW_CASTER;
+			};
+
+			v2f vert(appdata_base v)
+			{
+	            v2f o;
+	            
+	        	// Access the current line segment
+				uint vertexId = g_TriangleIndicesBuffer[(int)v.vertex.x];
+				
+			    // Access the current line segment
+			    uint index = vertexId / 2;  // vertexId is actually the indexed vertex id when indexed triangles are used
+				
+			    // Get updated positions and tangents from simulation result
+			    float3 vert = g_HairVertexPositions[index].xyz;
+			    float3 t = g_HairVertexTangents[index].xyz;
+			    fixed ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+
+			    // Calculate right and projected right vectors
+			    fixed3 right      = normalize( cross( t, normalize(vert - _WorldSpaceCameraPos) ) );
+			    
+			    // g_bExpandPixels should be set to 0 at minimum from the CPU side; this would avoid the below test
+			    fixed expandPixels = (g_bExpandPixels < 0 ) ? 0.0 : 0.71;
+			    
+			    // Which direction to expand?
+			    fixed fDirIndex = (vertexId & 0x01) ? -1.0 : 1.0;
+			    
+			    // Calculate the edge position
+			    v.vertex = float4(vert + fDirIndex * right * ratio * g_FiberRadius, 1.0);
+	            
+				TRANSFER_SHADOW_CASTER(o)
+				return o;
+			}
+
+			float4 frag( v2f i ) : COLOR
+			{
+				SHADOW_CASTER_FRAGMENT(i)
+			}
+			ENDCG
+		}*/
 	}
 }

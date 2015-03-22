@@ -151,7 +151,7 @@ public class TressFXRender : MonoBehaviour
 		this.LinkedListHead.hideFlags = HideFlags.HideAndDontSave;
 		this.LinkedListHead.Create ();
 
-		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 16, ComputeBufferType.Counter);
+		this.LinkedList = new ComputeBuffer (this.totalHairLayers * Screen.width * Screen.height, 24, ComputeBufferType.Counter);
 
 		// Generate triangle meshes
 		this.triangleMeshes = this.GenerateTriangleMeshes ();
@@ -376,9 +376,6 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void OnRenderObject()
 	{
-		/*if (Camera.current != Camera.main)
-			return;*/
-
 		this.SortFragments ();
 
 		// Apply fullscreen quad
