@@ -2,7 +2,6 @@ Unity TressFX Portation
 ==============
 
 This project is a portation of AMD's TressFX hair simulation aiming for fully implementing realtime hair rendering and simulation into Unity3D.
-
 AMD's TressFX Sample can get found here: http://developer.amd.com/tools-and-sdks/graphics-development/amd-radeon-sdk/
 
 Simulation
@@ -10,44 +9,17 @@ Simulation
 
 The simulation is based on a DX11 ComputeShader which does all the Simulation of the hair on the GPU.
 
-Rendering
-==============
-
-The rendering in AMD's sample is quite different than my implementation.
-I use a 1-pass fragment shader as forward rendering shader which uses Kajiya-Kay lighting.
-It does not support transparency, but you can easily implement your own shaders which i'll describe later.
-
-AMD uses a multipass shader for order-independent transparency and overblending the single hair framgents.
-
-Implementing own Rednering shaders
---------------
-
-For implementing your own rendering shader you can either write your own version of the ATressFXRender class or use it as the base for rendering (which i suggest for simplicity).
-
-After the initialization of the ATressFXRender baseclass there are 2 types of meshes available.
-The property meshes is a list of mesh arrays, each list index contains all meshes for one hair file.
-The property lineMeshes is an array of meshes which contain the same data as the meshes list but as a line topology mesh.
-In the BasicTressFXRender this gets used for rendering the hair shadow.
-
-The linemeshes get built with the vertex indices in the vertex positions compute buffer as vertex x-coordinate.
-The meshes get built with the triangle indices index in the triangle indices compute buffer as vertex x-coordinate.
-So the first vertex in the linemeshes is 0|0|0, the second one is 1|0|0, the third is 2|0|0. Same for the meshes property.
-
-So you need to pass vertex positions buffer and / or triangle indices buffer to your shader as StructuredBuffer.
-For reference you should take a look at the HairShader.shader and the BasicTressFXRender.cs file, which is a basic hair shader and rendering implementation.
-
-After writing your implementation you only need to attach it to the TressFX gameobject, it will automatically find and use it.
-
 Features
 ==============
 
-* Fully implemented TressFX 2.0 Simulation
-* Basic rendering implementation supporting Forward rendering and ambient an directional lighting
+* Fully implemented TressFX 2.2 Simulation
+* TressFX-Equivalent rendering implementation
+* Unity editor integration
 
 Licenses
 ==============
 
-AMD Files (HairSimulate.compute, the example hairs and character model)
+AMD Files (HairSimulate.compute, the example hairs and character model and some parts of the rendering shaders)
 --------------
 Copyright 2014 ADVANCED MICRO DEVICES, INC.  All Rights Reserved.
 
@@ -92,7 +64,7 @@ acknowledgement of AMD's proprietary rights in them.
 EXPORT RESTRICTIONS: The Materials may be subject to export restrictions as
 stated in the Software License Agreement.
 
-Unity Implementation (CSharp files and parts of the HairShader)
+Unity Implementation (CSharp files and some parts of the HairShader)
 --------------
 
 Copyright (c) 2014 Kenneth Ellersdorfer
