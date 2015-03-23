@@ -56,6 +56,10 @@
 #pragma kernel UpdateFollowHairVertices
 #pragma kernel PrepareFollowHairBeforeTurningIntoGuide
 
+// If you change the value below, you must change it in TressFXSimulation.cs as well. 
+#define THREAD_GROUP_SIZE 64
+#define MAX_VERTS_PER_STRAND 16
+
 //constants that change frame to frame
 float4x4 g_ModelTransformForHead;
 
@@ -72,32 +76,10 @@ int g_bCollision;
 float g_GravityMagnitude;
 float g_TimeStep;
 
-float g_Damping0;
-float g_StiffnessForLocalShapeMatching0;
-float g_StiffnessForGlobalShapeMatching0;
-float g_GlobalShapeMatchingEffectiveRange0;
-
-float g_Damping1;
-float g_StiffnessForLocalShapeMatching1;
-float g_StiffnessForGlobalShapeMatching1;
-float g_GlobalShapeMatchingEffectiveRange1;
-
-float g_Damping2;
-float g_StiffnessForLocalShapeMatching2;
-float g_StiffnessForGlobalShapeMatching2;
-float g_GlobalShapeMatchingEffectiveRange2;
-
-float g_Damping3;
-float g_StiffnessForLocalShapeMatching3;
-float g_StiffnessForGlobalShapeMatching3;	
-float g_GlobalShapeMatchingEffectiveRange3;
-
 uint g_NumOfStrandsPerThreadGroup;
-//uint g_NumFollowHairsPerOneGuideHair;
 int g_NumFollowHairsPerOneGuideHair;
 
 int	g_bWarp;
-//int g_NumLocalShapeMatchingIterations;
 uint g_NumLocalShapeMatchingIterations;
 	
 float3	g_cc0_center;
@@ -122,15 +104,28 @@ RWStructuredBuffer<int>		g_HairStrandType			: register(t1);
 RWStructuredBuffer<float4>	g_HairRefVecsInLocalFrame	: register(t2); 
 RWStructuredBuffer<float4>	g_FollowHairRootOffset   	: register(t3); 
 
-
-// If you change the value below, you must change it in TressFXAsset.h as well. 
-#define THREAD_GROUP_SIZE 64
+// Config arrays
+float g_Damping0;
+float g_Damping1;
+float g_Damping2;
+float g_Damping3;
+float g_StiffnessForLocalShapeMatching0;
+float g_StiffnessForLocalShapeMatching1;
+float g_StiffnessForLocalShapeMatching2;
+float g_StiffnessForLocalShapeMatching3;
+float g_StiffnessForGlobalShapeMatching0;
+float g_StiffnessForGlobalShapeMatching1;
+float g_StiffnessForGlobalShapeMatching2;
+float g_StiffnessForGlobalShapeMatching3;
+float g_GlobalShapeMatchingEffectiveRange0;
+float g_GlobalShapeMatchingEffectiveRange1;
+float g_GlobalShapeMatchingEffectiveRange2;
+float g_GlobalShapeMatchingEffectiveRange3;
 
 groupshared float4 sharedPos[THREAD_GROUP_SIZE];
 groupshared float4 sharedTangent[THREAD_GROUP_SIZE];
 groupshared float  sharedLength[THREAD_GROUP_SIZE];
 
-#define MAX_VERTS_PER_STRAND 16
 
 //--------------------------------------------------------------------------------------
 // 
@@ -142,6 +137,58 @@ bool IsMovable(float4 particle)
     if ( particle.w > 0 )
         return true;
     return false;      
+}
+
+float GetDamping(uint strandType)
+{
+	if (strandType == 0)
+		return g_StiffnessForLocalShapeMatching0;
+	if (strandType == 1)
+		return g_StiffnessForLocalShapeMatching1;
+	if (strandType == 2)
+		return g_StiffnessForLocalShapeMatching2;
+	if (strandType == 3)
+		return g_StiffnessForLocalShapeMatching3;
+	return 0.03;
+}
+
+float GetStiffnessForLocalShapeMatching(uint strandType)
+{
+	if (strandType == 0)
+		return g_StiffnessForLocalShapeMatching0;
+	if (strandType == 1)
+		return g_StiffnessForLocalShapeMatching1;
+	if (strandType == 2)
+		return g_StiffnessForLocalShapeMatching2;
+	if (strandType == 3)
+		return g_StiffnessForLocalShapeMatching3;
+	return 0.95;
+}
+
+float GetStiffnessForGlobalShapeMatching(uint strandType)
+{
+	if (strandType == 0)
+		return g_GlobalShapeMatchingEffectiveRange0;
+	if (strandType == 1)
+		return g_GlobalShapeMatchingEffectiveRange1;
+	if (strandType == 2)
+		return g_GlobalShapeMatchingEffectiveRange2;
+	if (strandType == 3)
+		return g_GlobalShapeMatchingEffectiveRange3;
+	return 0.2;
+}
+
+float GetGlobalShapeMatchingEffectiveRange(uint strandType)
+{
+	if (strandType == 0)
+		return g_GlobalShapeMatchingEffectiveRange0;
+	if (strandType == 1)
+		return g_GlobalShapeMatchingEffectiveRange1;
+	if (strandType == 2)
+		return g_GlobalShapeMatchingEffectiveRange2;
+	if (strandType == 3)
+		return g_GlobalShapeMatchingEffectiveRange3;
+	return 0.3;
 }
 
 float2 ConstraintMultiplier(float4 particle0, float4 particle1)
@@ -301,7 +348,6 @@ struct CollisionCapsule
 //  Moves the position based on collision with capsule
 //
 //--------------------------------------------------------------------------------------
-//bool CapsuleCollision(float4 curPosition, float3 oldPosition, inout float3 newPosition, CollisionCapsule cc, bool bOnlyFirstSphere = false, float friction = 0.4f)
 bool CapsuleCollision(float4 curPosition, float4 oldPosition, inout float3 newPosition, CollisionCapsule cc, bool bOnlyFirstSphere = false, float friction = 0.4f)
 {
 	const float radius = cc.p1.w;
@@ -409,16 +455,7 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
     GroupMemoryBarrierWithGroupSync();
 
     // Integrate
-	float dampingCoeff = 0.03f;
-
-    if ( strandType == 0 )
-        dampingCoeff = g_Damping0;
-    else if ( strandType == 1 ) 
-        dampingCoeff = g_Damping1;
-    else if ( strandType == 2 ) 
-        dampingCoeff = g_Damping2;
-    else if ( strandType == 3 )
-        dampingCoeff = g_Damping3;
+	float dampingCoeff = GetDamping(strandType);
 
     float4 oldPos;
 	if (g_bWarp)
@@ -433,29 +470,8 @@ void IntegrationAndGlobalShapeConstraints(uint GIndex : SV_GroupIndex,
         sharedPos[indexForSharedMem] = initialPos;
 
     // Global Shape Constraints
-    float stiffnessForGlobalShapeMatching = 0;
-    float globalShapeMatchingEffectiveRange = 0;
-
-    if ( strandType == 0 ) 
-    {
-        stiffnessForGlobalShapeMatching = g_StiffnessForGlobalShapeMatching0;
-        globalShapeMatchingEffectiveRange = g_GlobalShapeMatchingEffectiveRange0;
-    }
-    else if ( strandType == 1 ) 
-    {
-        stiffnessForGlobalShapeMatching = g_StiffnessForGlobalShapeMatching1;
-        globalShapeMatchingEffectiveRange = g_GlobalShapeMatchingEffectiveRange1;
-    }
-    else if ( strandType == 2 ) 
-    {
-        stiffnessForGlobalShapeMatching = g_StiffnessForGlobalShapeMatching2;
-        globalShapeMatchingEffectiveRange = g_GlobalShapeMatchingEffectiveRange2;
-    }
-    else if ( strandType == 3 ) 
-    {
-        stiffnessForGlobalShapeMatching = g_StiffnessForGlobalShapeMatching3;
-        globalShapeMatchingEffectiveRange = g_GlobalShapeMatchingEffectiveRange3;
-    }
+    float stiffnessForGlobalShapeMatching = GetStiffnessForGlobalShapeMatching(strandType);
+    float globalShapeMatchingEffectiveRange = GetGlobalShapeMatchingEffectiveRange(strandType);
     
     if ( stiffnessForGlobalShapeMatching > 0 && globalShapeMatchingEffectiveRange )
     {
@@ -492,16 +508,7 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 	CalcIndicesInStrandLevelMaster(GIndex, GId.x, globalStrandIndex, numVerticesInTheStrand, globalRootVertexIndex, strandType);
 
 	// stiffness for local shape constraints
-	float stiffnessForLocalShapeMatching = 0.4f;
-
-	if ( strandType == 2 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching2;
-	else if ( strandType == 3 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching3;
-	else if ( strandType == 1 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching1;
-	else if ( strandType == 0 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching0;
+	float stiffnessForLocalShapeMatching = GetStiffnessForLocalShapeMatching(strandType);
 
 	//1.0 for stiffness makes things unstable sometimes.
 	stiffnessForLocalShapeMatching = 0.5f*min(stiffnessForLocalShapeMatching, 0.95f);
@@ -515,10 +522,9 @@ void LocalShapeConstraints(uint GIndex : SV_GroupIndex,
 		uint globalVertexIndex = 0;
 		float4 rotGlobal = g_GlobalRotations[globalRootVertexIndex];
 	
-//		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
-		for ( uint localVertexIndex1 = 1; localVertexIndex1 < numVerticesInTheStrand-1; localVertexIndex1++ )
+		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
 		{
-			globalVertexIndex = globalRootVertexIndex + localVertexIndex1;
+			globalVertexIndex = globalRootVertexIndex + localVertexIndex;
 			pos_plus_one = g_HairVertexPositions[globalVertexIndex+1];
 
 			//--------------------------------
@@ -584,16 +590,7 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 	CalcIndicesInStrandLevelMaster(GIndex, GId.x, globalStrandIndex, numVerticesInTheStrand, globalRootVertexIndex, strandType);
 
 	// stiffness for local shape constraints
-	float stiffnessForLocalShapeMatching = 0.4f;
-
-	if ( strandType == 2 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching2;
-	else if ( strandType == 3 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching3;
-	else if ( strandType == 1 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching1;
-	else if ( strandType == 0 ) 
-		stiffnessForLocalShapeMatching = g_StiffnessForLocalShapeMatching0;
+	float stiffnessForLocalShapeMatching = GetStiffnessForLocalShapeMatching(strandType);
 
 	//1.0 for stiffness makes things unstable sometimes.
 	stiffnessForLocalShapeMatching = 0.5f*min(stiffnessForLocalShapeMatching, 0.95f);
@@ -603,10 +600,12 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 	//------------------------------
 	uint globalVertexIndex = 0;
 	float4 sharedStrandPos[MAX_VERTS_PER_STRAND];
-	for ( uint localVertexIndex2 = 0; localVertexIndex2 < numVerticesInTheStrand; localVertexIndex2++ )
+	uint localVertexIndex = 0;
+	
+	for ( localVertexIndex = 0; localVertexIndex < numVerticesInTheStrand; localVertexIndex++ )
 	{
-		globalVertexIndex = globalRootVertexIndex + localVertexIndex2;
-		sharedStrandPos[localVertexIndex2] = g_HairVertexPositions[globalVertexIndex];
+		globalVertexIndex = globalRootVertexIndex + localVertexIndex;
+		sharedStrandPos[localVertexIndex] = g_HairVertexPositions[globalVertexIndex];
 	}
 
 	//--------------------------------------------
@@ -617,10 +616,10 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 		float4 pos = sharedStrandPos[1];
 		float4 rotGlobal = g_GlobalRotations[globalRootVertexIndex];
 	
-		for ( uint localVertexIndex3 = 1; localVertexIndex3 < numVerticesInTheStrand-1; localVertexIndex3++ )
+		for ( uint localVertexIndex = 1; localVertexIndex < numVerticesInTheStrand-1; localVertexIndex++ )
 		{
-			globalVertexIndex = globalRootVertexIndex + localVertexIndex3;
-			float4 pos_plus_one = sharedStrandPos[localVertexIndex3+1];
+			globalVertexIndex = globalRootVertexIndex + localVertexIndex;
+			float4 pos_plus_one = sharedStrandPos[localVertexIndex+1];
 
 			//--------------------------------
 			// Update position i and i_plus_1
@@ -657,17 +656,17 @@ void LocalShapeConstraintsWithIteration(uint GIndex : SV_GroupIndex,
 				rotGlobal = MultQuaternionAndQuaternion(rotGlobal, localRot);
 			}	
 
-			sharedStrandPos[localVertexIndex3].xyz = pos.xyz;			
-			sharedStrandPos[localVertexIndex3+1].xyz = pos_plus_one.xyz;
+			sharedStrandPos[localVertexIndex].xyz = pos.xyz;			
+			sharedStrandPos[localVertexIndex+1].xyz = pos_plus_one.xyz;
 
 			pos = pos_plus_one;
 		}	  
 	}
 
-	for ( uint localVertexIndex4 = 0; localVertexIndex4 < numVerticesInTheStrand; localVertexIndex4++ )
+	for ( localVertexIndex = 0; localVertexIndex < numVerticesInTheStrand; localVertexIndex++ )
 	{
-		globalVertexIndex = globalRootVertexIndex + localVertexIndex4;
-		g_HairVertexPositions[globalVertexIndex] = sharedStrandPos[localVertexIndex4];
+		globalVertexIndex = globalRootVertexIndex + localVertexIndex;
+		g_HairVertexPositions[globalVertexIndex] = sharedStrandPos[localVertexIndex];
 	}
 
 	return;

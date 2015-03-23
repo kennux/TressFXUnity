@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-
 /// <summary>
 /// Tress FX simulation implementation.
 /// Uses the AMD Simulation shader to simulate the hair strands.
@@ -99,6 +98,11 @@ public class TressFXSimulation : MonoBehaviour
 	private Vector4 windForce3;
 	private Vector4 windForce4;
 
+	// Hair sim configuration
+	private const int maxHairSections = 4;
+
+	private float lastTimeSimulated = 0;
+
 	public void Start()
 	{
 		// No shader? :-(
@@ -114,7 +118,14 @@ public class TressFXSimulation : MonoBehaviour
 
 		if (this.master == null)
 		{
-			Debug.LogError ("No TressFX intance attached to TressFXSimulation's gameobject :-'(");
+			Debug.LogError ("No TressFX intance attached to TressFXSimulation's gameobject :'-(");
+			this.enabled = false;
+			return;
+		}
+
+		if (this.master.hairData.hairPartConfig.Length > maxHairSections)
+		{
+			Debug.LogError ("TressFX mesh has more hair sections than allowed :'-(");
 			this.enabled = false;
 			return;
 		}
@@ -130,6 +141,12 @@ public class TressFXSimulation : MonoBehaviour
 
 	public void Update()
 	{
+		// Frame skipping if rendering too fast
+		if (Time.time - this.lastTimeSimulated < 1.0f / 60.0f && !this.isWarping)
+			return;
+
+		this.lastTimeSimulated = Time.time;
+
 		this.SimulateWind ();
 
 		// Set constant data
@@ -261,27 +278,6 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetInt ("g_bWarp", this.isWarping ? 1 : 0);
 		this.simulationShader.SetInt ("g_NumLocalShapeMatchingIterations", this.localShapeConstraintIterations);
 
-		// Hair values
-		this.simulationShader.SetFloat ("g_Damping0", this.master.hairData.Damping0);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching0", this.master.hairData.StiffnessForLocalShapeMatching0);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching0", this.master.hairData.StiffnessForGlobalShapeMatching0);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange0", this.master.hairData.GlobalShapeMatchingEffectiveRange0);
-		
-		this.simulationShader.SetFloat ("g_Damping1", this.master.hairData.Damping1);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching1", this.master.hairData.StiffnessForLocalShapeMatching1);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching1", this.master.hairData.StiffnessForGlobalShapeMatching1);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange1", this.master.hairData.GlobalShapeMatchingEffectiveRange1);
-		
-		this.simulationShader.SetFloat ("g_Damping2", this.master.hairData.Damping2);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching2", this.master.hairData.StiffnessForLocalShapeMatching2);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching2", this.master.hairData.StiffnessForGlobalShapeMatching2);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange2", this.master.hairData.GlobalShapeMatchingEffectiveRange2);
-		
-		this.simulationShader.SetFloat ("g_Damping3", this.master.hairData.Damping3);
-		this.simulationShader.SetFloat ("g_StiffnessForLocalShapeMatching3", this.master.hairData.StiffnessForLocalShapeMatching3);
-		this.simulationShader.SetFloat ("g_StiffnessForGlobalShapeMatching3", this.master.hairData.StiffnessForGlobalShapeMatching3);
-		this.simulationShader.SetFloat ("g_GlobalShapeMatchingEffectiveRange3", this.master.hairData.GlobalShapeMatchingEffectiveRange3);
-
 		// Colliders
 		this.simulationShader.SetVector ("g_cc0_center", new Vector3(-0.095f, 92.000f, -9.899f));
 		this.simulationShader.SetVector ("g_cc1_center", new Vector3(-0.405f, 93.707f, 5.111f));
@@ -292,6 +288,15 @@ public class TressFXSimulation : MonoBehaviour
 		this.simulationShader.SetFloat ("g_cc0_radius2", 26.5f*26.5f);
 		this.simulationShader.SetFloat ("g_cc1_radius2", 24.113f*24.113f);
 		this.simulationShader.SetFloat ("g_cc2_radius2", 25.500f*25.500f);
+
+		// Set config constants
+		for (int i = 0; i < this.master.hairData.hairPartConfig.Length; i++)
+		{
+			this.simulationShader.SetFloat("g_Damping"+i, this.master.hairData.hairPartConfig[i].Damping);
+			this.simulationShader.SetFloat("g_StiffnessForLocalShapeMatching"+i, this.master.hairData.hairPartConfig[i].StiffnessForLocalShapeMatching);
+			this.simulationShader.SetFloat("g_StiffnessForGlobalShapeMatching"+i, this.master.hairData.hairPartConfig[i].StiffnessForGlobalShapeMatching);
+			this.simulationShader.SetFloat("g_GlobalShapeMatchingEffectiveRange"+i, this.master.hairData.hairPartConfig[i].GlobalShapeMatchingEffectiveRange);
+		}
 	}
 
 	/// <summary>

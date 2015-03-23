@@ -18,6 +18,7 @@ public class TressFX : MonoBehaviour
 	public ComputeBuffer g_GlobalRotations;
 	public ComputeBuffer g_LocalRotations;
 
+	public ComputeBuffer g_HairThicknessCoeffs;
 	public ComputeBuffer g_HairRestLengthSRV;
 	public ComputeBuffer g_HairStrandType;
 	public ComputeBuffer g_HairRefVecsInLocalFrame;
@@ -47,6 +48,7 @@ public class TressFX : MonoBehaviour
 		this.g_HairStrandType = this.InitializeBuffer (this.hairData.m_pHairStrandType, 4);
 		this.g_HairRefVecsInLocalFrame = this.InitializeBuffer (this.hairData.m_pRefVectors, 16);
 		this.g_FollowHairRootOffset = this.InitializeBuffer (this.hairData.m_pFollowRootOffset, 16);
+		this.g_HairThicknessCoeffs = this.InitializeBuffer (this.hairData.m_pThicknessCoeffs, 4);
 
 		// Get other parts
 		this.simulation = this.GetComponent<TressFXSimulation> ();
@@ -78,7 +80,8 @@ public class TressFX : MonoBehaviour
 		this.g_HairVertexTangents.Release ();
 		this.g_GlobalRotations.Release ();
 		this.g_LocalRotations.Release ();
-		
+
+		this.g_HairThicknessCoeffs.Release ();
 		this.g_HairRestLengthSRV.Release ();
 		this.g_HairStrandType.Release ();
 		this.g_HairRefVecsInLocalFrame.Release ();

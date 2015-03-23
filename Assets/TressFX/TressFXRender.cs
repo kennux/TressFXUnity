@@ -98,24 +98,11 @@ public class TressFXRender : MonoBehaviour
 	/// If this is set to true an additional rendering pass for shadows is rendered.
 	/// </summary>
 	public bool castShadows = true;
-	
-	/// <summary>
-	/// The color of the hair.
-	/// </summary>
-	public Color hairColor = new Color(0.647f, 0.419f, 0.274f, 1);
 
-	// Rendering/material variables
-	public float fiberAlpha = 1.0f;
-	public float fiberRadius = 0.14f;
-	public bool expandPixels = true;
-	public bool thinTip = true;
-	public float alphaThreshold = 0.1f;
-	public float g_MatKd = 0.4f;
-	public float g_MatKa = 0;
-	public float g_MatKs1 = 0.14f;
-	public float g_MatEx1 = 80;
-	public float g_MatKs2 = 0.5f;
-	public float g_MatEx2 = 8;
+	/// <summary>
+	/// The hair material
+	/// </summary>
+	public TressFXHairMaterial hairRenderingMaterial;
 
 	public Transform directionalLight;
 
@@ -308,18 +295,18 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetBuffer ("g_HairVertexTangents", this.master.g_HairVertexTangents);
 		this.hairMaterial.SetBuffer ("g_HairVertexPositions", this.master.g_HairVertexPositions);
 		this.hairMaterial.SetBuffer ("g_TriangleIndicesBuffer", this.g_TriangleIndicesBuffer);
-		this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairVertexTangents);
+		this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairThicknessCoeffs);
 		
 		this.hairMaterial.SetMatrix ("VPMatrix", this.VPMatrix);
 		this.hairMaterial.SetMatrix ("MMatrix", this.transform.localToWorldMatrix);
 		this.hairMaterial.SetMatrix ("InvVPMatrix", this.VPMatrix.inverse);
 		
 		// Set rendering variables
-		this.hairMaterial.SetInt ("g_bExpandPixels", this.expandPixels ? 1 : 0);
-		this.hairMaterial.SetFloat ("g_FiberRadius", this.fiberRadius);
-		this.hairMaterial.SetFloat ("g_FiberAlpha", this.fiberAlpha);
-		this.hairMaterial.SetFloat ("g_bThinTip", this.thinTip ? 1 : 0);
-		this.hairMaterial.SetFloat ("g_alphaThreshold", this.alphaThreshold);
+		this.hairMaterial.SetInt ("g_bExpandPixels", this.hairRenderingMaterial.expandPixels ? 1 : 0);
+		this.hairMaterial.SetFloat ("g_FiberRadius", this.hairRenderingMaterial.fiberRadius);
+		this.hairMaterial.SetFloat ("g_FiberAlpha", this.hairRenderingMaterial.fiberAlpha);
+		this.hairMaterial.SetFloat ("g_bThinTip", this.hairRenderingMaterial.thinTip ? 1 : 0);
+		this.hairMaterial.SetFloat ("g_alphaThreshold", this.hairRenderingMaterial.alphaThreshold);
 		this.hairMaterial.SetVector ("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
 		this.hairMaterial.SetFloat ("g_directionalLightIntensity", this.directionalLight.GetComponent<Light>().intensity);
 		
@@ -352,15 +339,15 @@ public class TressFXRender : MonoBehaviour
 	protected void SortFragments()
 	{
 		this.fragmentSortingShader.SetVector("screenSize", new Vector4(Screen.width, Screen.height, 0, 0));
-		this.fragmentSortingShader.SetVector ("g_MatBaseColor", new Vector4 (this.hairColor.r, this.hairColor.g, this.hairColor.b, this.hairColor.a));
+		this.fragmentSortingShader.SetVector ("g_MatBaseColor", new Vector4 (this.hairRenderingMaterial.hairColor.r, this.hairRenderingMaterial.hairColor.g, this.hairRenderingMaterial.hairColor.b, this.hairRenderingMaterial.hairColor.a));
 		this.fragmentSortingShader.SetVector("g_vEye", new Vector4(Camera.main.transform.position.x, Camera.main.transform.position.y, Camera.main.transform.position.z, 1));
 		this.fragmentSortingShader.SetFloats ("InvVPMatrix", this.MatrixToFloatArray(this.VPMatrix.inverse));
-		this.fragmentSortingShader.SetFloat ("g_MatKd", this.g_MatKd);
-		this.fragmentSortingShader.SetFloat ("g_MatKa", this.g_MatKa);
-		this.fragmentSortingShader.SetFloat ("g_MatKs1", this.g_MatKs1);
-		this.fragmentSortingShader.SetFloat ("g_MatEx1", this.g_MatEx1);
-		this.fragmentSortingShader.SetFloat ("g_MatKs2", this.g_MatKs2);
-		this.fragmentSortingShader.SetFloat ("g_MatEx2", this.g_MatEx2);
+		this.fragmentSortingShader.SetFloat ("g_MatKd", this.hairRenderingMaterial.g_MatKd);
+		this.fragmentSortingShader.SetFloat ("g_MatKa", this.hairRenderingMaterial.g_MatKa);
+		this.fragmentSortingShader.SetFloat ("g_MatKs1", this.hairRenderingMaterial.g_MatKs1);
+		this.fragmentSortingShader.SetFloat ("g_MatEx1", this.hairRenderingMaterial.g_MatEx1);
+		this.fragmentSortingShader.SetFloat ("g_MatKs2", this.hairRenderingMaterial.g_MatKs2);
+		this.fragmentSortingShader.SetFloat ("g_MatEx2", this.hairRenderingMaterial.g_MatEx2);
 		this.fragmentSortingShader.SetVector ("g_lightDir", new Vector4 (this.directionalLight.forward.x, this.directionalLight.forward.y, this.directionalLight.forward.z, 1));
 
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);

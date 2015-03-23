@@ -173,7 +173,7 @@
 			    float3 v = g_HairVertexPositions[index].xyz;
 
 			    // Get hair strand thickness
-			    float ratio = 1.0f; // ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
+			    float ratio = ( g_bThinTip > 0 ) ? g_HairThicknessCoeffs[index] : 1.0f;
 
 			    // Calculate right and projected right vectors
 			    float3 right      = normalize( cross( t, normalize(v - _WorldSpaceCameraPos) ) );

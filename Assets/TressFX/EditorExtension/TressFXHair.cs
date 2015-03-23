@@ -9,6 +9,22 @@ using UnityEditor;
 using System.IO;
 using System;
 
+[Serializable]
+public struct HairPartConfig
+{
+	[SerializeField]
+	public float Damping;
+	
+	[SerializeField]
+	public float StiffnessForLocalShapeMatching;
+	
+	[SerializeField]
+	public float StiffnessForGlobalShapeMatching;
+	
+	[SerializeField]
+	public float GlobalShapeMatchingEffectiveRange;
+}
+
 /// <summary>
 /// Struct which represents one vertex in a strand.
 /// </summary>
@@ -217,100 +233,10 @@ public class TressFXHair : ScriptableObject
 	public int[] m_LineIndices;
 	
 	/// <summary>
-	/// The damping value for hair section 0.
+	/// The hair parts simulation configuration.
 	/// </summary>
 	[SerializeField]
-	public float Damping0;
-	
-	/// <summary>
-	/// The stiffness for local shape matching for hair section 0.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForLocalShapeMatching0;
-	
-	/// <summary>
-	/// The stiffness for global shape matching for hair section 0.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForGlobalShapeMatching0;
-	
-	/// <summary>
-	/// The effective matching range for global shape matching for hair section 0.
-	/// </summary>
-	[SerializeField]
-	public float GlobalShapeMatchingEffectiveRange0;
-
-	/// <summary>
-	/// The damping value for hair section 1.
-	/// </summary>
-	[SerializeField]
-	public float Damping1;
-	
-	/// <summary>
-	/// The stiffness for local shape matching for hair section 1.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForLocalShapeMatching1;
-	
-	/// <summary>
-	/// The stiffness for global shape matching for hair section 1.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForGlobalShapeMatching1;
-	
-	/// <summary>
-	/// The effective matching range for global shape matching for hair section 1.
-	/// </summary>
-	[SerializeField]
-	public float GlobalShapeMatchingEffectiveRange1;
-
-	/// <summary>
-	/// The damping value for hair section 2.
-	/// </summary>
-	[SerializeField]
-	public float Damping2;
-	
-	/// <summary>
-	/// The stiffness for local shape matching for hair section 2.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForLocalShapeMatching2;
-	
-	/// <summary>
-	/// The stiffness for global shape matching for hair section 2.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForGlobalShapeMatching2;
-	
-	/// <summary>
-	/// The effective matching range for global shape matching for hair section 2.
-	/// </summary>
-	[SerializeField]
-	public float GlobalShapeMatchingEffectiveRange2;
-
-	/// <summary>
-	/// The damping value for hair section 3.
-	/// </summary>
-	[SerializeField]
-	public float Damping3;
-	
-	/// <summary>
-	/// The stiffness for local shape matching for hair section 3.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForLocalShapeMatching3;
-	
-	/// <summary>
-	/// The stiffness for global shape matching for hair section 3.
-	/// </summary>
-	[SerializeField]
-	public float StiffnessForGlobalShapeMatching3;
-	
-	/// <summary>
-	/// The effective matching range for global shape matching for hair section 3.
-	/// </summary>
-	[SerializeField]
-	public float GlobalShapeMatchingEffectiveRange3;
+	public HairPartConfig[] hairPartConfig;
 
 	/// <summary>
 	/// Opens the hair data (tfxb) at the given path.
@@ -355,6 +281,18 @@ public class TressFXHair : ScriptableObject
 			this.m_pFollowRootOffset = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairStrands);
 			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading rest lengths...", 0.7f);
 			this.m_pRestLengths = TressFXLoader.ReadFloatArray (reader, this.m_NumTotalHairVertices);
+
+			// Determine how much hair strand types are available
+			List<int> strandTypes = new List<int>();
+			for (int i = 0; i < this.m_pHairStrandType.Length; i++)
+			{
+				if (!strandTypes.Contains(this.m_pHairStrandType[i]))
+				{
+					strandTypes.Add(this.m_pHairStrandType[i]);
+				}
+			}
+
+			this.hairPartConfig = new HairPartConfig[strandTypes.Count];
 			
 			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading bounding sphere...", 0.75f);
 			// Load bounding sphere
@@ -390,7 +328,7 @@ public class TressFXHair : ScriptableObject
 	/// <summary>
 	/// Creates a new asset.
 	/// </summary>
-	[MenuItem("Assets/Create/TressFX Hair")]
+	[MenuItem("Assets/Create/TressFX/Hair")]
 	public static void CreateAsset()
 	{
 		string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "tfxb");

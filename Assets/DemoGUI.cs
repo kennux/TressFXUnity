@@ -7,27 +7,43 @@ public class DemoGUI : MonoBehaviour
 	public TressFXSimulation simulationInstance;
 	public Light directionalLight;
 
+	private float fps;
+
+	public void Start()
+	{
+		this.StartCoroutine (this.fpsCalc ());
+	}
+
+	public IEnumerator fpsCalc()
+	{
+		while (true)
+		{
+			this.fps = (1.0f / Time.deltaTime);
+			yield return new WaitForSeconds(0.25f);
+		}
+	}
+
 	public void OnGUI()
 	{
 		// Render settings
 		GUI.Label (new Rect (10, 10, 200, 20), "Render settings: ");
 
-		GUI.Label (new Rect (10, 30, 200, 20), "Hair Alpha (" + this.renderInstance.fiberAlpha + "): ");
-		this.renderInstance.fiberAlpha = GUI.HorizontalSlider (new Rect (10, 50, 200, 10), this.renderInstance.fiberAlpha, 0, 1.0f);
+		GUI.Label (new Rect (10, 30, 200, 20), "Hair Alpha (" + this.renderInstance.hairRenderingMaterial.fiberAlpha + "): ");
+		this.renderInstance.hairRenderingMaterial.fiberAlpha = GUI.HorizontalSlider (new Rect (10, 50, 200, 10), this.renderInstance.hairRenderingMaterial.fiberAlpha, 0, 1.0f);
 		
-		GUI.Label (new Rect (10, 70, 200, 20), "Fiber radius (" + this.renderInstance.fiberRadius + "): ");
-		this.renderInstance.fiberRadius = GUI.HorizontalSlider (new Rect (10, 90, 200, 10), this.renderInstance.fiberRadius, 0, 1.0f);
+		GUI.Label (new Rect (10, 70, 200, 20), "Fiber radius (" + this.renderInstance.hairRenderingMaterial.fiberRadius + "): ");
+		this.renderInstance.hairRenderingMaterial.fiberRadius = GUI.HorizontalSlider (new Rect (10, 90, 200, 10), this.renderInstance.hairRenderingMaterial.fiberRadius, 0, 1.0f);
 		
 		GUI.Label (new Rect (10, 110, 200, 20), "Thin tip: ");
-		if (GUI.Button(new Rect (10, 130, 200, 20), this.renderInstance.thinTip ? "On" : "Off"))
+		if (GUI.Button(new Rect (10, 130, 200, 20), this.renderInstance.hairRenderingMaterial.thinTip ? "On" : "Off"))
 		{
-			this.renderInstance.thinTip = !this.renderInstance.thinTip;
+			this.renderInstance.hairRenderingMaterial.thinTip = !this.renderInstance.hairRenderingMaterial.thinTip;
 		}
 		
 		GUI.Label (new Rect (10, 150, 200, 20), "Expand pixels: ");
-		if (GUI.Button(new Rect (10, 170, 200, 20), this.renderInstance.expandPixels ? "On" : "Off"))
+		if (GUI.Button(new Rect (10, 170, 200, 20), this.renderInstance.hairRenderingMaterial.expandPixels ? "On" : "Off"))
 		{
-			this.renderInstance.expandPixels = !this.renderInstance.expandPixels;
+			this.renderInstance.hairRenderingMaterial.expandPixels = !this.renderInstance.hairRenderingMaterial.expandPixels;
 		}
 		
 		GUI.Label (new Rect (10, 190, 200, 20), "Cast shadows: ");
@@ -41,57 +57,57 @@ public class DemoGUI : MonoBehaviour
 				this.directionalLight.shadows = LightShadows.Soft;
 		}
 		
-		GUI.Label (new Rect (10, 230, 200, 20), "Alpha threshold (" + this.renderInstance.alphaThreshold + "): ");
-		this.renderInstance.alphaThreshold = GUI.HorizontalSlider (new Rect (10, 250, 200, 10), this.renderInstance.alphaThreshold, 0, 1.0f);
+		GUI.Label (new Rect (10, 230, 200, 20), "Alpha threshold (" + this.renderInstance.hairRenderingMaterial.alphaThreshold + "): ");
+		this.renderInstance.hairRenderingMaterial.alphaThreshold = GUI.HorizontalSlider (new Rect (10, 250, 200, 10), this.renderInstance.hairRenderingMaterial.alphaThreshold, 0, 1.0f);
 
 		// Material settings
 		int yPos = 280;
 		GUI.Label (new Rect (10, yPos, 200, 20), "Kajiya-kay settings: ");
 		yPos += 20;
 		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Ka (" + this.renderInstance.g_MatKa + ": ");
+		GUI.Label (new Rect (10, yPos, 200, 20), "Ka (" + this.renderInstance.hairRenderingMaterial.g_MatKa + ": ");
 		yPos += 20;
-		this.renderInstance.g_MatKa = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatKa, 0, 1.0f);
-		yPos += 20;
-		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Kd (" + this.renderInstance.g_MatKd + ": ");
-		yPos += 20;
-		this.renderInstance.g_MatKd = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatKd, 0, 1.0f);
+		this.renderInstance.hairRenderingMaterial.g_MatKa = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatKa, 0, 1.0f);
 		yPos += 20;
 		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Ks1 (" + this.renderInstance.g_MatKs1 + ": ");
+		GUI.Label (new Rect (10, yPos, 200, 20), "Kd (" + this.renderInstance.hairRenderingMaterial.g_MatKd + ": ");
 		yPos += 20;
-		this.renderInstance.g_MatKs1 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatKs1, 0, 1.0f);
-		yPos += 20;
-		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Ks2 (" + this.renderInstance.g_MatKs2 + ": ");
-		yPos += 20;
-		this.renderInstance.g_MatKs2 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatKs2, 0, 1.0f);
+		this.renderInstance.hairRenderingMaterial.g_MatKd = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatKd, 0, 1.0f);
 		yPos += 20;
 		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Ex1 (" + this.renderInstance.g_MatEx1 + ": ");
+		GUI.Label (new Rect (10, yPos, 200, 20), "Ks1 (" + this.renderInstance.hairRenderingMaterial.g_MatKs1 + ": ");
 		yPos += 20;
-		this.renderInstance.g_MatEx1 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatEx1, 0, 100.0f);
-		yPos += 20;
-		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Ex2 (" + this.renderInstance.g_MatEx2 + ": ");
-		yPos += 20;
-		this.renderInstance.g_MatEx2 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.g_MatEx2, 0, 10.0f);
+		this.renderInstance.hairRenderingMaterial.g_MatKs1 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatKs1, 0, 1.0f);
 		yPos += 20;
 		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Red (" + this.renderInstance.hairColor.r + ": ");
+		GUI.Label (new Rect (10, yPos, 200, 20), "Ks2 (" + this.renderInstance.hairRenderingMaterial.g_MatKs2 + ": ");
 		yPos += 20;
-		this.renderInstance.hairColor.r = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairColor.r, 0, 1.0f);
-		yPos += 20;
-		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Green (" + this.renderInstance.hairColor.g + ": ");
-		yPos += 20;
-		this.renderInstance.hairColor.g = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairColor.g, 0, 1.0f);
+		this.renderInstance.hairRenderingMaterial.g_MatKs2 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatKs2, 0, 1.0f);
 		yPos += 20;
 		
-		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Blue (" + this.renderInstance.hairColor.b + ": ");
+		GUI.Label (new Rect (10, yPos, 200, 20), "Ex1 (" + this.renderInstance.hairRenderingMaterial.g_MatEx1 + ": ");
 		yPos += 20;
-		this.renderInstance.hairColor.b = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairColor.b, 0, 1.0f);
+		this.renderInstance.hairRenderingMaterial.g_MatEx1 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatEx1, 0, 100.0f);
+		yPos += 20;
+		
+		GUI.Label (new Rect (10, yPos, 200, 20), "Ex2 (" + this.renderInstance.hairRenderingMaterial.g_MatEx2 + ": ");
+		yPos += 20;
+		this.renderInstance.hairRenderingMaterial.g_MatEx2 = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.g_MatEx2, 0, 10.0f);
+		yPos += 20;
+		
+		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Red (" + this.renderInstance.hairRenderingMaterial.hairColor.r + ": ");
+		yPos += 20;
+		this.renderInstance.hairRenderingMaterial.hairColor.r = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.hairColor.r, 0, 1.0f);
+		yPos += 20;
+		
+		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Green (" + this.renderInstance.hairRenderingMaterial.hairColor.g + ": ");
+		yPos += 20;
+		this.renderInstance.hairRenderingMaterial.hairColor.g = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.hairColor.g, 0, 1.0f);
+		yPos += 20;
+		
+		GUI.Label (new Rect (10, yPos, 200, 20), "Hair Color Blue (" + this.renderInstance.hairRenderingMaterial.hairColor.b + ": ");
+		yPos += 20;
+		this.renderInstance.hairRenderingMaterial.hairColor.b = GUI.HorizontalSlider (new Rect (10, yPos, 200, 10), this.renderInstance.hairRenderingMaterial.hairColor.b, 0, 1.0f);
 		yPos += 20;
 
 
@@ -127,5 +143,7 @@ public class DemoGUI : MonoBehaviour
 		{
 			this.simulationInstance.collision = !this.simulationInstance.collision;
 		}
+
+		GUI.Label (new Rect (Screen.width - 200.0f, Screen.height - 50.0f, 200, 20), this.fps + " FPS");
 	}
 }
