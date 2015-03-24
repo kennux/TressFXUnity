@@ -704,10 +704,6 @@ void LengthConstriantsWindAndCollision(uint GIndex : SV_GroupIndex,
 	//------------
 	if ( g_Wind.x != 0 || g_Wind.y != 0 || g_Wind.z != 0 )
 	{  
-		float4 force = float4(0, 0, 0, 0);
-
-		float frame = g_Wind.w;
-
 		if ( localVertexIndex >= 2 && localVertexIndex < numVerticesInTheStrand-1 )
 		{
 			// combining four winds.

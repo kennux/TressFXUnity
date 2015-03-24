@@ -93,6 +93,8 @@ public class TressFXSimulation : MonoBehaviour
 	/// </summary>
 	public float windMagnitude;
 	
+	public float frameLimit = 999;
+	
 	private Vector4 windForce1;
 	private Vector4 windForce2;
 	private Vector4 windForce3;
@@ -142,11 +144,11 @@ public class TressFXSimulation : MonoBehaviour
 	public void Update()
 	{
 		// Frame skipping if rendering too fast
-		if (Time.time - this.lastTimeSimulated < 1.0f / 60.0f && !this.isWarping)
+		if (Time.time - this.lastTimeSimulated < 1.0f / this.frameLimit && !this.isWarping)
 			return;
-
+		
 		this.lastTimeSimulated = Time.time;
-
+		
 		this.SimulateWind ();
 
 		// Set constant data

@@ -56,7 +56,7 @@
 			    uint	TangentAndCoverage;	
 			    float	depth;
 			    uint    uNext;
-			    half   ammountLight;
+			    half   shadowAmmount;
 			    float2	worldPos;
 			};
             
@@ -83,7 +83,6 @@
 			uniform float g_fHairKs2;
 			uniform float4x4 VPMatrix;
 			uniform float4x4 MMatrix;
-			uniform float g_directionalLightIntensity;
 			
 			// HELPER FUNCTIONS
 			uint PackFloat4IntoUint(float4 vValue)
@@ -139,7 +138,7 @@
 				return (relDist + 1.f) * 0.5f;
 			}
 			
-			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float ammountLight, float2 worldPos)
+			void StoreFragments_Hair(uint2 address, float3 tangent, float coverage, float depth, float shadowAmmount, float2 worldPos)
 			{
 			    // Retrieve current pixel count and increase counter
 			    uint uPixelCount = LinkedListUAV.IncrementCounter();
@@ -154,7 +153,7 @@
 				Element.TangentAndCoverage = PackTangentAndCoverage(tangent, coverage);
 				Element.depth = depth;
 			    Element.uNext = uOldStartOffset;
-			    Element.ammountLight = ammountLight;
+			    Element.shadowAmmount = shadowAmmount;
 			    Element.worldPos = worldPos;
 			    LinkedListUAV[uPixelCount] = Element; // buffer that stores the fragments
 			}
@@ -233,8 +232,8 @@
 			    // only store fragments with non-zero alpha value
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
-			    	float atten = SHADOW_ATTENUATION(In) * g_directionalLightIntensity;
-			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, atten, In.worldPos.xy);
+			    	float shadowAmmount = SHADOW_ATTENUATION(In);
+			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, shadowAmmount, In.worldPos.xy);
 			    }
 			    
 			    // output a mask RT for final pass  

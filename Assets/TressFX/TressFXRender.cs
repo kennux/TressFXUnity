@@ -104,7 +104,7 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public TressFXHairMaterial hairRenderingMaterial;
 
-	public Transform directionalLight;
+	public Light directionalLight;
 
 	/// <summary>
 	/// Gets the VP matrix.
@@ -308,8 +308,7 @@ public class TressFXRender : MonoBehaviour
 		this.hairMaterial.SetFloat ("g_bThinTip", this.hairRenderingMaterial.thinTip ? 1 : 0);
 		this.hairMaterial.SetFloat ("g_alphaThreshold", this.hairRenderingMaterial.alphaThreshold);
 		this.hairMaterial.SetVector ("g_WinSize", new Vector4((float) Screen.width, (float) Screen.height, 1.0f / (float) Screen.width, 1.0f / (float) Screen.height));
-		this.hairMaterial.SetFloat ("g_directionalLightIntensity", this.directionalLight.GetComponent<Light>().intensity);
-		
+
 		// Update rendering bounds
 		Bounds renderingBounds = new Bounds (this.transform.position + this.renderingBounds.center, this.renderingBounds.size);
 
@@ -348,7 +347,10 @@ public class TressFXRender : MonoBehaviour
 		this.fragmentSortingShader.SetFloat ("g_MatEx1", this.hairRenderingMaterial.g_MatEx1);
 		this.fragmentSortingShader.SetFloat ("g_MatKs2", this.hairRenderingMaterial.g_MatKs2);
 		this.fragmentSortingShader.SetFloat ("g_MatEx2", this.hairRenderingMaterial.g_MatEx2);
-		this.fragmentSortingShader.SetVector ("g_lightDir", new Vector4 (this.directionalLight.forward.x, this.directionalLight.forward.y, this.directionalLight.forward.z, 1));
+		this.fragmentSortingShader.SetVector ("g_DirectionalLightDir", new Vector4 (this.directionalLight.transform.forward.x, this.directionalLight.transform.forward.y, this.directionalLight.transform.forward.z, 1));
+		this.fragmentSortingShader.SetVector ("g_DirectionalLightColor", new Vector4 (this.directionalLight.color.r, this.directionalLight.color.g, this.directionalLight.color.b, this.directionalLight.color.a));
+		this.fragmentSortingShader.SetVector ("g_AmbientLightColor", new Vector4(RenderSettings.ambientLight.r, RenderSettings.ambientLight.g, RenderSettings.ambientLight.b, RenderSettings.ambientLight.a));
+		this.fragmentSortingShader.SetFloat ("g_DirectionalLightIntensity", this.directionalLight.intensity);
 
 		this.fragmentSortingShader.SetTexture (this.SortFragmentsKernelId, "LinkedListHead", this.LinkedListHead);
 		this.fragmentSortingShader.SetBuffer (this.SortFragmentsKernelId, "LinkedList", this.LinkedList);
