@@ -290,7 +290,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		}
 		
 		// Do out of order blending and simple shading for fragments which dont make it into the KBuffer
-		float3 worldPosition = float3(worldPos.xy, depth);
+		float3 worldPosition = mul(float4(worldPos.xy, depth,1), InvVPMatrix).xyz;
 		
 		float4 fragmentColor = float4(SimpleHairShading(worldPosition.xyz, tangent, shadowAmmount), coverage);
         fcolor.xyz = mad(-fcolor.xyz, fragmentColor.w, fcolor.xyz) + fragmentColor.xyz * fragmentColor.w;
@@ -333,7 +333,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 		}
 		
 		// Build world position
-		float3 worldPos = float3(kBuffer[maxDepthIndex].worldPos, kBuffer[maxDepthIndex].depth);
+		float3 worldPos = mul(float4(kBuffer[maxDepthIndex].worldPos, kBuffer[maxDepthIndex].depth,1), InvVPMatrix).xyz;
 		
 		// Compute hair shading for current fragment and set coverage as alpha
 		fragmentColor.xyz = ComputeHairShading(worldPos.xyz, kBuffer[maxDepthIndex].tangent, kBuffer[maxDepthIndex].shadowAmmount);

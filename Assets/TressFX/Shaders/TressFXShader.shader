@@ -233,7 +233,7 @@
 			    if (coverage > g_alphaThreshold) // ensure alpha is at least as much as the minimum alpha value
 			    {
 			    	float shadowAmmount = SHADOW_ATTENUATION(In);
-			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, shadowAmmount, In.worldPos.xy);
+			        StoreFragments_Hair(origScreenPos, In.Tangent.xyz, coverage, In.pos.z, shadowAmmount, In.pos.xy);
 			    }
 			    
 			    // output a mask RT for final pass  
