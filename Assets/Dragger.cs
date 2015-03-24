@@ -6,7 +6,7 @@ public class Dragger : MonoBehaviour
 	public Transform tressfxModel;
 	public float speed = 100;
 
-	public void FixedUpdate()
+	public void Update()
 	{
 		if (!Input.GetMouseButton (1))
 			return;

@@ -12,7 +12,7 @@
 			ColorMask 0
         	ZWrite Off
         	ZTest LEqual
-        	Cull Back
+        	Cull Off
         	
 			Stencil
 			{

@@ -9,6 +9,7 @@
         	// Z-Buffer and Stencil
 			ZWrite off
         	ZTest LEqual
+        	
 			Stencil
 			{
 				Ref 1

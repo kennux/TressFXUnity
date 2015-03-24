@@ -142,13 +142,13 @@ bool IsMovable(float4 particle)
 float GetDamping(uint strandType)
 {
 	if (strandType == 0)
-		return g_StiffnessForLocalShapeMatching0;
+		return g_Damping0;
 	if (strandType == 1)
-		return g_StiffnessForLocalShapeMatching1;
+		return g_Damping1;
 	if (strandType == 2)
-		return g_StiffnessForLocalShapeMatching2;
+		return g_Damping2;
 	if (strandType == 3)
-		return g_StiffnessForLocalShapeMatching3;
+		return g_Damping3;
 	return 0.03;
 }
 
@@ -168,13 +168,13 @@ float GetStiffnessForLocalShapeMatching(uint strandType)
 float GetStiffnessForGlobalShapeMatching(uint strandType)
 {
 	if (strandType == 0)
-		return g_GlobalShapeMatchingEffectiveRange0;
+		return g_StiffnessForGlobalShapeMatching0;
 	if (strandType == 1)
-		return g_GlobalShapeMatchingEffectiveRange1;
+		return g_StiffnessForGlobalShapeMatching1;
 	if (strandType == 2)
-		return g_GlobalShapeMatchingEffectiveRange2;
+		return g_StiffnessForGlobalShapeMatching2;
 	if (strandType == 3)
-		return g_GlobalShapeMatchingEffectiveRange3;
+		return g_StiffnessForGlobalShapeMatching3;
 	return 0.2;
 }
 

@@ -121,7 +121,6 @@ public class TressFXRender : MonoBehaviour
 	/// </summary>
 	public void Start()
 	{
-		Camera.main.hdr = false;
 		this.hairMaterial = new Material (this.hairShader);
 
 		// Get TressFX master
@@ -283,9 +282,8 @@ public class TressFXRender : MonoBehaviour
 	/// <summary>
 	/// Raises the render object event.
 	/// </summary>
-	public void Update()
+	public void LateUpdate()
 	{
-		// Debug.Log (Camera.main.WorldToScreenPoint (new Vector3 (50, 100, 100)));
 		// Set random write targets
 		Graphics.ClearRandomWriteTargets ();
 		Graphics.SetRandomWriteTarget (1, this.LinkedList);

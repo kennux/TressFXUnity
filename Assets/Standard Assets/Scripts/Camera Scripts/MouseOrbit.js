@@ -23,7 +23,7 @@ function Start () {
 	doOrbiting();
 }
 
-function LateUpdate () {
+function Update () {
 	if (Input.GetMouseButton(2) || Input.GetKey(KeyCode.O))
 	{
 		doOrbiting();
