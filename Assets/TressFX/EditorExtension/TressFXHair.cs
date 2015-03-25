@@ -269,7 +269,7 @@ public class TressFXHair : ScriptableObject
 			this.m_pGlobalRotations = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
 			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading local rotations...", 0.25f);
 			this.m_pLocalRotations = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
-			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading verticess...", 0.35f);
+			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading vertices...", 0.35f);
 			this.m_pVertices = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);
 			EditorUtility.DisplayProgressBar("Importing TressFX Hair", "Loading tangents...", 0.4f);
 			this.m_pTangents = TressFXLoader.ReadVector4Array (reader, this.m_NumTotalHairVertices);

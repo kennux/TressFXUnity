@@ -29,6 +29,7 @@ namespace AseToTFX
             List<TressFXStrand[]> currentStrands = new List<TressFXStrand[]>();
             int currentStrand = 0;
             int currentHairId = -1;
+            int maxNumVerticesInStrand = 0;
             float texcoordMultiplier = 0;
 
             LogToConsole("Starting ASE parsing... This may take a LONG while..", ConsoleColor.Blue);
@@ -78,6 +79,11 @@ namespace AseToTFX
                         currentStrands[currentHairId][currentStrand].vertices = positions;
                         currentStrands[currentHairId][currentStrand].texcoordX = texcoordMultiplier * currentStrand;
 
+                        if (maxNumVerticesInStrand < positions.Length)
+                        {
+                            maxNumVerticesInStrand = positions.Length;
+                        }
+
                         i = i + 1 + positions.Length;
 
                         currentStrand++;
@@ -90,8 +96,18 @@ namespace AseToTFX
             // Build TFX files
             for (int i = 0; i < currentStrands.Count; i++)
             {
-                LogToConsole("Exporting hair " + i + "...", ConsoleColor.Yellow); 
+                LogToConsole("Exporting hair " + i + "...", ConsoleColor.Yellow);
                 StringBuilder currentHairBuilder = new StringBuilder();
+
+                // Write header
+                currentHairBuilder.Append("version 2.0" + "\r\n");
+                currentHairBuilder.Append("scale 1.0" + "\r\n");
+                currentHairBuilder.Append("rotation 0 0 0" + "\r\n");
+                currentHairBuilder.Append("translation 0 0 0" + "\r\n");
+                currentHairBuilder.Append("bothEndsImmovable 0" + "\r\n");
+                currentHairBuilder.Append("maxNumVerticesInStrand " + maxNumVerticesInStrand + "\r\n");
+                currentHairBuilder.Append("numFollowHairsPerGuideHair 4\r\n");
+                currentHairBuilder.Append("maxRadiusAroundGuideHair 0.5\r\n");
                 currentHairBuilder.Append("numStrands " + currentStrands[i].Length + "\r\nis sorted 1\r\n");
 
                 // Write strands

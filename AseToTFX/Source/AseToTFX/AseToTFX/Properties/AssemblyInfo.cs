@@ -8,19 +8,19 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("AseToTFX")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("AseToTFX")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2014")]
+[assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Durch Festlegen von ComVisible auf "false" werden die Typen in dieser Assembly unsichtbar 
-// für COM-Komponenten. Wenn Sie auf einen Typ in dieser Assembly von 
+// für COM-Komponenten.  Wenn Sie auf einen Typ in dieser Assembly von 
 // COM zugreifen müssen, legen Sie das ComVisible-Attribut für diesen Typ auf "true" fest.
 [assembly: ComVisible(false)]
 
 // Die folgende GUID bestimmt die ID der Typbibliothek, wenn dieses Projekt für COM verfügbar gemacht wird
-[assembly: Guid("8afed626-80b2-4de3-94bd-a5fb1c981001")]
+[assembly: Guid("0bc9f791-e5b9-4b92-97ae-00b54b8484be")]
 
 // Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
 //

@@ -306,7 +306,7 @@ void SortFragments (uint3 id : SV_DispatchThreadID)
 	
 	#ifdef COLORDEBUG
     float3 debugColor = float3(0,1,0);
-    if (nNumFragments<8) debugColor.xyz = float3(1,1,1);
+    if (nNumFragments<32) debugColor.xyz = float3(1,1,1);
     if (nNumFragments>32) debugColor.xyz = float3(1,1,0);
     if (nNumFragments>64) debugColor.xyz = float3(1,0.5,0);
     if (nNumFragments>128) debugColor.xyz = float3(1,0,0);

@@ -81,7 +81,7 @@ public class TressFXSimulation : MonoBehaviour
 	/// <summary>
 	/// The number of strands per thread group.
 	/// </summary>
-	private int numOfStrandsPerThreadGroup;
+	public int numOfStrandsPerThreadGroup;
 
 	/// <summary>
 	/// The wind direction.
