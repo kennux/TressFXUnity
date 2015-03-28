@@ -139,6 +139,8 @@ namespace TressFXUtils.TressFX
                 this.highestVertexPerStrandCount = strand.vertices.Length;
             }
 
+            vertexCount += strand.vertices.Length;
+
             this.strands.Add(strand);
         }
 

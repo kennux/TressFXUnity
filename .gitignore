@@ -7,8 +7,8 @@ Assets/Private.meta
 # Ignore the following file extensions
 *.DS_Store
 *.vcproject
-*.sln
-*.csproj
+# *.sln
+# *.csproj
 *.unityproj
 *.pidb
 *.userprefs

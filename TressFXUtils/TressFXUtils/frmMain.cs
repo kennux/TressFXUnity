@@ -110,36 +110,20 @@ namespace TressFXUtils
                 OpenFileDialog ofd = new OpenFileDialog();
                 ofd.Title = "Open .ase file";
                 ofd.Filter = "ASE File (*.ase)|";
-                string aseFile = "";
-                string tressfxPrefix = "";
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    aseFile = ofd.FileName;
+                    this.hairMeshes = AseConverter.ConvertAse(ofd.FileName);
+                    this.UpdateHairGuiInfos();
                 }
                 else
                     return;
-
-                MessageBox.Show("Now navigate to the folder where you want to save your tressfx files and enter your fileprefix as filename.");
-
-                // Save tressfx files
-                SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Title = "TressFX Hairfiles Prefix";
-
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    // Convert
-                    tressfxPrefix = System.IO.Path.GetFileNameWithoutExtension(sfd.FileName);
-                    this.hairMeshes = AseConverter.ConvertAse(aseFile, tressfxPrefix, System.IO.Path.GetDirectoryName(sfd.FileName));
-                }
             }
             catch (Exception ex) 
             {
                 MessageBox.Show("Couldn't convert ase file: \r\n" + ex.Message + "!\r\n" + ex.StackTrace);
                 return;
             }
-
-            MessageBox.Show("Converted ASE file!");
         }
 
         private void saveHairMeshesToolStripMenuItem_Click(object sender, EventArgs e)

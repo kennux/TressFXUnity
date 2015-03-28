@@ -33,6 +33,7 @@
             this.menu_loadHair = new System.Windows.Forms.ToolStripMenuItem();
             this.convertaseFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveHairMeshesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveSelectedHairMeshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_hair = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_recalc_uvs = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
@@ -58,7 +59,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.lbl_hair_vertices = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.saveSelectedHairMeshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.grp_meshes.SuspendLayout();
@@ -90,7 +90,7 @@
             // menu_loadHair
             // 
             this.menu_loadHair.Name = "menu_loadHair";
-            this.menu_loadHair.Size = new System.Drawing.Size(166, 22);
+            this.menu_loadHair.Size = new System.Drawing.Size(199, 22);
             this.menu_loadHair.Text = "Load Hair";
             this.menu_loadHair.Click += new System.EventHandler(this.menu_loadHair_Click);
             // 
@@ -104,9 +104,16 @@
             // saveHairMeshesToolStripMenuItem
             // 
             this.saveHairMeshesToolStripMenuItem.Name = "saveHairMeshesToolStripMenuItem";
-            this.saveHairMeshesToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.saveHairMeshesToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
             this.saveHairMeshesToolStripMenuItem.Text = "Save Hair Meshes";
             this.saveHairMeshesToolStripMenuItem.Click += new System.EventHandler(this.saveHairMeshesToolStripMenuItem_Click);
+            // 
+            // saveSelectedHairMeshToolStripMenuItem
+            // 
+            this.saveSelectedHairMeshToolStripMenuItem.Name = "saveSelectedHairMeshToolStripMenuItem";
+            this.saveSelectedHairMeshToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.saveSelectedHairMeshToolStripMenuItem.Text = "Save selected hair mesh";
+            this.saveSelectedHairMeshToolStripMenuItem.Click += new System.EventHandler(this.saveSelectedHairMeshToolStripMenuItem_Click);
             // 
             // menu_hair
             // 
@@ -182,16 +189,16 @@
             this.grp_hair_info.Controls.Add(this.label2);
             this.grp_hair_info.Controls.Add(this.lbl_hair_vertices);
             this.grp_hair_info.Controls.Add(this.label1);
-            this.grp_hair_info.Location = new System.Drawing.Point(222, 38);
+            this.grp_hair_info.Location = new System.Drawing.Point(222, 27);
             this.grp_hair_info.Name = "grp_hair_info";
-            this.grp_hair_info.Size = new System.Drawing.Size(414, 287);
+            this.grp_hair_info.Size = new System.Drawing.Size(414, 298);
             this.grp_hair_info.TabIndex = 3;
             this.grp_hair_info.TabStop = false;
             this.grp_hair_info.Text = "Hair Info";
             // 
             // btn_detail_save
             // 
-            this.btn_detail_save.Location = new System.Drawing.Point(9, 249);
+            this.btn_detail_save.Location = new System.Drawing.Point(9, 167);
             this.btn_detail_save.Name = "btn_detail_save";
             this.btn_detail_save.Size = new System.Drawing.Size(387, 23);
             this.btn_detail_save.TabIndex = 16;
@@ -201,7 +208,7 @@
             // 
             // txt_follow_hair_radius_around_guide_hair
             // 
-            this.txt_follow_hair_radius_around_guide_hair.Location = new System.Drawing.Point(194, 156);
+            this.txt_follow_hair_radius_around_guide_hair.Location = new System.Drawing.Point(194, 141);
             this.txt_follow_hair_radius_around_guide_hair.Name = "txt_follow_hair_radius_around_guide_hair";
             this.txt_follow_hair_radius_around_guide_hair.Size = new System.Drawing.Size(51, 20);
             this.txt_follow_hair_radius_around_guide_hair.TabIndex = 15;
@@ -209,7 +216,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 163);
+            this.label5.Location = new System.Drawing.Point(6, 141);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(179, 13);
             this.label5.TabIndex = 14;
@@ -217,7 +224,7 @@
             // 
             // txt_follow_hair_per_guide_hair
             // 
-            this.txt_follow_hair_per_guide_hair.Location = new System.Drawing.Point(194, 128);
+            this.txt_follow_hair_per_guide_hair.Location = new System.Drawing.Point(194, 116);
             this.txt_follow_hair_per_guide_hair.Name = "txt_follow_hair_per_guide_hair";
             this.txt_follow_hair_per_guide_hair.Size = new System.Drawing.Size(51, 20);
             this.txt_follow_hair_per_guide_hair.TabIndex = 13;
@@ -225,7 +232,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(6, 131);
+            this.label4.Location = new System.Drawing.Point(6, 116);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(135, 13);
             this.label4.TabIndex = 12;
@@ -234,7 +241,7 @@
             // chk_both_ends_immovable
             // 
             this.chk_both_ends_immovable.AutoSize = true;
-            this.chk_both_ends_immovable.Location = new System.Drawing.Point(126, 100);
+            this.chk_both_ends_immovable.Location = new System.Drawing.Point(194, 94);
             this.chk_both_ends_immovable.Name = "chk_both_ends_immovable";
             this.chk_both_ends_immovable.Size = new System.Drawing.Size(15, 14);
             this.chk_both_ends_immovable.TabIndex = 11;
@@ -243,7 +250,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 101);
+            this.label3.Location = new System.Drawing.Point(6, 94);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(114, 13);
             this.label3.TabIndex = 10;
@@ -251,21 +258,21 @@
             // 
             // translation_z
             // 
-            this.translation_z.Location = new System.Drawing.Point(194, 67);
+            this.translation_z.Location = new System.Drawing.Point(251, 67);
             this.translation_z.Name = "translation_z";
             this.translation_z.Size = new System.Drawing.Size(51, 20);
             this.translation_z.TabIndex = 9;
             // 
             // translation_y
             // 
-            this.translation_y.Location = new System.Drawing.Point(137, 67);
+            this.translation_y.Location = new System.Drawing.Point(194, 67);
             this.translation_y.Name = "translation_y";
             this.translation_y.Size = new System.Drawing.Size(51, 20);
             this.translation_y.TabIndex = 8;
             // 
             // translation_x
             // 
-            this.translation_x.Location = new System.Drawing.Point(76, 67);
+            this.translation_x.Location = new System.Drawing.Point(133, 67);
             this.translation_x.Name = "translation_x";
             this.translation_x.Size = new System.Drawing.Size(51, 20);
             this.translation_x.TabIndex = 7;
@@ -281,21 +288,21 @@
             // 
             // rotation_z
             // 
-            this.rotation_z.Location = new System.Drawing.Point(194, 41);
+            this.rotation_z.Location = new System.Drawing.Point(251, 41);
             this.rotation_z.Name = "rotation_z";
             this.rotation_z.Size = new System.Drawing.Size(51, 20);
             this.rotation_z.TabIndex = 5;
             // 
             // rotation_y
             // 
-            this.rotation_y.Location = new System.Drawing.Point(137, 41);
+            this.rotation_y.Location = new System.Drawing.Point(194, 41);
             this.rotation_y.Name = "rotation_y";
             this.rotation_y.Size = new System.Drawing.Size(51, 20);
             this.rotation_y.TabIndex = 4;
             // 
             // rotation_x
             // 
-            this.rotation_x.Location = new System.Drawing.Point(76, 41);
+            this.rotation_x.Location = new System.Drawing.Point(133, 41);
             this.rotation_x.Name = "rotation_x";
             this.rotation_x.Size = new System.Drawing.Size(51, 20);
             this.rotation_x.TabIndex = 3;
@@ -326,13 +333,6 @@
             this.label1.Size = new System.Drawing.Size(51, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Vertices: ";
-            // 
-            // saveSelectedHairMeshToolStripMenuItem
-            // 
-            this.saveSelectedHairMeshToolStripMenuItem.Name = "saveSelectedHairMeshToolStripMenuItem";
-            this.saveSelectedHairMeshToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
-            this.saveSelectedHairMeshToolStripMenuItem.Text = "Save selected hair mesh";
-            this.saveSelectedHairMeshToolStripMenuItem.Click += new System.EventHandler(this.saveSelectedHairMeshToolStripMenuItem_Click);
             // 
             // frmMain
             // 

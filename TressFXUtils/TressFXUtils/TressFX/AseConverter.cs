@@ -19,13 +19,15 @@ namespace TressFXUtils.TressFX
         /// <param name="hairFilePrefix"></param>
         /// <param name="directory"></param>
         /// <returns></returns>
-        public static Dictionary<string, TressFXHair> ConvertAse(string asefile, string hairFilePrefix, string directory)
+        public static Dictionary<string, TressFXHair> ConvertAse(string asefile)
         {
             // Start parsing the file
             ConsoleUtil.LogToConsole("Loading ASE File...", ConsoleColor.Blue);
             string[] aseContent = File.ReadAllLines(asefile);
             Dictionary<string, TressFXHair> hairMeshes = new Dictionary<string, TressFXHair>();
             List<TressFXStrand> currentStrands = new List<TressFXStrand>();
+            string aseFilenameWithoutExt = Path.GetFileNameWithoutExtension(asefile);
+
             int currentStrand = 0;
             int currentHairId = -1;
             float texcoordMultiplier = 0;
@@ -50,12 +52,26 @@ namespace TressFXUtils.TressFX
                 {
                     if (tokens[0] == "*SHAPE_LINECOUNT")
                     {
-                        TressFXHair hairMesh = new TressFXHair();
-                        currentStrand = 0;
-                        currentHairId++;
+                        if (currentStrand > 0)
+                        {
+                            currentHairId++;
+                            currentStrand = 0;
 
-                        texcoordMultiplier = 1.0f / (float)int.Parse(tokens[1]);
-                        ConsoleUtil.LogToConsole("Starting parse hair: " + currentHairId + ", lines count: " + int.Parse(tokens[1]), ConsoleColor.Yellow);
+                            // Add to mesh list
+                            TressFXHair hairMesh = new TressFXHair();
+                            foreach (TressFXStrand strand in currentStrands)
+                            {
+                                hairMesh.AddStrand(strand);
+                            }
+
+                            hairMeshes.Add(aseFilenameWithoutExt + "_" + currentHairId, hairMesh);
+
+                            // Clear current strands
+                            currentStrands.Clear();
+
+                            texcoordMultiplier = 1.0f / (float)int.Parse(tokens[1]);
+                            ConsoleUtil.LogToConsole("Starting parse hair: " + currentHairId + ", lines count: " + int.Parse(tokens[1]), ConsoleColor.Yellow);
+                        }
                     }
                     else if (tokens[0] == "*SHAPE_LINE")
                     {
