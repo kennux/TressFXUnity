@@ -253,8 +253,19 @@ namespace TressFXUtils.TressFX
         public byte[] GenerateBinaryTressFXAsset()
         {
             // Generate follow hairs
-            List<TressFXStrand> followHairs = new List<TressFXStrand>();
+            TressFXStrand[] followHairs = new TressFXStrand[0];
 
+            if (this.numFollowHairsPerGuideHair > 0)
+            {
+                // Now start follow hair generation
+                int numFollowHairs = this.numFollowHairsPerGuideHair * this.strands.Count; // Follow hairs per guide hair * guide hairs
+                followHairs = new TressFXStrand[numFollowHairs];
+
+                for (int i = 0; i < numFollowHairs; i++)
+                {
+
+                }
+            }
 
             return null;
         }
