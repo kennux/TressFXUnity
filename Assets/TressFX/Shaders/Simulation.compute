@@ -99,6 +99,7 @@ RWStructuredBuffer<float4> g_InitialHairPositions		: register(u3);
 RWStructuredBuffer<float4> g_GlobalRotations			: register(u4); 
 RWStructuredBuffer<float4> g_LocalRotations				: register(u5); 
 
+// RO Buffer
 RWStructuredBuffer<float>	g_HairRestLengthSRV			: register(t0);
 RWStructuredBuffer<int>		g_HairStrandType			: register(t1); 
 RWStructuredBuffer<float4>	g_HairRefVecsInLocalFrame	: register(t2); 

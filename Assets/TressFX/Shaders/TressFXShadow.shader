@@ -5,13 +5,13 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Opaque" }
+		Tags { "RenderType" = "Opaque" "Queue"="Transparent" }
 		
 		// Pass to render object as a shadow caster
 		Pass
 		{
 			Name "ShadowCaster"
-			Tags { "LightMode" = "ShadowCaster" }
+			Tags { "LightMode" = "ShadowCaster" "Queue" = "Geometry" }
 
 			CGPROGRAM
 			#pragma vertex vert
@@ -22,15 +22,19 @@
 			#include "UnityCG.cginc"
 			
 			StructuredBuffer<float3> g_HairVertexPositions;
+			StructuredBuffer<int> g_LineIndices;
 
 			struct v2f
 			{ 
 				V2F_SHADOW_CASTER;
 			};
 
-			v2f vert(appdata_base input)
+			v2f vert(appdata_base input) // uint vertexId : SV_VertexID) // 
 			{
 				float3 vertexPosition = g_HairVertexPositions[(int)input.vertex.x];
+	            
+	            //int index = g_LineIndices[vertexId];
+	            //float3 vertexPosition = g_HairVertexPositions[index];
 	            
 		        appdata_base v;
 		        v.vertex = float4(vertexPosition.xyz, 1);
