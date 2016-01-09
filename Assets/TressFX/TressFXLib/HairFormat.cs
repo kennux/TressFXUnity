@@ -12,7 +12,8 @@ namespace TressFXLib
     public enum HairFormat
     {
         ASE,
-        TFXB
+        TFXB,
+        OBJ
     }
 
     public static class HairFormatExt
@@ -30,6 +31,8 @@ namespace TressFXLib
                     return new AseFormat();
                 case HairFormat.TFXB:
                     return new TFXBFormat();
+                case HairFormat.OBJ:
+                    return new WavefrontObjFormat();
                 default:
                     throw new FormatException("Format unknown!"); // This should never happen if the library is unmodified
             }

@@ -158,36 +158,65 @@ namespace TressFX
 			
 			EditorUtility.SetDirty (newHairData);
 			AssetDatabase.SaveAssets ();
-		}
-		
-		/// <summary>
-		/// Creates a new asset.
-		/// </summary>
-		[MenuItem("Assets/Create/TressFX/Hair from ASE")]
-		public static void CreateAssetASE()
-		{
-			string hairfilePath = EditorUtility.OpenFilePanel ("Open ASE Hair data", "", "ase");
-			string hairfileName = System.IO.Path.GetFileNameWithoutExtension (hairfilePath);
-			
-			// Create new hair asset
-			TressFXHair newHairData = ScriptableObjectUtility.CreateAsset<TressFXHair> (hairfileName);
-			
-			// Open hair data
-			Hair hair = Hair.Import(HairFormat.ASE, hairfilePath, TressFXEditorWindow.GetImportSettings());
+        }
 
-			if (TressFXEditorWindow.normalizeVertexCountActive && TressFXEditorWindow.normalizeVertexCount > 2)
-			{
-				hair.NormalizeStrands (TressFXEditorWindow.normalizeVertexCount);
-			}
+        /// <summary>
+        /// Creates a new asset.
+        /// </summary>
+        [MenuItem("Assets/Create/TressFX/Hair from ASE")]
+        public static void CreateAssetASE()
+        {
+            string hairfilePath = EditorUtility.OpenFilePanel("Open ASE Hair data", "", "ase");
+            string hairfileName = System.IO.Path.GetFileNameWithoutExtension(hairfilePath);
 
-			hair = hair.PrepareSimulationParamatersAssetConverter (TressFXEditorWindow.followHairCount, TressFXEditorWindow.maxRadiusAroundGuideHair, Application.dataPath + "/" + EditorPrefs.GetString("TressFXAssetConverterPath"));
-			hair.CreateUVs ();
+            // Create new hair asset
+            TressFXHair newHairData = ScriptableObjectUtility.CreateAsset<TressFXHair>(hairfileName);
 
-			newHairData.LoadHairData (hair);
-			
-			EditorUtility.SetDirty (newHairData);
-			AssetDatabase.SaveAssets ();
-		}
-		#endif
-	}
+            // Open hair data
+            Hair hair = Hair.Import(HairFormat.ASE, hairfilePath, TressFXEditorWindow.GetImportSettings());
+
+            if (TressFXEditorWindow.normalizeVertexCountActive && TressFXEditorWindow.normalizeVertexCount > 2)
+            {
+                hair.NormalizeStrands(TressFXEditorWindow.normalizeVertexCount);
+            }
+
+            hair = hair.PrepareSimulationParamatersAssetConverter(TressFXEditorWindow.followHairCount, TressFXEditorWindow.maxRadiusAroundGuideHair, Application.dataPath + "/" + EditorPrefs.GetString("TressFXAssetConverterPath"));
+            hair.CreateUVs();
+
+            newHairData.LoadHairData(hair);
+
+            EditorUtility.SetDirty(newHairData);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Creates a new asset.
+        /// </summary>
+        [MenuItem("Assets/Create/TressFX/Hair from OBJ")]
+        public static void CreateAssetOBJ()
+        {
+            string hairfilePath = EditorUtility.OpenFilePanel("Open OBJ Hair data", "", "obj");
+            string hairfileName = System.IO.Path.GetFileNameWithoutExtension(hairfilePath);
+
+            // Create new hair asset
+            TressFXHair newHairData = ScriptableObjectUtility.CreateAsset<TressFXHair>(hairfileName);
+
+            // Open hair data
+            Hair hair = Hair.Import(HairFormat.OBJ, hairfilePath, TressFXEditorWindow.GetImportSettings());
+
+            if (TressFXEditorWindow.normalizeVertexCountActive && TressFXEditorWindow.normalizeVertexCount > 2)
+            {
+                hair.NormalizeStrands(TressFXEditorWindow.normalizeVertexCount);
+            }
+
+            hair = hair.PrepareSimulationParamatersAssetConverter(TressFXEditorWindow.followHairCount, TressFXEditorWindow.maxRadiusAroundGuideHair, Application.dataPath + "/" + EditorPrefs.GetString("TressFXAssetConverterPath"));
+            hair.CreateUVs();
+
+            newHairData.LoadHairData(hair);
+
+            EditorUtility.SetDirty(newHairData);
+            AssetDatabase.SaveAssets();
+        }
+#endif
+    }
 }
