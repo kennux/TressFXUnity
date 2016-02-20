@@ -20,8 +20,8 @@
 			#pragma multi_compile_shadowcaster
 	            
 			#include "UnityCG.cginc"
+			#include "TressFX.cginc"
 			
-			StructuredBuffer<float3> g_HairVertexPositions;
 			StructuredBuffer<int> g_LineIndices;
 
 			struct v2f
@@ -31,7 +31,7 @@
 
 			v2f vert(appdata_base input) // uint vertexId : SV_VertexID) // 
 			{
-				float3 vertexPosition = g_HairVertexPositions[(int)input.vertex.x];
+				float3 vertexPosition = GetVertexPosition((uint)input.vertex.x);
 	            
 	            //int index = g_LineIndices[vertexId];
 	            //float3 vertexPosition = g_HairVertexPositions[index];

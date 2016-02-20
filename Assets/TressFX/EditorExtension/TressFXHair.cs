@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
+using System.Linq;
 using System.IO;
 using System;
 using TressFXLib;
@@ -202,5 +203,109 @@ namespace TressFX
 		/// </summary>
 		[SerializeField]
 		public HairPartConfig[] hairPartConfig;
+
+        /// <summary>
+        /// Merges other into this tressfx hair.
+        /// </summary>
+        /// <param name="other"></param>
+        public void MergeIntoThis(TressFXHair other)
+        {
+            if (this.hairPartConfig.Length + other.hairPartConfig.Length > 4)
+                throw new Exception("Tressfx merge error! Hair cannot have more than 4 parts");
+
+            // Head info check
+            if (this.m_NumOfVerticesPerStrand != other.m_NumOfVerticesPerStrand)
+                throw new Exception("Tressfx merge error! Hair vertex count per strand must match!");
+
+            int newPartCount = this.hairPartConfig.Length + other.hairPartConfig.Length;
+            int otherPartCount = other.hairPartConfig.Length;
+            int thisPartCount = this.hairPartConfig.Length;
+
+            // Create lists
+            List<int> pHairStrandType = new List<int>(this.m_pHairStrandType);
+            List<Vector4> pRefVectors = new List<Vector4>(this.m_pRefVectors);
+            List<Vector4> pGlobalRotations = new List<Vector4>(this.m_pGlobalRotations);
+            List<Vector4> pLocalRotations = new List<Vector4>(this.m_pLocalRotations);
+            List<Vector4> pVertices = new List<Vector4>(this.m_pVertices);
+            List<Vector4> pTangents = new List<Vector4>(this.m_pTangents);
+            List<float> pThicknessCoeffs = new List<float>(this.m_pThicknessCoeffs);
+            List<Vector4> pFollowRootOffset = new List<Vector4>(this.m_pFollowRootOffset);
+            List<float> pRestLengths = new List<float>(this.m_pRestLengths);
+            List<int> triangleIndices = new List<int>(this.m_TriangleIndices);
+            List<int> lineIndices = new List<int>(this.m_LineIndices);
+            List<Vector4> texCoords = new List<Vector4>(this.m_TexCoords);
+
+            // Prepare new strand types
+            List<int> tmpIntList = new List<int>();
+            for (int i = 0; i < other.m_pHairStrandType.Length; i++)
+            {
+                tmpIntList.Add(other.m_pHairStrandType[i] + thisPartCount);
+            }
+
+            // Add up new strand types
+            pHairStrandType.AddRange(tmpIntList);
+            tmpIntList.Clear();
+
+            // Prepare indices
+            // TRIANGLES
+            int indexOffset = this.m_pVertices.Length;
+            for (int i = 0; i < other.m_TriangleIndices.Length; i++)
+            {
+                tmpIntList.Add(other.m_TriangleIndices[i] + indexOffset);
+            }
+
+            // Add new triangle indices
+            triangleIndices.AddRange(tmpIntList);
+            tmpIntList.Clear();
+
+            // LINES
+            for (int i = 0; i < other.m_LineIndices.Length; i++)
+            {
+                tmpIntList.Add(other.m_LineIndices[i] + indexOffset);
+            }
+
+            // Add new triangle indices
+            lineIndices.AddRange(tmpIntList);
+            tmpIntList.Clear();
+
+            // Add up static stuff
+            pRefVectors.AddRange(other.m_pRefVectors);
+            pGlobalRotations.AddRange(other.m_pGlobalRotations);
+            pLocalRotations.AddRange(other.m_pLocalRotations);
+            pVertices.AddRange(other.m_pVertices);
+            pTangents.AddRange(other.m_pTangents);
+            pThicknessCoeffs.AddRange(other.m_pThicknessCoeffs);
+            pFollowRootOffset.AddRange(other.m_pFollowRootOffset);
+            pRestLengths.AddRange(other.m_pRestLengths);
+            texCoords.AddRange(other.m_TexCoords);
+
+            // Write back to this
+            this.m_pHairStrandType = pHairStrandType.ToArray();
+            this.m_pRefVectors = pRefVectors.ToArray();
+            this.m_pGlobalRotations = pGlobalRotations.ToArray();
+            this.m_pLocalRotations = pLocalRotations.ToArray();
+            this.m_pVertices = pVertices.ToArray();
+            this.m_pTangents = pTangents.ToArray();
+            this.m_pThicknessCoeffs = pThicknessCoeffs.ToArray();
+            this.m_pFollowRootOffset = pFollowRootOffset.ToArray();
+            this.m_pRestLengths = pRestLengths.ToArray();
+            this.m_TriangleIndices = triangleIndices.ToArray();
+            this.m_LineIndices = lineIndices.ToArray();
+            this.m_TexCoords = texCoords.ToArray();
+
+            // Part configs
+            List<HairPartConfig> partConfigs = new List<HairPartConfig>();
+            partConfigs.AddRange(this.hairPartConfig);
+            partConfigs.AddRange(other.hairPartConfig);
+            this.hairPartConfig = partConfigs.ToArray();
+
+            // Recalc header
+            this.m_NumTotalHairVertices = pVertices.Count;
+            this.m_NumTotalHairStrands = this.m_NumTotalHairStrands + other.m_NumTotalHairStrands;
+            this.m_NumGuideHairVertices = this.m_NumGuideHairVertices + other.m_NumGuideHairVertices;
+            this.m_NumGuideHairStrands = this.m_NumGuideHairStrands + other.m_NumGuideHairStrands;
+
+            // TODO: Bounds
+        }
 	}
 }

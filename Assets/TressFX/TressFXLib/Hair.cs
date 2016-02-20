@@ -348,7 +348,7 @@ namespace TressFXLib
         /// <returns></returns>
         public bool SimulationPrecheck()
         {
-            // TODO: Actual check xD
+            // TODO: Actual check
             return true;
         }
 

@@ -27,14 +27,11 @@ namespace TressFX
 		public ComputeBuffer g_FollowHairRootOffset;
 		public ComputeBuffer g_TexCoords;
 
-		[HideInInspector]
-		public TressFXSimulation simulation;
-
 		/// <summary>
 		/// Start this instance.
 		/// Initializes all buffers and other resources needed by tressfx simulation and rendering.
 		/// </summary>
-		public void Start()
+		public void Awake()
 		{
 			if (this.hairData == null)
 			{
@@ -58,9 +55,6 @@ namespace TressFX
 			this.g_FollowHairRootOffset = this.InitializeBuffer (this.hairData.m_pFollowRootOffset, 16);
 			this.g_HairThicknessCoeffs = this.InitializeBuffer (this.hairData.m_pThicknessCoeffs, 4);
 			this.g_TexCoords = this.InitializeBuffer(this.hairData.m_TexCoords, 16);
-
-			// Get other parts
-			this.simulation = this.GetComponent<TressFXSimulation> ();
 		}
 
 		/// <summary>
@@ -96,6 +90,6 @@ namespace TressFX
 			this.g_HairRefVecsInLocalFrame.Release ();
 			this.g_FollowHairRootOffset.Release ();
 			this.g_TexCoords.Release ();
-		}
+        }
 	}
 }

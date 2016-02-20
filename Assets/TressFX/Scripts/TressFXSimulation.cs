@@ -35,6 +35,11 @@ namespace TressFX
 		/// </summary>
 		public float gravityMagnitude = 9.81f;
 
+        /// <summary>
+        /// The tip seperation factor used to update follow hair vertices.
+        /// </summary>
+        public float tipSeperationFactor = 5.0f;
+
 		/// <summary>
 		/// The size of the thread group.
 		/// </summary>
@@ -63,7 +68,7 @@ namespace TressFX
 		/// <summary>
 		/// The length constriants wind and collision kernel identifier.
 		/// </summary>
-		private int LengthConstriantsWindAndCollisionKernelId;
+		private int LengthConstraintsWindAndCollisionKernelId;
 
 		/// <summary>
 		/// The update follow hair vertices kernel identifier.
@@ -108,6 +113,11 @@ namespace TressFX
 		public SphereCollider collider3;
 		
 		public float frameLimit = 999;
+
+        [Header("DEBUG")]
+        public bool doIntegrationAndGlobalShapeConstraints = true;
+        public bool doLocalShapeConstraints = true;
+        public bool doLengthConstraintsWindAndCollision = true;
 		
 		private Vector4 windForce1;
 		private Vector4 windForce2;
@@ -152,7 +162,7 @@ namespace TressFX
 			this.IntegrationAndGlobalShapeConstraintsKernelId = this.simulationShader.FindKernel ("IntegrationAndGlobalShapeConstraints");
 			this.LocalShapeConstraintsKernelId = this.simulationShader.FindKernel ("LocalShapeConstraints");
 			this.LocalShapeConstraintsWithIterationKernelId = this.simulationShader.FindKernel ("LocalShapeConstraintsWithIteration");
-			this.LengthConstriantsWindAndCollisionKernelId = this.simulationShader.FindKernel ("LengthConstriantsWindAndCollision");
+			this.LengthConstraintsWindAndCollisionKernelId = this.simulationShader.FindKernel ("LengthConstraintsWindAndCollision");
 			this.UpdateFollowHairVerticesKernelId = this.simulationShader.FindKernel ("UpdateFollowHairVertices");
 			this.PrepareFollowHairBeforeTurningIntoGuideKernelId = this.simulationShader.FindKernel ("PrepareFollowHairBeforeTurningIntoGuide");
 
@@ -162,7 +172,7 @@ namespace TressFX
 			this.followHairsLastFrame = this.followHairs;
 		}
 
-		public void Update()
+		public void LateUpdate()
 		{
 			// Warp into origin first
 			if (this.firstUpdate)
@@ -171,7 +181,7 @@ namespace TressFX
 
 				bool warp = this.isWarping;
 				this.isWarping = true;
-				this.Update ();
+				this.LateUpdate();
 				this.isWarping = warp;
 			}
 
@@ -190,7 +200,7 @@ namespace TressFX
 			this.SetBuffers (this.IntegrationAndGlobalShapeConstraintsKernelId);
 			this.SetBuffers (this.LocalShapeConstraintsKernelId);
 			this.SetBuffers (this.LocalShapeConstraintsWithIterationKernelId);
-			this.SetBuffers (this.LengthConstriantsWindAndCollisionKernelId);
+			this.SetBuffers (this.LengthConstraintsWindAndCollisionKernelId);
 			this.SetBuffers (this.UpdateFollowHairVerticesKernelId);
 			this.SetBuffers (this.PrepareFollowHairBeforeTurningIntoGuideKernelId);
 
@@ -208,9 +218,12 @@ namespace TressFX
 			}
 			
 			// Dispatch shaders
-			this.simulationShader.Dispatch (this.IntegrationAndGlobalShapeConstraintsKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
-			this.simulationShader.Dispatch (this.LocalShapeConstraintsWithIterationKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
-			this.simulationShader.Dispatch (this.LengthConstriantsWindAndCollisionKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+            if (this.doIntegrationAndGlobalShapeConstraints)
+			    this.simulationShader.Dispatch (this.IntegrationAndGlobalShapeConstraintsKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
+            if (this.doLocalShapeConstraints)
+                this.simulationShader.Dispatch (this.LocalShapeConstraintsWithIterationKernelId, numOfGroupsForCS_StrandLevel, 1, 1);
+            if (this.doLengthConstraintsWindAndCollision)
+                this.simulationShader.Dispatch (this.LengthConstraintsWindAndCollisionKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
 
 			if (this.followHairs)
 				this.simulationShader.Dispatch (this.UpdateFollowHairVerticesKernelId, numOfGroupsForCS_VertexLevel, 1, 1);
@@ -285,7 +298,7 @@ namespace TressFX
 		/// g_FollowHairRootOffset 
 		/// </summary>
 		/// <param name="kernelId">Kernel identifier.</param>
-		private void SetBuffers(int kernelId)
+		protected virtual void SetBuffers(int kernelId)
 		{
 			this.simulationShader.SetBuffer (kernelId, "g_HairVertexPositions", this.master.g_HairVertexPositions);
 			this.simulationShader.SetBuffer (kernelId, "g_HairVertexPositionsPrev", this.master.g_HairVertexPositionsPrev);
@@ -302,7 +315,7 @@ namespace TressFX
 		/// <summary>
 		/// Sets the constants for the compute shader simulation.
 		/// </summary>
-		private void SetConstants()
+		protected virtual void SetConstants()
 		{
 			// Set transform values
             Matrix4x4 m = Matrix4x4.TRS(this.transform.position, this.transform.rotation, Vector3.one);
@@ -322,33 +335,47 @@ namespace TressFX
 			this.simulationShader.SetFloat ("g_GravityMagnitude", this.gravityMagnitude);
 			this.simulationShader.SetFloat ("g_TimeStep", Time.deltaTime);
 			this.simulationShader.SetInt ("g_NumOfStrandsPerThreadGroup", this.numOfStrandsPerThreadGroup);
-			this.simulationShader.SetInt ("g_NumFollowHairsPerOneGuideHair", this.master.hairData.m_NumFollowHairsPerOneGuideHair);
+			this.simulationShader.SetInt ("g_NumFollowHairsPerGuideHair", this.master.hairData.m_NumFollowHairsPerOneGuideHair);
 			this.simulationShader.SetInt ("g_bWarp", this.isWarping ? 1 : 0);
-			this.simulationShader.SetInt ("g_NumLocalShapeMatchingIterations", this.localShapeConstraintIterations);
+            this.simulationShader.SetInt("g_NumLocalShapeMatchingIterations", this.localShapeConstraintIterations);
+            this.simulationShader.SetFloat("g_TipSeparationFactor", this.tipSeperationFactor);
+            this.simulationShader.SetInt("g_bSingleHeadTransform", 1);
+            this.simulationShader.SetInt("g_NumVerticesPerStrand", this.master.hairData.m_NumOfVerticesPerStrand);
 
-			// Colliders
-			if (this.collider1 != null)
-			{
-				this.simulationShader.SetVector ("g_cc0_center", this.collider1.center);// new Vector3(-0.095f, 92.000f, -9.899f));
-				this.simulationShader.SetFloat ("g_cc0_radius", this.collider1.radius);// 26.5f);
-				this.simulationShader.SetFloat ("g_cc0_radius2", this.collider1.radius*this.collider1.radius);//  26.5f*26.5f);
-				
-			}
-			if (this.collider2 != null)
-			{
-				this.simulationShader.SetVector ("g_cc1_center", this.collider2.center);// new Vector3(-0.405f, 93.707f, 5.111f));
-				this.simulationShader.SetFloat ("g_cc1_radius", this.collider2.radius);//  24.113f);
-				this.simulationShader.SetFloat ("g_cc1_radius2", this.collider2.radius*this.collider2.radius);//  24.113f*24.113f);
-			}
-			if (this.collider3 != null)
-			{
-				this.simulationShader.SetVector ("g_cc2_center", this.collider3.center);// new Vector3(-0.072f, 68.548f, 10.561f));
-				this.simulationShader.SetFloat ("g_cc2_radius", this.collider3.radius);//  30.0f);
-				this.simulationShader.SetFloat ("g_cc2_radius2", this.collider3.radius*this.collider3.radius);//  25.500f*25.500f);
-			}
+            // Colliders
+            if (this.collider1 != null && this.collider2 != null && this.collider3 != null)
+            {
+                // Since the simulation always happens in uniform 1 scaling space, the colliders need to be inverse scaled in order to match the hair coordinate system
+                // This is done to provide visual downscaling by like 100 times and running simulation with the higher scaled version in order to prevent precision loss
+                // and simulation system instability when running with low scale hair.
+                float lowestScale = Mathf.Min(this.transform.localScale.x, this.transform.localScale.y, this.transform.localScale.z);
+                Vector3 scaleBk = this.transform.localScale;
+                this.transform.localScale = Vector3.one;
 
-			// Set config constants
-			for (int i = 0; i < this.master.hairData.hairPartConfig.Length; i++)
+                Vector3 c1Center = this.transform.InverseTransformPoint(collider1.transform.TransformPoint(collider1.center));
+                Vector3 c2Center = this.transform.InverseTransformPoint(collider2.transform.TransformPoint(collider2.center));
+                Vector3 c3Center = this.transform.InverseTransformPoint(collider3.transform.TransformPoint(collider3.center));
+
+                this.transform.localScale = scaleBk;
+
+                c1Center /= lowestScale;
+                c2Center /= lowestScale;
+                c3Center /= lowestScale;
+
+                float r1 = this.collider1.radius / lowestScale;
+                float r2 = this.collider2.radius / lowestScale;
+                float r3 = this.collider3.radius / lowestScale;
+
+                this.simulationShader.SetVector("g_cc0_center1AndRadius", new Vector4(c1Center.x, c1Center.y, c1Center.z, r1));
+                this.simulationShader.SetVector("g_cc0_center2AndRadiusSquared", new Vector4(c2Center.x, c2Center.y, c2Center.z, r1*r1));
+                this.simulationShader.SetVector("g_cc1_center1AndRadius", new Vector4(c2Center.x, c2Center.y, c2Center.z, r2));
+                this.simulationShader.SetVector("g_cc1_center2AndRadiusSquared", new Vector4(c3Center.x, c3Center.y, c3Center.z, r2*r2));
+                this.simulationShader.SetVector("g_cc2_center1AndRadius", new Vector4(c3Center.x, c3Center.y, c3Center.z, r3));
+                this.simulationShader.SetVector("g_cc2_center2AndRadiusSquared", new Vector4(c1Center.x, c1Center.y, c1Center.z, r3*r3));
+            }
+
+            // Set config constants
+            for (int i = 0; i < this.master.hairData.hairPartConfig.Length; i++)
 			{
 				this.simulationShader.SetFloat("g_Damping"+i, this.master.hairData.hairPartConfig[i].Damping);
 				this.simulationShader.SetFloat("g_StiffnessForLocalShapeMatching"+i, this.master.hairData.hairPartConfig[i].StiffnessForLocalShapeMatching);

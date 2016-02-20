@@ -58,7 +58,7 @@ namespace TressFXLib.Formats
                 {
                     case "v":
                         {
-                            vertices.Add(new Vector3(SafeParse(parts[1]), SafeParse(parts[2]), SafeParse(parts[3])));
+                            vertices.Add(Vector3.Multiply(new Vector3(SafeParse(parts[1]), SafeParse(parts[2]), SafeParse(parts[3])), importSettings.scale));
                         }
                         break;
                     case "l":

@@ -9,6 +9,11 @@ uniform float g_MatKs2;
 uniform float g_MatEx2;
 uniform sampler2D _RandomTex;
 
+// Helper matrices
+uniform float4x4 _TFX_World2Object;
+uniform float4x4 _TFX_ScaleMatrix;
+uniform float4x4 _TFX_Object2World;
+
 struct SurfaceOutputKajiyaKay
 {
 	fixed3 iTangent;
@@ -32,6 +37,15 @@ struct SurfaceOutputKajiyaKay
 	StructuredBuffer<float> g_HairThicknessCoeffs;
 	StructuredBuffer<float4> g_TexCoords;
 #endif
+
+// Vertex index -> hair position (scaled)
+inline float3 GetVertexPosition(uint index)
+{
+	float3 vert = mul(_TFX_World2Object, float4(g_HairVertexPositions[index].xyz, 1)).xyz;
+	vert = mul(_TFX_ScaleMatrix, float4(vert, 1)).xyz;
+	vert = mul(_TFX_Object2World, float4(vert, 1)).xyz;
+	return vert;
+}
 
 inline fixed4 KajiyaKayLighting(SurfaceOutputKajiyaKay s, UnityLight light)
 {

@@ -35,6 +35,14 @@ namespace TressFX
 				target.hairPartConfig[i].GlobalShapeMatchingEffectiveRange = EditorGUILayout.FloatField ("GSM effective range", target.hairPartConfig[i].GlobalShapeMatchingEffectiveRange);
 			}
 
+            // Merge
+            EditorGUILayout.LabelField("Drag tressfx hair here to merge");
+            TressFXHair mergeHair = (TressFXHair)EditorGUILayout.ObjectField(null, typeof(TressFXHair));
+
+            if (mergeHair != null)
+            {
+                target.MergeIntoThis(mergeHair);
+            }
 			// Save hair data
 			if (GUILayout.Button ("Save"))
 			{

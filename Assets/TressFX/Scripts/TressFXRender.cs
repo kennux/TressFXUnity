@@ -32,9 +32,9 @@ namespace TressFX
 		/// Start this instance.
 		/// Initializes the hair material and all other resources.
 		/// </summary>
-		public void Start()
+		public override void Awake()
 		{
-			base.Start ();
+			base.Awake();
 			if (this.hairMaterial == null)
 			{
 				Debug.LogError("No hair material assigned to tressfx hair :(");
@@ -67,8 +67,16 @@ namespace TressFX
 			this.hairMaterial.SetBuffer ("g_TexCoords", this.master.g_TexCoords);
 			this.hairMaterial.SetInt ("_VerticesPerStrand", this.master.hairData.m_NumOfVerticesPerStrand);
 
-			// Set random texture
-			this.hairMaterial.SetTexture ("_RandomTex", this.randomTexture);
+            // Transformation matrices
+            this.shadowMaterial.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
+            this.shadowMaterial.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
+            this.shadowMaterial.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
+            this.hairMaterial.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
+            this.hairMaterial.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
+            this.hairMaterial.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
+
+            // Set random texture
+            this.hairMaterial.SetTexture ("_RandomTex", this.randomTexture);
 			
 			// Update rendering bounds
 			Bounds renderingBounds = new Bounds (this.transform.position + this.renderingBounds.center, this.renderingBounds.size);

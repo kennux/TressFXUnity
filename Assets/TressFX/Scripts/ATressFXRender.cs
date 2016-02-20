@@ -29,12 +29,17 @@ namespace TressFX
 		/// The triangle indices buffer.
 		/// </summary>
 		protected ComputeBuffer g_TriangleIndicesBuffer;
-		
-		/// <summary>
-		/// The triangle meshes.
-		/// Meshes are built of indices. Every vertices x-position will contain a triangleindex buffer index.
-		/// </summary>
-		protected Mesh[] triangleMeshes;
+
+        /// <summary>
+        /// The line indices buffer.
+        /// </summary>
+        public ComputeBuffer g_LineIndicesBuffer;
+
+        /// <summary>
+        /// The triangle meshes.
+        /// Meshes are built of indices. Every vertices x-position will contain a triangleindex buffer index.
+        /// </summary>
+        protected Mesh[] triangleMeshes;
 		
 		/// <summary>
 		/// The line meshes.
@@ -44,10 +49,11 @@ namespace TressFX
 		/// <summary>
 		/// The rendering bounds.
 		/// </summary>
-		protected Bounds renderingBounds;
+        [HideInInspector]
+		public Bounds renderingBounds;
 
 		
-		public virtual void Start()
+		public virtual void Awake()
 		{
 			// Get TressFX master
 			this.master = this.GetComponent<TressFX> ();
@@ -55,9 +61,13 @@ namespace TressFX
 			// Set triangle indices buffer
 			this.g_TriangleIndicesBuffer = new ComputeBuffer (this.master.hairData.m_TriangleIndices.Length, 4);
 			this.g_TriangleIndicesBuffer.SetData (this.master.hairData.m_TriangleIndices);
-			
-			// Generate meshes
-			this.triangleMeshes = this.GenerateTriangleMeshes ();
+
+            // Set line indices buffer
+            this.g_LineIndicesBuffer = new ComputeBuffer(this.master.hairData.m_LineIndices.Length, 4);
+            this.g_LineIndicesBuffer.SetData(this.master.hairData.m_LineIndices);
+
+            // Generate meshes
+            this.triangleMeshes = this.GenerateTriangleMeshes ();
 			this.lineMeshes = this.GenerateLineMeshes ();
 			
 			// Initialize shadow material
@@ -68,7 +78,7 @@ namespace TressFX
 
 		}
 		
-		public void Update()
+		public virtual void Update()
 		{
 			if (!this.debugBoundingBox)
 				return;
@@ -207,9 +217,10 @@ namespace TressFX
 		/// Raises the destroy event.
 		/// Releases all resources not needed any more.
 		/// </summary>
-		public void OnDestroy()
+		public virtual void OnDestroy()
 		{
 			this.g_TriangleIndicesBuffer.Release ();
+            this.g_LineIndicesBuffer.Release();
 		}
 		
 		/// <summary>
