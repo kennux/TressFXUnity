@@ -6,22 +6,17 @@ namespace TressFX
 {
 	public class TressFXRender : ATressFXRender
 	{
-		
-		/// <summary>
-		/// The hair material.
-		/// </summary>
-		public Material hairMaterial;
-		
-		/// <summary>
-		/// If this is set to true an additional rendering pass for shadows is rendered.
-		/// </summary>
-		public bool castShadows = true;
+		[Header("Triangle Shadows")]
+        /// <summary>
+        /// The full shadows flag.
+        /// If this is checked, shadow is rendered in triangle topology instead of line topology.
+        /// </summary>
+        public bool fullShadows = true;
 
-		/// <summary>
-		/// The full shadows flag.
-		/// If this is checked, shadow is rendered in triangle topology instead of line topology.
-		/// </summary>
-		public bool fullShadows = true;
+        /// <summary>
+        /// The hair material.
+        /// </summary>
+        public Material hairMaterial;
 
 		/// <summary>
 		/// The random texture.
@@ -55,9 +50,15 @@ namespace TressFX
 			this.randomTexture.Apply ();
 		}
 
-		/// <summary>
-		/// </summary>
-		public void LateUpdate()
+        protected override void RenderShadows()
+        {
+            if (!this.fullShadows)
+                base.RenderShadows();
+        }
+
+        /// <summary>
+        /// </summary>
+        public void LateUpdate()
 		{
 			// Set shader buffers
 			this.hairMaterial.SetBuffer ("g_HairVertexTangents", this.master.g_HairVertexTangents);
@@ -68,12 +69,8 @@ namespace TressFX
 			this.hairMaterial.SetInt ("_VerticesPerStrand", this.master.hairData.m_NumOfVerticesPerStrand);
 
             // Transformation matrices
-            this.shadowMaterial.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
-            this.shadowMaterial.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
-            this.shadowMaterial.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
-            this.hairMaterial.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
-            this.hairMaterial.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
-            this.hairMaterial.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
+            SetSimulationTransformCorrection(this.hairMaterial);
+            SetSimulationTransformCorrection(this.shadowMaterial);
 
             // Set random texture
             this.hairMaterial.SetTexture ("_RandomTex", this.randomTexture);
@@ -92,19 +89,8 @@ namespace TressFX
 				foreach (Camera cam in Camera.allCameras)
 					Graphics.DrawMesh (this.triangleMeshes [i], Vector3.zero, Quaternion.identity, this.hairMaterial, 8, cam, 0, new MaterialPropertyBlock(), this.fullShadows);
 			}
-			
-			// Render shadows
-			// Surface shader renders it's own shadows
-			if (this.castShadows && !this.fullShadows)
-			{
-				this.shadowMaterial.SetBuffer("g_HairVertexPositions", this.master.g_HairVertexPositions);
-				
-				for (int i = 0; i < this.lineMeshes.Length; i++)
-				{
-					this.lineMeshes[i].bounds = renderingBounds;
-					Graphics.DrawMesh (this.lineMeshes [i], Vector3.zero, Quaternion.identity, this.shadowMaterial, 8);
-				}
-			}
+
+            RenderShadows();
 		}
 	}
 }

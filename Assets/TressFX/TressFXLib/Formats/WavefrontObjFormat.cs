@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using TressFXLib.Numerics;
-using System.Linq;
 using System.Globalization;
 
 namespace TressFXLib.Formats
@@ -105,6 +104,9 @@ namespace TressFXLib.Formats
                     alreadyLoadedIndices.Add(indices[i].index2);
                 }
             }
+
+            // Shuffle strands
+            currentStrands = FormatHelper.Shuffle(currentStrands);
 
             HairMesh hm = new HairMesh();
             currentStrands.ForEach((item) =>

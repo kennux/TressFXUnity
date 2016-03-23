@@ -13,6 +13,7 @@ uniform sampler2D _RandomTex;
 uniform float4x4 _TFX_World2Object;
 uniform float4x4 _TFX_ScaleMatrix;
 uniform float4x4 _TFX_Object2World;
+uniform float4 _TFX_PositionOffset;
 
 struct SurfaceOutputKajiyaKay
 {
@@ -41,7 +42,7 @@ struct SurfaceOutputKajiyaKay
 // Vertex index -> hair position (scaled)
 inline float3 GetVertexPosition(uint index)
 {
-	float3 vert = mul(_TFX_World2Object, float4(g_HairVertexPositions[index].xyz, 1)).xyz;
+	float3 vert = mul(_TFX_World2Object, float4(g_HairVertexPositions[index].xyz - _TFX_PositionOffset.xyz, 1)).xyz;
 	vert = mul(_TFX_ScaleMatrix, float4(vert, 1)).xyz;
 	vert = mul(_TFX_Object2World, float4(vert, 1)).xyz;
 	return vert;
@@ -88,7 +89,7 @@ inline fixed4 KajiyaKayLighting(SurfaceOutputKajiyaKay s, UnityLight light)
 //                    g_MatKs2 * pow(specular_tip, (g_MatEx2 * s.SpecularEx2)) * baseColor); // secondary highlight rtr 
 
     float3 vColor = UNITY_LIGHTMODEL_AMBIENT.rgb * baseColor + // ambient * base
-                    amountLight * light.color.xyz * (
+					amountLight * light.color.xyz * (
                     g_MatKd * diffuse * baseColor + // diffuse
                     g_MatKs1 * pow(specular_root, (g_MatEx1 * s.SpecularEx1))  + // primary hightlight r
                     g_MatKs2 * pow(specular_tip, (g_MatEx2 * s.SpecularEx2)) * s.Specular); // secondary highlight rtr 

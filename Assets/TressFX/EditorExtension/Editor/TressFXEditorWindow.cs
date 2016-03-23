@@ -25,7 +25,7 @@ namespace TressFX
 					if (EditorPrefs.HasKey("TRESSFX_ImportScale_X") && EditorPrefs.HasKey("TRESSFX_ImportScale_Y") && EditorPrefs.HasKey("TRESSFX_ImportScale_Z"))
 						_importScale = new Vector3(EditorPrefs.GetFloat("TRESSFX_ImportScale_X"),EditorPrefs.GetFloat("TRESSFX_ImportScale_Y"),EditorPrefs.GetFloat("TRESSFX_ImportScale_Z"));
 					else
-						_importScale = Vector3.one;
+						_importScale = Vector3.one * 100f; // 100,100,100 is standard
 				}
 
 				return _importScale;
@@ -150,7 +150,7 @@ namespace TressFX
 		}
 		
 		// Add menu named "My Window" to the Window menu
-		[MenuItem ("Window/TressFX")]
+		[MenuItem ("Window/TressFX Settings")]
 		static void Init () {
 			// Get existing open window or if none, make a new one:
 			TressFXEditorWindow window = (TressFXEditorWindow)EditorWindow.GetWindow (typeof (TressFXEditorWindow));
@@ -159,13 +159,14 @@ namespace TressFX
 		
 		void OnGUI ()
 		{
+            EditorGUILayout.LabelField("Import Settings", EditorStyles.boldLabel);
+
 			// Import scale field
 			importScale = EditorGUILayout.Vector3Field ("Import scale", importScale);
 			GUILayout.Space (20);
 
 			// ASE-Import section
-			GUILayout.Label ("ASE-Import");
-			GUILayout.Label ("<------------------------------------------->");
+			GUILayout.Label ("Strand normalization (OBJ/ASE only)", EditorStyles.boldLabel);
 
 			normalizeVertexCountActive = GUILayout.Toggle (normalizeVertexCountActive, "Normalize vertex count");
 			if (normalizeVertexCountActive)
@@ -176,10 +177,9 @@ namespace TressFX
 				GUILayout.EndHorizontal();
 			}
 
-			GUILayout.Label ("<------------------------------------------->");
-
-			GUILayout.Space (20);
-			GUILayout.BeginHorizontal ();
+            GUILayout.Space(20);
+            GUILayout.Label("Follow hair generation (OBJ/ASE only)", EditorStyles.boldLabel);
+            GUILayout.BeginHorizontal ();
 
 			GUILayout.Label ("Follow hairs per one guidance hairs");
 			followHairCount = EditorGUILayout.IntField ("", followHairCount);

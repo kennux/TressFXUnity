@@ -17,6 +17,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 5.0
+			#pragma only_renderers d3d11
 			#pragma multi_compile_shadowcaster
 	            
 			#include "UnityCG.cginc"
@@ -29,16 +30,12 @@
 				V2F_SHADOW_CASTER;
 			};
 
-			v2f vert(appdata_base input) // uint vertexId : SV_VertexID) // 
+			v2f vert(appdata_base input)
 			{
 				float3 vertexPosition = GetVertexPosition((uint)input.vertex.x);
 	            
-	            //int index = g_LineIndices[vertexId];
-	            //float3 vertexPosition = g_HairVertexPositions[index];
-	            
 		        appdata_base v;
 		        v.vertex = float4(vertexPosition.xyz, 1);
-	            
 	            v2f o;
 	            
 				TRANSFER_SHADOW_CASTER(o)

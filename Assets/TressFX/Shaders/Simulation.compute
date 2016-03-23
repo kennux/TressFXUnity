@@ -64,7 +64,7 @@ RWStructuredBuffer<float4> g_LocalRotations;
 RWStructuredBuffer<Transforms> g_Transforms;
 
 // SRVs
-StructuredBuffer<float>								g_HairRestLengthSRV;
+StructuredBuffer<float>								g_HairRestLength;
 StructuredBuffer<int>								g_HairStrandType;
 StructuredBuffer<float4>							g_HairRefVecsInLocalFrame;
 StructuredBuffer<float4>							g_FollowHairRootOffset;
@@ -683,7 +683,7 @@ void LengthConstraintsWindAndCollision(uint GIndex : SV_GroupIndex,
     // Copy data into shared memory
     //------------------------------
     sharedPos[indexForSharedMem] = g_HairVertexPositions[globalVertexIndex];
-    sharedLength[indexForSharedMem] = g_HairRestLengthSRV[globalVertexIndex]; 
+    sharedLength[indexForSharedMem] = g_HairRestLength[globalVertexIndex]; 
     GroupMemoryBarrierWithGroupSync();
 
 	//------------

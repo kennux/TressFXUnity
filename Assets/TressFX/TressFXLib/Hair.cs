@@ -627,8 +627,6 @@ namespace TressFXLib
 
                     for (int k = 0; k < currentStrand.vertices.Count - 1; k++)
                     {
-                        HairStrandVertex currentVertex = currentStrand.vertices[k];
-
                         // Append line indices
                         lineIndices.Add(id);
                         lineIndices.Add(id+1);

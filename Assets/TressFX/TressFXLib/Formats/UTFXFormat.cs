@@ -22,7 +22,8 @@ namespace TressFXLib.Formats
                         foreach (HairStrandVertex vertex in strand.vertices)
                             WriteVector4(writer, vertex.texcoord);
         }
-        public HairMesh[] Import(BinaryReader reader, string path, Hair hair, HairImportSettings importSettings)
+
+        public override HairMesh[] Import(BinaryReader reader, string path, Hair hair, HairImportSettings importSettings)
         {
             HairMesh[] meshes = base.Import(reader, path, hair, importSettings);
             int id = 0;

@@ -5,15 +5,16 @@ namespace TressFX
 {
 	public abstract class ATressFXRender : MonoBehaviour
 	{
-		/// <summary>
-		/// The debug bounding box flag.
-		/// </summary>
-		public bool debugBoundingBox = false;
+        [Header("Shadows")]
+        /// <summary>
+        /// If this is set to true an additional rendering pass for shadows is rendered.
+        /// </summary>
+        public bool castShadows = true;
 
-		/// <summary>
-		/// The shadow shader.
-		/// </summary>
-		public Shader shadowShader;
+        /// <summary>
+        /// The shadow shader.
+        /// </summary>
+        public Shader shadowShader;
 		
 		/// <summary>
 		/// The shadow material.
@@ -45,12 +46,57 @@ namespace TressFX
 		/// The line meshes.
 		/// </summary>
 		protected Mesh[] lineMeshes;
-		
-		/// <summary>
-		/// The rendering bounds.
-		/// </summary>
+
+        [Header("Debug")]
+        /// <summary>
+        /// The debug bounding box flag.
+        /// </summary>
+        public bool debugBoundingBox = false;
+
+        /// <summary>
+        /// Rendering bounds in worldspace.
+        /// </summary>
+        public Bounds worldspaceBounds
+        {
+            get
+            {
+                return new Bounds(this.renderingBounds.center, this.renderingBounds.size);
+            }
+        }
+
+        /// <summary>
+        /// The rendering bounds.
+        /// In local space!
+        /// </summary>
         [HideInInspector]
-		public Bounds renderingBounds;
+		public Bounds renderingBounds
+        {
+            get
+            {
+                return new Bounds(Vector3.Scale(this._renderingBounds.center, this.transform.localScale), Vector3.Scale(this._renderingBounds.size, this.transform.localScale));
+            }
+        }
+        private Bounds _renderingBounds;
+
+        /// <summary>
+        /// Submits draw calls to unitys rendering system to render hair shadows.
+        /// </summary>
+        protected virtual void RenderShadows()
+        {
+            if (this.castShadows)
+            {
+                this.shadowMaterial.SetBuffer("g_HairVertexPositions", this.master.g_HairVertexPositions);
+
+                foreach (var cam in Camera.allCameras)
+                {
+                    for (int i = 0; i < this.lineMeshes.Length; i++)
+                    {
+                        this.lineMeshes[i].bounds = renderingBounds;
+                        Graphics.DrawMesh(this.lineMeshes[i], Matrix4x4.identity, this.shadowMaterial, this.gameObject.layer, cam);
+                    }
+                }
+            }
+        }
 
 		
 		public virtual void Awake()
@@ -74,8 +120,7 @@ namespace TressFX
 			this.shadowMaterial = new Material (this.shadowShader);
 			
 			// Create render bounds
-			this.renderingBounds = new Bounds (this.master.hairData.m_bSphere.center, new Vector3(this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius));
-
+			this._renderingBounds = new Bounds (this.master.hairData.m_bSphere.center, new Vector3(this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius));
 		}
 		
 		public virtual void Update()
@@ -128,7 +173,7 @@ namespace TressFX
 		/// Meshes are built of indices. Every vertices x-position will contain a triangleindex buffer index.
 		/// </summary>
 		/// <returns>The triangle meshes.</returns>
-		protected Mesh[] GenerateTriangleMeshes()
+		protected virtual Mesh[] GenerateTriangleMeshes()
 		{
 			// Counter
 			int indexCounter = 0;
@@ -173,7 +218,7 @@ namespace TressFX
 		/// Meshes are built of indices. Every vertices x-position will contain a vertex list index.
 		/// </summary>
 		/// <returns>The line meshes.</returns>
-		protected Mesh[] GenerateLineMeshes()
+		protected virtual Mesh[] GenerateLineMeshes()
 		{
 			// Counter
 			int indexCounter = 0;
@@ -212,6 +257,25 @@ namespace TressFX
 			
 			return meshBuilder.GetMeshes ();
 		}
+
+        /// <summary>
+        /// Sets the simulation upscaling correction paramters to the given material.
+        /// </summary>
+        /// <param name="mat"></param>
+        protected void SetSimulationTransformCorrection(Material mat)
+        {
+            mat.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
+            mat.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
+            mat.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
+
+            Vector3 scale = new Vector3
+            (
+                1 / this.transform.lossyScale.x,
+                1 / this.transform.lossyScale.y,
+                1 / this.transform.lossyScale.z
+            );
+            mat.SetVector("_TFX_PositionOffset", Vector3.Scale(this.transform.position, scale) - this.transform.position);
+        }
 		
 		/// <summary>
 		/// Raises the destroy event.

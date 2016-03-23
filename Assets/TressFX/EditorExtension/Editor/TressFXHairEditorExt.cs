@@ -180,7 +180,7 @@ namespace TressFX
                 hair.NormalizeStrands(TressFXEditorWindow.normalizeVertexCount);
             }
 
-            hair = hair.PrepareSimulationParamatersAssetConverter(TressFXEditorWindow.followHairCount, TressFXEditorWindow.maxRadiusAroundGuideHair, Application.dataPath + "/" + EditorPrefs.GetString("TressFXAssetConverterPath"));
+            hair.PrepareSimulationParamatersAssetConverter(TressFXEditorWindow.followHairCount, TressFXEditorWindow.maxRadiusAroundGuideHair, Application.dataPath + "/" + EditorPrefs.GetString("TressFXAssetConverterPath"));
             hair.CreateUVs();
 
             newHairData.LoadHairData(hair);

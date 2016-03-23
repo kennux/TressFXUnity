@@ -12,7 +12,7 @@
 		g_MatKs2 ( "Material Ks2", Range(0,1)) = 0.5
 		g_bThinTip ( "Thin tip (>0 means enabled)", Range(0,1)) = 0
 		_HairWidth ( "HairWidth", Range(0,1)) = 0.14
-		_HairWidthMulitplier ( "HairWidth Multiplier", Range(0,1)) = 1
+		_HairWidthMultiplier ( "HairWidth Multiplier", Range(0,1)) = 1
 		_HairColorTex ( "Hair color texture", 2D) = "white" {}
 		_HairSpecularTexEx1 ( "Primary highlight multiplicator texture (Ex1)", 2D) = "white" {}
 		_HairSpecularTexEx2 ( "Secondary highlight multiplicator texture (Ex2)", 2D) = "white" {}
@@ -31,6 +31,7 @@
 		
 		// Target = DX 11
 		#pragma target 5.0
+		#pragma only_renderers d3d11
 
 		struct Input {
 			float3 iTangent;
@@ -46,7 +47,7 @@
 		// Deformation / Procedural mesh generation parameters
 		uniform float g_bThinTip;
 		uniform float _HairWidth;
-		uniform float _HairWidthMulitplier;
+		uniform float _HairWidthMultiplier;
 		
 		// Textures
 		uniform sampler2D _HairColorTex;
@@ -78,7 +79,7 @@
 			
 			// Calculate normal
 			v.normal.xyz = cross(left, t);
-			v.vertex.xyz = vert + ((right * ((_HairWidth * _HairWidthMulitplier) * ratio))  * fDirIndex);
+			v.vertex.xyz = vert + ((right * ((_HairWidth * _HairWidthMultiplier) * ratio))  * fDirIndex);
 			v.texcoord.xy = g_TexCoords[vertexId].xy;
 			
 			// Set tangent

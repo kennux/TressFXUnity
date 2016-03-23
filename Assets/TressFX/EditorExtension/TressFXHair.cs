@@ -204,6 +204,30 @@ namespace TressFX
 		[SerializeField]
 		public HairPartConfig[] hairPartConfig;
 
+        public void Reimport()
+        {
+            // Export hair vertices
+            /*int i = 0;
+            Dictionary <int, HairMesh> meshes = new Dictionary<int, HairMesh>();
+            for (i = 0; i < this.hairPartConfig.Length; i++)
+                meshes.Add(i, new HairMesh());
+
+            foreach (var index in this.m_pHairStrandType)
+            {
+                int offset = (i * this.m_NumOfVerticesPerStrand);
+                HairStrand hs = new HairStrand()
+                {
+                    isGuidanceStrand = this.m_pFollowRootOffset[i].x == 0 && this.m_pFollowRootOffset[i].y == 0 && this.m_pFollowRootOffset[i].z == 0;
+                };
+
+                for (int j = 0; j < this.m_NumOfVerticesPerStrand; j++)
+                {
+                    hs.strands.Add(index, this.m_pVertices[offset+j])
+                }
+                meshes[offset + j].strands.Add(new )
+            }*/
+        }
+
         /// <summary>
         /// Merges other into this tressfx hair.
         /// </summary>
@@ -217,8 +241,8 @@ namespace TressFX
             if (this.m_NumOfVerticesPerStrand != other.m_NumOfVerticesPerStrand)
                 throw new Exception("Tressfx merge error! Hair vertex count per strand must match!");
 
-            int newPartCount = this.hairPartConfig.Length + other.hairPartConfig.Length;
-            int otherPartCount = other.hairPartConfig.Length;
+            /*int newPartCount = this.hairPartConfig.Length + other.hairPartConfig.Length;
+            int otherPartCount = other.hairPartConfig.Length;*/
             int thisPartCount = this.hairPartConfig.Length;
 
             // Create lists
@@ -305,7 +329,12 @@ namespace TressFX
             this.m_NumGuideHairVertices = this.m_NumGuideHairVertices + other.m_NumGuideHairVertices;
             this.m_NumGuideHairStrands = this.m_NumGuideHairStrands + other.m_NumGuideHairStrands;
 
-            // TODO: Bounds
+            // Bounds
+            Bounds newBounds = new Bounds(this.m_bSphere.center, Vector3.one * this.m_bSphere.radius);
+            newBounds.Encapsulate(new Bounds(other.m_bSphere.center, Vector3.one * this.m_bSphere.radius));
+
+            this.m_bSphere.center = newBounds.center;
+            this.m_bSphere.radius = Mathf.Max(newBounds.extents.x, newBounds.extents.y, newBounds.extents.z);
         }
 	}
 }

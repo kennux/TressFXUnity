@@ -10,6 +10,9 @@ namespace TressFXLib.Formats
     /// <summary>
     /// TressFX Binary (TFXB) file format implementation.
     /// This format is available for import and export.
+    /// 
+    /// This file format implementation does __NOT__ contain import logic for amd's TFXB file.
+    /// Unity TressFX uses a slightly modified version, because the data amd's exporter exported couldnt be read into c# easily.
     /// </summary>
     public class TFXBFormat : IHairFormat
     {
@@ -103,7 +106,7 @@ namespace TressFXLib.Formats
             int maxVerticesPerStrand = reader.ReadInt32();
             int numGuideHairVertices = reader.ReadInt32();
             int numGuideHairStrands = reader.ReadInt32();
-            int numFollowHairsPerOneGuideHair = reader.ReadInt32();
+            /*int numFollowHairsPerOneGuideHair = */reader.ReadInt32();
 
             // Load hair data information
             int[] strandTypes = ReadIntegerArray(reader, numStrands);
@@ -116,9 +119,9 @@ namespace TressFXLib.Formats
             // Read the triangle vertices
             // Actually those are __NEVER__ used anywhere.
             // So, we are going to skip / ignore them
-            Vector3[] nonsense = ReadVector3Array(reader, numVertices);
-            nonsense = ReadVector3Array(reader, numVertices);
-            Vector4[] nonsense2 = ReadVector4Array(reader, numVertices);
+            ReadVector3Array(reader, numVertices);
+            ReadVector3Array(reader, numVertices);
+            ReadVector4Array(reader, numVertices);
 
             float[] thicknessCoefficients = ReadFloatArray(reader, numVertices);
             Vector4[] followRootOffsets = ReadVector4Array(reader, numStrands);

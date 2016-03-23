@@ -109,6 +109,13 @@ namespace TressFXLib
         public bool isMovable = true;
 
         /// <summary>
+        /// The distance from this vertex to the root of the hair.
+        /// This is generated during simulation data preparation.
+        /// This value is normalized between 0 and 1
+        /// </summary>
+        public float distanceToRoot;
+
+        /// <summary>
         /// The global transformation of the current vertex.
         /// </summary>
         public HairStrandVertexTransform globalTransform = new HairStrandVertexTransform();

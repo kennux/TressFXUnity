@@ -8,8 +8,6 @@ namespace TressFX
 	[CustomEditor(typeof(TressFXHair))]
 	public class TressFXHairEditor : Editor
 	{
-		private Vector3 scale = new Vector3();
-
 		public override void OnInspectorGUI()
 		{
 			// Get the tressfx hair instance
@@ -37,44 +35,19 @@ namespace TressFX
 
             // Merge
             EditorGUILayout.LabelField("Drag tressfx hair here to merge");
-            TressFXHair mergeHair = (TressFXHair)EditorGUILayout.ObjectField(null, typeof(TressFXHair));
+            TressFXHair mergeHair = (TressFXHair)EditorGUILayout.ObjectField(null, typeof(TressFXHair), false);
 
             if (mergeHair != null)
             {
                 target.MergeIntoThis(mergeHair);
             }
-			// Save hair data
-			if (GUILayout.Button ("Save"))
-			{
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
-			}
 
-			/*
-			// Load new hair data TFXB
-			if (GUILayout.Button("Load new Hairdata (TFXB)"))
+                // Save hair data
+            if (GUILayout.Button ("Save"))
 			{
-				// Load new hair file
-				string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "tfxb");
-				target.LoadHairData (Hair.Import(HairFormat.TFXB, hairfilePath));
-				
-				// Save
 				EditorUtility.SetDirty(target);
 				AssetDatabase.SaveAssets();
 			}
-			
-			// Load new hair data ASE
-			if (GUILayout.Button("Load new Hairdata (ASE)"))
-			{
-				// Load new hair file
-				string hairfilePath = EditorUtility.OpenFilePanel ("Open TressFX Hair data", "", "ase");
-				target.LoadHairData (Hair.Import(HairFormat.ASE, hairfilePath));
-				
-				// Save
-				EditorUtility.SetDirty(target);
-				AssetDatabase.SaveAssets();
-			}
-			*/
 		}
 	}
 }

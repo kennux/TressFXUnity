@@ -38,7 +38,6 @@ namespace TressFXLib.Formats
             // Init "state"-variables
             int currentStrand = 0;
             int currentHairId = -1;
-            float texcoordMultiplier = 0;
 
             // Now the hard part begins...
             for (int i = 0; i < aseContent.Length; i++)
@@ -74,7 +73,6 @@ namespace TressFXLib.Formats
 
                             // Clear current strands
                             currentStrands.Clear();
-                            texcoordMultiplier = 1.0f / (float)int.Parse(tokens[1]);
                         }
                     }
                     else if (tokens[0] == "*SHAPE_LINE")
@@ -123,6 +121,9 @@ namespace TressFXLib.Formats
                     }
                 }
             }
+
+            // Shuffle strands
+            currentStrands = FormatHelper.Shuffle(currentStrands);
 
             // Get last mesh
             HairMesh lastMesh = new HairMesh();

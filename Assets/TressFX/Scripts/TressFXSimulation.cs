@@ -9,11 +9,16 @@ namespace TressFX
 	/// </summary>
 	[RequireComponent(typeof(TressFX))]
 	public class TressFXSimulation : MonoBehaviour
-	{
-		/// <summary>
-		/// The simulation shader.
-		/// </summary>
-		public ComputeShader simulationShader;
+    {
+        /// <summary>
+        /// The size of the thread groups for compute shader dispatching.
+        /// </summary
+        const int THREAD_GROUP_SIZE = 64;
+
+        /// <summary>
+        /// The simulation shader.
+        /// </summary>
+        public ComputeShader simulationShader;
 
 		/// <summary>
 		/// The local shape constraint iterations.
@@ -39,11 +44,6 @@ namespace TressFX
         /// The tip seperation factor used to update follow hair vertices.
         /// </summary>
         public float tipSeperationFactor = 5.0f;
-
-		/// <summary>
-		/// The size of the thread group.
-		/// </summary>
-		public int threadGroupSize = 64;
 
 		/// <summary>
 		/// If this is set to true head collision is performed.
@@ -93,7 +93,7 @@ namespace TressFX
 		/// <summary>
 		/// The wind direction.
 		/// </summary>
-		public Vector4 windDirection;
+		public Vector3 windDirection;
 
 		/// <summary>
 		/// The wind magnitude.
@@ -118,8 +118,9 @@ namespace TressFX
         public bool doIntegrationAndGlobalShapeConstraints = true;
         public bool doLocalShapeConstraints = true;
         public bool doLengthConstraintsWindAndCollision = true;
-		
-		private Vector4 windForce1;
+        public HairPartConfig[] partConfigs;
+
+        private Vector4 windForce1;
 		private Vector4 windForce2;
 		private Vector4 windForce3;
 		private Vector4 windForce4;
@@ -131,7 +132,8 @@ namespace TressFX
 
 		private bool firstUpdate = true;
 
-		public void Start()
+
+		public void Awake()
 		{
 			// No shader? :-(
 			if (this.simulationShader == null)
@@ -167,9 +169,13 @@ namespace TressFX
 			this.PrepareFollowHairBeforeTurningIntoGuideKernelId = this.simulationShader.FindKernel ("PrepareFollowHairBeforeTurningIntoGuide");
 
 			// Calculate num of strand per tg
-			this.numOfStrandsPerThreadGroup = this.threadGroupSize/this.master.hairData.m_NumOfVerticesPerStrand;
+			this.numOfStrandsPerThreadGroup = THREAD_GROUP_SIZE/this.master.hairData.m_NumOfVerticesPerStrand;
 
 			this.followHairsLastFrame = this.followHairs;
+
+            // Init part config instances
+            this.partConfigs = new HairPartConfig[this.master.hairData.hairPartConfig.Length];
+            System.Array.Copy(this.master.hairData.hairPartConfig, this.partConfigs, this.master.hairData.hairPartConfig.Length);
 		}
 
 		public void LateUpdate()
@@ -188,7 +194,7 @@ namespace TressFX
 			// Frame skipping if rendering too fast
 			if (Time.time - this.lastTimeSimulated < 1.0f / this.frameLimit && !this.isWarping)
 				return;
-			
+            
 			this.lastTimeSimulated = Time.time;
 			
 			this.SimulateWind ();
@@ -208,8 +214,8 @@ namespace TressFX
 			int vertexCount = (this.followHairsLastFrame ? this.master.hairData.m_NumGuideHairVertices : this.master.hairData.m_NumTotalHairVertices);
 			int strandCount = (this.followHairsLastFrame ? this.master.hairData.m_NumGuideHairStrands : this.master.hairData.m_NumTotalHairStrands);
 			
-			int numOfGroupsForCS_VertexLevel = (int)(((float)(vertexCount) / (float)this.threadGroupSize)*1); // * 1 = * density
-			int numOfGroupsForCS_StrandLevel = (int)(((float)(strandCount) / (float)this.threadGroupSize)*1);
+			int numOfGroupsForCS_VertexLevel = (int)(((float)(vertexCount) / (float)THREAD_GROUP_SIZE)*1); // * 1 = * density
+			int numOfGroupsForCS_StrandLevel = (int)(((float)(strandCount) / (float)THREAD_GROUP_SIZE) *1);
 			
 			if (this.followHairsLastFrame && !this.followHairs)
 			{
@@ -245,7 +251,7 @@ namespace TressFX
 			
 			float angle = Mathf.Asin(xCrossW.magnitude);
 			
-			if ( angle > 0.001 )
+			if ( angle > 0.001f )
 			{
 				rotFromXAxisToWindDir = Quaternion.AngleAxis(angle, xCrossW.normalized);
 			}
@@ -255,7 +261,6 @@ namespace TressFX
 			{
 				Vector3 rotAxis = new Vector3(0, 1.0f, 0);
 				
-				// Radians?
 				Quaternion rot = Quaternion.AngleAxis(angleToWideWindCone, rotAxis);
 				Vector3 newWindDir = rotFromXAxisToWindDir * rot * XAxis; 
 				this.windForce1 = new Vector4(newWindDir.x * wM, newWindDir.y * wM, newWindDir.z * wM, Time.frameCount);
@@ -305,7 +310,7 @@ namespace TressFX
 			this.simulationShader.SetBuffer (kernelId, "g_InitialHairPositions", this.master.g_InitialHairPositions);
 			this.simulationShader.SetBuffer (kernelId, "g_GlobalRotations", this.master.g_GlobalRotations);
 			this.simulationShader.SetBuffer (kernelId, "g_LocalRotations", this.master.g_LocalRotations);
-			this.simulationShader.SetBuffer (kernelId, "g_HairRestLengthSRV", this.master.g_HairRestLengthSRV);
+			this.simulationShader.SetBuffer (kernelId, "g_HairRestLength", this.master.g_HairRestLengthSRV);
 			this.simulationShader.SetBuffer (kernelId, "g_HairStrandType", this.master.g_HairStrandType);
 			this.simulationShader.SetBuffer (kernelId, "g_HairVertexTangents", this.master.g_HairVertexTangents);
 			this.simulationShader.SetBuffer (kernelId, "g_HairRefVecsInLocalFrame", this.master.g_HairRefVecsInLocalFrame);
@@ -317,8 +322,15 @@ namespace TressFX
 		/// </summary>
 		protected virtual void SetConstants()
 		{
-			// Set transform values
-            Matrix4x4 m = Matrix4x4.TRS(this.transform.position, this.transform.rotation, Vector3.one);
+            // Set transform values
+            Vector3 scale = new Vector3
+            (
+                1 / this.transform.lossyScale.x,
+                1 / this.transform.lossyScale.y,
+                1 / this.transform.lossyScale.z
+            );
+
+            Matrix4x4 m = Matrix4x4.TRS(Vector3.Scale(this.transform.position, scale), this.transform.rotation, Vector3.one);
 
 			this.simulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (m));
 			this.simulationShader.SetFloats ("g_ModelRotateForHead", this.QuaternionToFloatArray (this.transform.rotation));
@@ -375,12 +387,12 @@ namespace TressFX
             }
 
             // Set config constants
-            for (int i = 0; i < this.master.hairData.hairPartConfig.Length; i++)
+            for (int i = 0; i < this.partConfigs.Length; i++)
 			{
-				this.simulationShader.SetFloat("g_Damping"+i, this.master.hairData.hairPartConfig[i].Damping);
-				this.simulationShader.SetFloat("g_StiffnessForLocalShapeMatching"+i, this.master.hairData.hairPartConfig[i].StiffnessForLocalShapeMatching);
-				this.simulationShader.SetFloat("g_StiffnessForGlobalShapeMatching"+i, this.master.hairData.hairPartConfig[i].StiffnessForGlobalShapeMatching);
-				this.simulationShader.SetFloat("g_GlobalShapeMatchingEffectiveRange"+i, this.master.hairData.hairPartConfig[i].GlobalShapeMatchingEffectiveRange);
+				this.simulationShader.SetFloat("g_Damping"+i, this.partConfigs[i].Damping);
+				this.simulationShader.SetFloat("g_StiffnessForLocalShapeMatching"+i, this.partConfigs[i].StiffnessForLocalShapeMatching);
+				this.simulationShader.SetFloat("g_StiffnessForGlobalShapeMatching"+i, this.partConfigs[i].StiffnessForGlobalShapeMatching);
+				this.simulationShader.SetFloat("g_GlobalShapeMatchingEffectiveRange"+i, this.partConfigs[i].GlobalShapeMatchingEffectiveRange);
 			}
 		}
 
