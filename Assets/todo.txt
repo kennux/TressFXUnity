@@ -1,0 +1,6 @@
+- Correct bounding box scaling in import
+- Add light culling for spot lights
+- Check why sometimes depth testing does not work.
+-> Tested in test scene: Occlusion / Depthtesting in Forward AND Deferred. - No problems observed!
+- Fix spot light attenuation equation
+- Simulation downscaling fix breaks simulation (force scaling todo!)

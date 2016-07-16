@@ -329,7 +329,7 @@ namespace TressFX
                 1 / this.transform.lossyScale.y,
                 1 / this.transform.lossyScale.z
             );
-
+            
             Matrix4x4 m = Matrix4x4.TRS(Vector3.Scale(this.transform.position, scale), this.transform.rotation, Vector3.one);
 
 			this.simulationShader.SetFloats ("g_ModelTransformForHead", this.MatrixToFloatArray (m));

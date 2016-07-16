@@ -20,11 +20,15 @@ namespace TressFX
 		/// The shadow material.
 		/// </summary>
 		protected Material shadowMaterial;
-
+        
+        public TressFX master
+        {
+            get { return this._master; }
+        }
 		/// <summary>
 		/// The TressFX master class.
 		/// </summary>
-		protected TressFX master;
+		protected TressFX _master;
 		
 		/// <summary>
 		/// The triangle indices buffer.
@@ -85,7 +89,7 @@ namespace TressFX
         {
             if (this.castShadows)
             {
-                this.shadowMaterial.SetBuffer("g_HairVertexPositions", this.master.g_HairVertexPositions);
+                this.shadowMaterial.SetBuffer("g_HairVertexPositions", this._master.g_HairVertexPositions);
 
                 foreach (var cam in Camera.allCameras)
                 {
@@ -102,15 +106,15 @@ namespace TressFX
 		public virtual void Awake()
 		{
 			// Get TressFX master
-			this.master = this.GetComponent<TressFX> ();
+			this._master = this.GetComponent<TressFX> ();
 			
 			// Set triangle indices buffer
-			this.g_TriangleIndicesBuffer = new ComputeBuffer (this.master.hairData.m_TriangleIndices.Length, 4);
-			this.g_TriangleIndicesBuffer.SetData (this.master.hairData.m_TriangleIndices);
+			this.g_TriangleIndicesBuffer = new ComputeBuffer (this._master.hairData.m_TriangleIndices.Length, 4);
+			this.g_TriangleIndicesBuffer.SetData (this._master.hairData.m_TriangleIndices);
 
             // Set line indices buffer
-            this.g_LineIndicesBuffer = new ComputeBuffer(this.master.hairData.m_LineIndices.Length, 4);
-            this.g_LineIndicesBuffer.SetData(this.master.hairData.m_LineIndices);
+            this.g_LineIndicesBuffer = new ComputeBuffer(this._master.hairData.m_LineIndices.Length, 4);
+            this.g_LineIndicesBuffer.SetData(this._master.hairData.m_LineIndices);
 
             // Generate meshes
             this.triangleMeshes = this.GenerateTriangleMeshes ();
@@ -120,11 +124,17 @@ namespace TressFX
 			this.shadowMaterial = new Material (this.shadowShader);
 			
 			// Create render bounds
-			this._renderingBounds = new Bounds (this.master.hairData.m_bSphere.center, new Vector3(this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius, this.master.hairData.m_bSphere.radius));
+			this._renderingBounds = new Bounds (this._master.hairData.m_bSphere.center, new Vector3(this._master.hairData.m_bSphere.radius, this._master.hairData.m_bSphere.radius, this._master.hairData.m_bSphere.radius));
 		}
 		
 		public virtual void Update()
 		{
+            if (this.castShadows)
+            {
+                // Shadow casting
+                RenderShadows();
+            }
+
 			if (!this.debugBoundingBox)
 				return;
 			
@@ -180,7 +190,7 @@ namespace TressFX
 			MeshBuilder meshBuilder = new MeshBuilder (MeshTopology.Triangles);
 			
 			// Write all indices to the meshes
-			for (int i = 0; i < this.master.hairData.m_TriangleIndices.Length; i+=6)
+			for (int i = 0; i < this._master.hairData.m_TriangleIndices.Length; i+=6)
 			{
 				// Check for space
 				if (!meshBuilder.HasSpace(6))
@@ -225,7 +235,7 @@ namespace TressFX
 			MeshBuilder meshBuilder = new MeshBuilder (MeshTopology.Lines);
 			
 			// Write all indices to the meshes
-			for (int i = 0; i < this.master.hairData.m_pVertices.Length; i+=2)
+			for (int i = 0; i < this._master.hairData.m_pVertices.Length; i+=2)
 			{
 				// Check for space
 				if (!meshBuilder.HasSpace(2))
@@ -243,7 +253,7 @@ namespace TressFX
 				for (int j = 0; j < 2; j++)
 				{
 					// Prepare data
-					vertices[j] = new Vector3(this.master.hairData.m_LineIndices[i+j],0,0);
+					vertices[j] = new Vector3(this._master.hairData.m_LineIndices[i+j],0,0);
 					normals[j] = Vector3.up;
 					indices[j] = indexCounter+j;
 					uvs[j] = Vector2.one;
@@ -264,9 +274,9 @@ namespace TressFX
         /// <param name="mat"></param>
         protected void SetSimulationTransformCorrection(Material mat)
         {
-            mat.SetMatrix("_TFX_World2Object", this.transform.worldToLocalMatrix);
+            mat.SetMatrix("_TFX_World2Object", Matrix4x4.TRS(this.transform.position, this.transform.rotation, Vector3.one).inverse); // this.transform.worldToLocalMatrix);
             mat.SetMatrix("_TFX_ScaleMatrix", Matrix4x4.Scale(this.transform.localScale));
-            mat.SetMatrix("_TFX_Object2World", this.transform.localToWorldMatrix);
+            mat.SetMatrix("_TFX_Object2World", Matrix4x4.TRS(this.transform.position, this.transform.rotation, Vector3.one)); // this.transform.localToWorldMatrix);
 
             Vector3 scale = new Vector3
             (

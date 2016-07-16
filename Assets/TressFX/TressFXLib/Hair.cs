@@ -52,6 +52,8 @@ namespace TressFXLib
             for (int i = 0; i < hairMeshes.Length; i++)
                 hair.SetHairMesh(i, hairMeshes[i]);
 
+            hair.CreateBoundingSphere();
+
             // We're done :>
             return hair;
         }

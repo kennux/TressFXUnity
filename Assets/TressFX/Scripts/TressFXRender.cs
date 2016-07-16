@@ -61,12 +61,12 @@ namespace TressFX
         public void LateUpdate()
 		{
 			// Set shader buffers
-			this.hairMaterial.SetBuffer ("g_HairVertexTangents", this.master.g_HairVertexTangents);
-			this.hairMaterial.SetBuffer ("g_HairVertexPositions", this.master.g_HairVertexPositions);
+			this.hairMaterial.SetBuffer ("g_HairVertexTangents", this._master.g_HairVertexTangents);
+			this.hairMaterial.SetBuffer ("g_HairVertexPositions", this._master.g_HairVertexPositions);
 			this.hairMaterial.SetBuffer ("g_TriangleIndicesBuffer", this.g_TriangleIndicesBuffer);
-			this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this.master.g_HairThicknessCoeffs);
-			this.hairMaterial.SetBuffer ("g_TexCoords", this.master.g_TexCoords);
-			this.hairMaterial.SetInt ("_VerticesPerStrand", this.master.hairData.m_NumOfVerticesPerStrand);
+			this.hairMaterial.SetBuffer ("g_HairThicknessCoeffs", this._master.g_HairThicknessCoeffs);
+			this.hairMaterial.SetBuffer ("g_TexCoords", this._master.g_TexCoords);
+			this.hairMaterial.SetInt ("_VerticesPerStrand", this._master.hairData.m_NumOfVerticesPerStrand);
 
             // Transformation matrices
             SetSimulationTransformCorrection(this.hairMaterial);

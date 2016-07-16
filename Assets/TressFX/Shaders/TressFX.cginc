@@ -2,7 +2,6 @@
 
 // Material information
 uniform float g_MatKd;
-uniform float g_MatKa;
 uniform float g_MatKs1;
 uniform float g_MatEx1;
 uniform float g_MatKs2;
