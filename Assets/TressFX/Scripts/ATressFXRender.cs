@@ -64,7 +64,7 @@ namespace TressFX
         {
             get
             {
-                return new Bounds(this.renderingBounds.center, this.renderingBounds.size);
+                return new Bounds(this.renderingBounds.center + this.transform.position, this.renderingBounds.size);
             }
         }
 
